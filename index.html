@@ -73,17 +73,6 @@
         .ql-container { flex-grow: 1; min-height: 140px; color: var(--text-color); border-color: var(--panel-border); background: var(--editor-bg); }
         .ql-toolbar { border-color: var(--panel-border); background: var(--toolbar-bg); }
 
-        /* Quillエディタのツールバーアイコン・文字色のモード切替対応 */
-        :root[data-theme="dark"] .ql-toolbar .ql-stroke { stroke: #fff !important; }
-        :root[data-theme="dark"] .ql-toolbar .ql-fill { fill: #fff !important; }
-        :root[data-theme="dark"] .ql-toolbar .ql-picker { color: #fff !important; }
-        :root[data-theme="dark"] .ql-toolbar .ql-picker-options { background-color: #2d2d2d !important; color: #fff !important; }
-
-        :root[data-theme="light"] .ql-toolbar .ql-stroke { stroke: #212529 !important; }
-        :root[data-theme="light"] .ql-toolbar .ql-fill { fill: #212529 !important; }
-        :root[data-theme="light"] .ql-toolbar .ql-picker { color: #212529 !important; }
-        :root[data-theme="light"] .ql-toolbar .ql-picker-options { background-color: #ffffff !important; color: #212529 !important; }
-
         /* 画像サイズ個別変更対応 */
         .ql-editor img { max-width: none !important; width: 250px; height: auto; cursor: pointer; display: inline-block; border: 2px solid transparent; }
         .ql-editor img.selected-img { border-color: #007bff; box-shadow: 0 0 8px rgba(0,123,255,0.6); }
@@ -202,6 +191,18 @@
         let relations = []; 
         let linkingSource = null; 
 
+        function updateEditorToolbarTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const targetColor = (currentTheme === 'dark') ? '#ffffff' : '#000000';
+            
+            document.querySelectorAll('.ql-toolbar').forEach(toolbar => {
+                toolbar.querySelectorAll('.ql-stroke').forEach(el => el.style.stroke = targetColor);
+                toolbar.querySelectorAll('.ql-fill').forEach(el => el.style.fill = targetColor);
+                toolbar.querySelectorAll('.ql-picker').forEach(el => el.style.color = targetColor);
+                toolbar.querySelectorAll('.ql-picker-label').forEach(el => el.style.color = targetColor);
+            });
+        }
+
         function toggleTheme() {
             const html = document.documentElement;
             const btn = document.getElementById('theme-toggle-btn');
@@ -213,6 +214,7 @@
                 btn.textContent = "🌙";
             }
             renderSchedules();
+            updateEditorToolbarTheme();
         }
 
         function switchMainTab(tabName) {
@@ -225,6 +227,7 @@
             } else {
                 document.querySelector('.main-tabs button:nth-child(2)').classList.add('active');
                 document.getElementById('tab-notes').classList.add('active');
+                setTimeout(updateEditorToolbarTheme, 50);
             }
         }
 
@@ -485,6 +488,8 @@
                 theme: 'snow'
             });
             if (contentHtml) quill.clipboard.dangerouslyPasteHTML(contentHtml);
+
+            updateEditorToolbarTheme();
 
             quill.root.addEventListener('click', function(e) {
                 if (e.target.tagName === 'IMG') {
