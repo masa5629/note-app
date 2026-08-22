@@ -2,7 +2,7 @@
 <html lang="ja" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>学習用カードノートアプリ (完全版)</title>
+    <title>学習用カードノートアプリ (カテゴリタブ対応版)</title>
     
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
 
@@ -56,9 +56,14 @@
         th { background: var(--toolbar-bg); }
         input[type="text"] { width: 95%; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-color); padding: 4px; border-radius: 3px; }
         
+        /* ノートカテゴリタブ用スタイル */
+        .note-category-tabs { display: flex; gap: 8px; margin-bottom: 15px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid var(--panel-border); padding-bottom: 10px; }
+        .note-cat-btn { background: var(--panel-bg); color: var(--text-color); border: 1px solid var(--panel-border); padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 6px; }
+        .note-cat-btn.active { background: #28a745; color: white; border-color: #28a745; }
+        .note-cat-input { background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); padding: 4px 6px; border-radius: 3px; font-weight: bold; width: 120px; }
+
         .notes-area-wrapper { position: relative; }
         .cards-container { display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-start; position: relative; z-index: 1; }
-        #relation-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
         
         .card { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 10px; position: relative; resize: both; overflow: auto; width: 400px; min-width: 320px; min-height: 280px; }
         .card-header { display: flex; align-items: center; gap: 10px; }
@@ -73,14 +78,17 @@
         .ql-container { flex-grow: 1; min-height: 140px; color: var(--text-color); border-color: var(--panel-border); background: var(--editor-bg); }
         .ql-toolbar { border-color: var(--panel-border); background: var(--toolbar-bg); }
 
-        /* エディタ内のリンクの色とスタイル */
-        .ql-editor a { color: #4dabf7; text-decoration: underline; cursor: pointer; }
+        /* ツールバーのアイコン色切替 */
+        :root[data-theme="dark"] .ql-toolbar .ql-stroke { stroke: #fff !important; }
+        :root[data-theme="dark"] .ql-toolbar .ql-fill { fill: #fff !important; }
+        :root[data-theme="dark"] .ql-toolbar .ql-picker { color: #fff !important; }
+        :root[data-theme="light"] .ql-toolbar .ql-stroke { stroke: #212529 !important; }
+        :root[data-theme="light"] .ql-toolbar .ql-fill { fill: #212529 !important; }
+        :root[data-theme="light"] .ql-toolbar .ql-picker { color: #212529 !important; }
 
-        /* 画像サイズ個別変更対応 */
         .ql-editor img { max-width: none !important; width: 250px; height: auto; cursor: pointer; display: inline-block; border: 2px solid transparent; }
         .ql-editor img.selected-img { border-color: #007bff; box-shadow: 0 0 8px rgba(0,123,255,0.6); }
 
-        /* カスタム装飾スタイル */
         .ql-editor .mask { background-color: black !important; color: black !important; cursor: pointer; user-select: none; border-radius: 2px; }
         .ql-editor .mask.revealed { background-color: #333 !important; color: #fff !important; }
         
@@ -131,12 +139,16 @@
 
     <!-- 学習ノートタブ -->
     <div id="tab-notes" class="tab-content">
-        <div class="toolbar" style="margin-bottom: 15px;">
-            <button class="btn" onclick="addNewCard()">＋ ノート追加</button>
-            <span style="font-size: 0.85em; color: var(--text-secondary); margin-left: 10px;">💡 リンク（URL）は入力すると自動でリンク化され、クリックで開けるようになります</span>
+        <!-- ノートのカテゴリタブエリア -->
+        <div class="note-category-tabs" id="note-category-tabs-container">
+            <!-- 動的生成 -->
+        </div>
+
+        <div class="toolbar" style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <button class="btn" onclick="addNewCardToCurrentTab()">＋ このタブにノート追加</button>
+            <button class="btn btn-secondary" onclick="addNewCategoryTab()">＋ 新しいノートタブ追加</button>
         </div>
         <div class="notes-area-wrapper">
-            <svg id="relation-svg"></svg>
             <div id="cards-container" class="cards-container"></div>
         </div>
     </div>
@@ -190,14 +202,15 @@
         let currentScheduleMode = 'slide'; 
         let allScheduleDays = [];   
         let temporarySavedSchedules = {}; 
-        let cards = [];
-        let relations = []; 
-        let linkingSource = null; 
+        
+        // ノートカテゴリとカードの管理構造
+        // noteTabs = [{ id: 'tab_1', name: '一般', cards: [ {title, content} ] }]
+        let noteTabs = [];
+        let currentTabId = null;
 
         function updateEditorToolbarTheme() {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             const targetColor = (currentTheme === 'dark') ? '#ffffff' : '#000000';
-            
             document.querySelectorAll('.ql-toolbar').forEach(toolbar => {
                 toolbar.querySelectorAll('.ql-stroke').forEach(el => el.style.stroke = targetColor);
                 toolbar.querySelectorAll('.ql-fill').forEach(el => el.style.fill = targetColor);
@@ -457,6 +470,108 @@
         CorrectionBlot.blotName = 'correction'; CorrectionBlot.tagName = 'span'; Quill.register(CorrectionBlot, true);
 
 
+        // --- ノートタブ管理システム ---
+        function saveCurrentCardsToActiveTab() {
+            if (!currentTabId) return;
+            const currentTab = noteTabs.find(t => t.id === currentTabId);
+            if (!currentTab) return;
+
+            currentTab.cards = cards.map(c => ({
+                title: c.titleInput.value,
+                content: c.quill.root.innerHTML
+            }));
+        }
+
+        function switchNoteTab(tabId) {
+            saveCurrentCardsToActiveTab();
+            currentTabId = tabId;
+            renderNoteTabsUI();
+            renderCardsForCurrentTab();
+        }
+
+        function addNewCategoryTab() {
+            saveCurrentCardsToActiveTab();
+            const newId = 'tab_' + Date.now();
+            noteTabs.push({
+                id: newId,
+                name: '新しいタブ',
+                cards: [{ title: '新規ノート', content: '例: <span class="mask">暗記項目</span>' }]
+            });
+            switchNoteTab(newId);
+        }
+
+        function deleteCategoryTab(tabId, event) {
+            event.stopPropagation();
+            if (noteTabs.length <= 1) {
+                alert("最後のタブは削除できません。");
+                return;
+            }
+            if (!confirm("このノートタブと中のカードをすべて削除しますか？")) return;
+
+            noteTabs = noteTabs.filter(t => t.id !== tabId);
+            if (currentTabId === tabId) {
+                currentTabId = noteTabs[0].id;
+            }
+            renderNoteTabsUI();
+            renderCardsForCurrentTab();
+        }
+
+        function renderNoteTabsUI() {
+            const container = document.getElementById('note-category-tabs-container');
+            container.innerHTML = "";
+
+            noteTabs.forEach(tab => {
+                const btn = document.createElement('div');
+                btn.className = `note-cat-btn ${tab.id === currentTabId ? 'active' : ''}`;
+                
+                const nameInput = document.createElement('inputtype');
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'note-cat-input';
+                input.value = tab.name;
+                input.onchange = (e) => {
+                    tab.name = e.target.value;
+                };
+
+                btn.appendChild(input);
+
+                if (noteTabs.length > 1) {
+                    const delSpan = document.createElement('span');
+                    delSpan.textContent = '❌';
+                    delSpan.style.cursor = 'pointer';
+                    delSpan.style.fontSize = '0.8em';
+                    delSpan.onclick = (e) => deleteCategoryTab(tab.id, e);
+                    btn.appendChild(delSpan);
+                }
+
+                btn.onclick = (e) => {
+                    if (e.target !== input) {
+                        switchNoteTab(tab.id);
+                    }
+                };
+
+                container.appendChild(btn);
+            });
+        }
+
+        function renderCardsForCurrentTab() {
+            const container = document.getElementById('cards-container');
+            container.innerHTML = "";
+            cards = [];
+
+            const currentTab = noteTabs.find(t => t.id === currentTabId);
+            if (!currentTab || !currentTab.cards) return;
+
+            currentTab.cards.forEach(cData => {
+                addNewCard(cData.title, cData.content);
+            });
+        }
+
+        function addNewCardToCurrentTab() {
+            addNewCard("新しいノート", "");
+            saveCurrentCardsToActiveTab();
+        }
+
         function addNewCard(title = "", contentHtml = "") {
             const container = document.getElementById('cards-container');
             const card = document.createElement('div'); card.className = 'card';
@@ -494,26 +609,27 @@
 
             updateEditorToolbarTheme();
 
-            // URL自動リンク化（スペースや改行区切りのURLを自動検知してリンクにする簡易処理）
             quill.on('text-change', (delta, oldDelta, source) => {
                 if (source === 'user') {
                     const text = quill.getText();
                     const urlRegex = /(https?:\/\/[^\s]+)/g;
                     let match;
-                    // テキスト内のURLを探す
                     while ((match = urlRegex.exec(text)) !== null) {
                         const url = match[1];
                         const index = match.index;
-                        // すでにリンクになっていなければリンクを付与
                         const format = quill.getFormat(index, url.length);
                         if (!format.link) {
                             quill.formatText(index, url.length, 'link', url);
                         }
                     }
                 }
+                saveCurrentCardsToActiveTab();
             });
 
-            // ノート内のクリック処理（リンククリック時は別タブで開く、画像選択、マスクめくり）
+            card.querySelector('.card-title').addEventListener('input', () => {
+                saveCurrentCardsToActiveTab();
+            });
+
             quill.root.addEventListener('click', function(e) {
                 if (e.target.tagName === 'A') {
                     e.preventDefault();
@@ -530,10 +646,10 @@
             cards.push({ cardElement: card, titleInput: card.querySelector('.card-title'), quill: quill });
 
             card.querySelector('.btn-apply-mask').addEventListener('click', () => {
-                const r = quill.getSelection(); if (r && r.length > 0) quill.formatText(r.index, r.length, 'mask', true);
+                const r = quill.getSelection(); if (r && r.length > 0) { quill.formatText(r.index, r.length, 'mask', true); saveCurrentCardsToActiveTab(); }
             });
             card.querySelector('.btn-remove-mask').addEventListener('click', () => {
-                const r = quill.getSelection(); if (r && r.length > 0) quill.formatText(r.index, r.length, 'mask', false);
+                const r = quill.getSelection(); if (r && r.length > 0) { quill.formatText(r.index, r.length, 'mask', false); saveCurrentCardsToActiveTab(); }
             });
 
             card.querySelector('.btn-correct').addEventListener('click', () => {
@@ -544,6 +660,7 @@
                 if (newText !== null) {
                     quill.deleteText(r.index, r.length);
                     quill.insertEmbed(r.index, 'correction', { oldText: oldText, newText: newText }, Quill.sources.USER);
+                    saveCurrentCardsToActiveTab();
                 }
             });
 
@@ -558,6 +675,7 @@
                     const index = quill.findIndex(wrapper);
                     quill.deleteText(index, 1);
                     quill.insertText(index, originalText);
+                    saveCurrentCardsToActiveTab();
                 }
             });
 
@@ -572,20 +690,23 @@
                 if (newWidth) {
                     selectedImg.style.width = newWidth;
                     selectedImg.style.height = 'auto';
+                    saveCurrentCardsToActiveTab();
                 }
             });
 
             card.querySelector('.btn-delete').addEventListener('click', () => {
                 container.removeChild(card);
                 cards = cards.filter(c => c.cardElement !== card);
+                saveCurrentCardsToActiveTab();
             });
         }
 
         window.saveAllData = async function() {
             captureCurrentInputs();
+            saveCurrentCardsToActiveTab();
             const data = {
                 schedules: temporarySavedSchedules,
-                cards: cards.map(c => ({ title: c.titleInput.value, content: c.quill.root.innerHTML }))
+                noteTabs: noteTabs
             };
             if (window.cloudSave) {
                 await window.cloudSave(data);
@@ -599,11 +720,22 @@
                 const data = await window.cloudLoad();
                 if (data && data.schedules) temporarySavedSchedules = data.schedules;
                 renderSchedules();
-                if (data && data.cards && data.cards.length > 0) {
-                    data.cards.forEach(c => addNewCard(c.title, c.content));
+
+                if (data && data.noteTabs && data.noteTabs.length > 0) {
+                    noteTabs = data.noteTabs;
                 } else {
-                    addNewCard("学習ノート 1", "例: <span class='mask'>暗記項目</span>");
+                    // デフォルトの初期タブ
+                    noteTabs = [
+                        {
+                            id: 'tab_default',
+                            name: '学習ノート 1',
+                            cards: [{ title: 'サンプルノート', content: '例: <span class="mask">暗記項目</span>' }]
+                        }
+                    ];
                 }
+                currentTabId = noteTabs[0].id;
+                renderNoteTabsUI();
+                renderCardsForCurrentTab();
             }
         };
     </script>
