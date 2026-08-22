@@ -73,6 +73,9 @@
         .ql-container { flex-grow: 1; min-height: 140px; color: var(--text-color); border-color: var(--panel-border); background: var(--editor-bg); }
         .ql-toolbar { border-color: var(--panel-border); background: var(--toolbar-bg); }
 
+        /* エディタ内のリンクの色とスタイル */
+        .ql-editor a { color: #4dabf7; text-decoration: underline; cursor: pointer; }
+
         /* 画像サイズ個別変更対応 */
         .ql-editor img { max-width: none !important; width: 250px; height: auto; cursor: pointer; display: inline-block; border: 2px solid transparent; }
         .ql-editor img.selected-img { border-color: #007bff; box-shadow: 0 0 8px rgba(0,123,255,0.6); }
@@ -130,7 +133,7 @@
     <div id="tab-notes" class="tab-content">
         <div class="toolbar" style="margin-bottom: 15px;">
             <button class="btn" onclick="addNewCard()">＋ ノート追加</button>
-            <span style="font-size: 0.85em; color: var(--text-secondary); margin-left: 10px;">💡 画像をクリックして選択し、「🖼️画像サイズ変更」ボタンを押すと大きさを自由に変更できます</span>
+            <span style="font-size: 0.85em; color: var(--text-secondary); margin-left: 10px;">💡 リンク（URL）は入力すると自動でリンク化され、クリックで開けるようになります</span>
         </div>
         <div class="notes-area-wrapper">
             <svg id="relation-svg"></svg>
@@ -478,7 +481,7 @@
                 ['bold', 'italic', 'underline', 'strike'],
                 [{ 'color': ['#000000', '#e60000', '#0066cc', '#009900', '#990099', '#ff6600'] }],
                 [{ 'background': ['#ffff00', '#00ff00', '#00ffff', '#ff99ff', '#ff9999'] }],
-                ['image'],
+                ['link', 'image'],
                 [{ 'header': [1, 2, false] }],
                 ['clean']
             ];
@@ -491,8 +494,31 @@
 
             updateEditorToolbarTheme();
 
+            // URL自動リンク化（スペースや改行区切りのURLを自動検知してリンクにする簡易処理）
+            quill.on('text-change', (delta, oldDelta, source) => {
+                if (source === 'user') {
+                    const text = quill.getText();
+                    const urlRegex = /(https?:\/\/[^\s]+)/g;
+                    let match;
+                    // テキスト内のURLを探す
+                    while ((match = urlRegex.exec(text)) !== null) {
+                        const url = match[1];
+                        const index = match.index;
+                        // すでにリンクになっていなければリンクを付与
+                        const format = quill.getFormat(index, url.length);
+                        if (!format.link) {
+                            quill.formatText(index, url.length, 'link', url);
+                        }
+                    }
+                }
+            });
+
+            // ノート内のクリック処理（リンククリック時は別タブで開く、画像選択、マスクめくり）
             quill.root.addEventListener('click', function(e) {
-                if (e.target.tagName === 'IMG') {
+                if (e.target.tagName === 'A') {
+                    e.preventDefault();
+                    window.open(e.target.href, '_blank');
+                } else if (e.target.tagName === 'IMG') {
                     card.querySelectorAll('.ql-editor img').forEach(img => img.classList.remove('selected-img'));
                     e.target.classList.add('selected-img');
                 } else if (e.target.classList.contains('mask') || e.target.closest('.mask')) {
