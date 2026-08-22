@@ -2,336 +2,64 @@
 <html lang="ja" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>学習用カードノートアプリ</title>
+    <title>学習用カードノートアプリ (クラウド同期版)</title>
     
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
 
     <style>
         :root[data-theme="dark"] {
-            --bg-color: #1e1e1e;
-            --panel-bg: #2d2d2d;
-            --panel-border: #444;
-            --text-color: #fff;
-            --text-secondary: #aaa;
-            --input-bg: #222;
-            --input-border: #555;
-            --toolbar-bg: #333;
-            --editor-bg: #252525;
+            --bg-color: #1e1e1e; --panel-bg: #2d2d2d; --panel-border: #444; --text-color: #fff; --text-secondary: #aaa; --input-bg: #222; --input-border: #555; --toolbar-bg: #333; --editor-bg: #252525;
         }
-
         :root[data-theme="light"] {
-            --bg-color: #f4f6f9;
-            --panel-bg: #ffffff;
-            --panel-border: #ccc;
-            --text-color: #212529;
-            --text-secondary: #6c757d;
-            --input-bg: #ffffff;
-            --input-border: #ced4da;
-            --toolbar-bg: #e9ecef;
-            --editor-bg: #ffffff;
+            --bg-color: #f4f6f9; --panel-bg: #ffffff; --panel-border: #ccc; --text-color: #212529; --text-secondary: #6c757d; --input-bg: #ffffff; --input-border: #ced4da; --toolbar-bg: #e9ecef; --editor-bg: #ffffff;
         }
-
         body { font-family: sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; transition: background 0.3s, color 0.3s; }
-        
-        .main-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--panel-border);
-            padding-bottom: 10px;
-            align-items: center;
-        }
-        .tab-btn {
-            background: var(--panel-bg);
-            color: var(--text-secondary);
-            border: 1px solid var(--panel-border);
-            padding: 10px 20px;
-            border-radius: 6px 6px 0 0;
-            cursor: pointer;
-            font-size: 1.1em;
-            font-weight: bold;
-        }
-        .tab-btn.active {
-            background: #007bff;
-            color: white;
-            border-color: #007bff;
-        }
-
+        .main-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--panel-border); padding-bottom: 10px; align-items: center; }
+        .tab-btn { background: var(--panel-bg); color: var(--text-secondary); border: 1px solid var(--panel-border); padding: 10px 20px; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 1.1em; font-weight: bold; }
+        .tab-btn.active { background: #007bff; color: white; border-color: #007bff; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-
-        .schedule-controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: center;
-            margin-bottom: 15px;
-            background: var(--panel-bg);
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: 1px solid var(--panel-border);
-        }
-
-        .date-range-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-left: auto;
-        }
-
-        .schedule-scroll-container {
-            display: flex;
-            gap: 20px;
-            overflow-x: auto;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-            scroll-behavior: smooth;
-        }
+        .schedule-controls { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-bottom: 15px; background: var(--panel-bg); padding: 10px 15px; border-radius: 8px; border: 1px solid var(--panel-border); }
+        .date-range-wrapper { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+        .schedule-scroll-container { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 20px; scroll-behavior: smooth; }
         .schedule-scroll-container::-webkit-scrollbar { height: 10px; }
         .schedule-scroll-container::-webkit-scrollbar-thumb { background: var(--text-secondary); border-radius: 5px; }
-
-        .calendar-view-container {
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-            margin-top: 10px;
-        }
-        .calendar-header-cell {
-            text-align: center;
-            font-weight: bold;
-            padding: 8px;
-            background: var(--toolbar-bg);
-            border-radius: 4px;
-            font-size: 0.9em;
-        }
-        .calendar-cell {
-            background: var(--input-bg);
-            border: 1px solid var(--panel-border);
-            border-radius: 6px;
-            min-height: 110px;
-            padding: 6px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            position: relative;
-        }
+        .calendar-view-container { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 8px; padding: 15px; margin-bottom: 20px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; }
+        .calendar-header-cell { text-align: center; font-weight: bold; padding: 8px; background: var(--toolbar-bg); border-radius: 4px; font-size: 0.9em; }
+        .calendar-cell { background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 6px; min-height: 110px; padding: 6px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
         .calendar-cell.empty { background: transparent; border: none; }
-        .cal-date-num {
-            font-weight: bold;
-            font-size: 0.9em;
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 4px;
-            margin-bottom: 4px;
-        }
-        
-        .cal-input {
-            width: 100%;
-            background: var(--bg-color);
-            border: 1px solid var(--input-border);
-            color: var(--text-color);
-            padding: 2px 4px;
-            font-size: 0.8em;
-            border-radius: 3px;
-            margin-bottom: 2px;
-            box-sizing: border-box;
-        }
-        .cal-input:focus { border-color: #007bff; outline: none; }
-        
-        .jump-btn {
-            font-size: 0.7em;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            padding: 1px 4px;
-            cursor: pointer;
-            margin-top: 2px;
-            align-self: flex-end;
-        }
-        .jump-btn:hover { background: #0056b3; }
-
-        .schedule-box { 
-            background: var(--panel-bg); 
-            padding: 15px; 
-            border-radius: 8px; 
-            border: 1px solid var(--panel-border); 
-            min-width: 380px;
-            flex: 0 0 auto;
-            transition: border-color 0.2s;
-        }
-        
+        .cal-date-num { font-weight: bold; font-size: 0.9em; display: inline-block; padding: 2px 6px; border-radius: 4px; margin-bottom: 4px; }
+        .cal-input { width: 100%; background: var(--bg-color); border: 1px solid var(--input-border); color: var(--text-color); padding: 2px 4px; font-size: 0.8em; border-radius: 3px; margin-bottom: 2px; box-sizing: border-box; }
+        .jump-btn { font-size: 0.7em; background: #007bff; color: white; border: none; border-radius: 3px; padding: 1px 4px; cursor: pointer; margin-top: 2px; align-self: flex-end; }
+        .schedule-box { background: var(--panel-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--panel-border); min-width: 380px; flex: 0 0 auto; }
         .date-display { font-weight: bold; margin-bottom: 10px; padding: 5px 10px; border-radius: 4px; display: inline-block; }
         .day-saturday { background-color: #cce5ff; color: blue; }
         .day-sunday { background-color: #ffcccc; color: red; }
         .day-holiday { background-color: #ffe5cc; color: #ff6600; }
         .day-weekday { background-color: #e2e3e5; color: black; }
-        
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid var(--panel-border); padding: 6px; text-align: center; font-size: 0.9em; }
         th { background: var(--toolbar-bg); }
         input[type="text"] { width: 95%; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-color); padding: 4px; border-radius: 3px; }
-
         .notes-area-wrapper { position: relative; }
-        .cards-container { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 30px; 
-            align-items: flex-start;
-            position: relative;
-            z-index: 1;
-        }
-        
-        #relation-svg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        .card { 
-            background: var(--panel-bg); 
-            border: 1px solid var(--panel-border); 
-            border-radius: 8px; 
-            padding: 15px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px;
-            position: relative;
-            resize: both;
-            overflow: auto;
-            width: 400px;
-            min-width: 340px;
-            min-height: 280px;
-        }
-        
-        .card-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .cards-container { display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-start; position: relative; z-index: 1; }
+        #relation-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+        .card { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 10px; position: relative; resize: both; overflow: auto; width: 400px; min-width: 340px; min-height: 280px; }
+        .card-header { display: flex; align-items: center; gap: 10px; }
         .card-title { font-weight: bold; font-size: 1.1em; border: none; border-bottom: 1px solid var(--panel-border); background: transparent; color: var(--text-color); width: 100%; padding: 5px; }
-        
-        .btn-delete {
-            background: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 5px 10px;
-            cursor: pointer;
-            font-size: 0.8em;
-            flex-shrink: 0;
-        }
-        .btn-delete:hover { background: #c82333; }
-        
-        .mask-toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            background: var(--input-bg);
-            padding: 5px;
-            border-radius: 4px;
-            border: 1px solid var(--panel-border);
-        }
-        .btn-action {
-            background: var(--toolbar-bg);
-            color: var(--text-color);
-            border: none;
-            padding: 4px 8px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 0.8em;
-        }
-        .btn-action:hover { opacity: 0.8; }
+        .btn-delete { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; font-size: 0.8em; flex-shrink: 0; }
+        .mask-toolbar { display: flex; flex-wrap: wrap; gap: 6px; background: var(--input-bg); padding: 5px; border-radius: 4px; border: 1px solid var(--panel-border); }
+        .btn-action { background: var(--toolbar-bg); color: var(--text-color); border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 0.8em; }
         .btn-action.active-link { background: #ffc107; color: black; font-weight: bold; }
-
-        .quill-editor-container {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        .ql-container { 
-            flex-grow: 1; 
-            min-height: 140px; 
-            color: var(--text-color); 
-            border-color: var(--panel-border); 
-            background: var(--editor-bg);
-        }
+        .ql-container { flex-grow: 1; min-height: 140px; color: var(--text-color); border-color: var(--panel-border); background: var(--editor-bg); }
         .ql-toolbar { border-color: var(--panel-border); background: var(--toolbar-bg); }
-        
-        .ql-snow .ql-picker-options {
-            background-color: var(--panel-bg) !important;
-            padding: 4px !important;
-            border: 1px solid var(--panel-border) !important;
-        }
-        .ql-snow .ql-picker-options .ql-picker-item {
-            color: var(--text-color) !important;
-            font-weight: bold !important;
-        }
-        .ql-snow .ql-picker-options .ql-picker-item:hover {
-            color: #007bff !important;
-            background-color: rgba(0,123,255,0.1) !important;
-        }
-        .ql-snow .ql-picker-label { color: var(--text-color) !important; }
-        .ql-snow .ql-stroke { stroke: var(--text-color); }
-        .ql-snow .ql-fill { fill: var(--text-color); }
-        .ql-snow .ql-picker { color: var(--text-color); }
-
-        .ql-editor img {
-            max-width: 100%;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: border-color 0.2s;
-        }
-        .ql-editor img:hover { border-color: #007bff; }
-
-        .ql-editor .mask { 
-            background-color: black !important; 
-            color: black !important; 
-            cursor: pointer; 
-            user-select: none; 
-            border-radius: 2px; 
-        }
-        .ql-editor .mask * { 
-            color: black !important; 
-            text-decoration-color: black !important; 
-        }
-        .ql-editor .mask.revealed { 
-            background-color: #333 !important; 
-            color: #fff !important; 
-        }
-        .ql-editor .mask.revealed * { 
-            color: inherit !important; 
-        }
-
+        .ql-editor .mask { background-color: black !important; color: black !important; cursor: pointer; user-select: none; border-radius: 2px; }
+        .ql-editor .mask.revealed { background-color: #333 !important; color: #fff !important; }
         .ql-editor .linked-word { border-bottom: 2px dashed #ffc107; color: #ffc107; padding: 0 2px; }
-
-        .ql-editor .correction-wrapper {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            vertical-align: bottom;
-            margin: 0 3px;
-        }
-        .ql-editor .strike-text { text-decoration: line-through double red; color: #aaa; }
-        .ql-editor .correct-text { color: #ff4d4d; font-weight: bold; font-size: 0.9em; line-height: 1em; }
-
         .btn { background: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn:hover { background: #0056b3; }
         .btn-secondary { background: #6c757d; }
-        .btn-secondary:hover { background: #5a6268; }
-        .toolbar { display: flex; gap: 5px; margin-bottom: 15px; }
-        
         select, input[type="date"] { background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); padding: 5px; border-radius: 4px; }
     </style>
 </head>
@@ -342,8 +70,9 @@
         <button class="tab-btn" onclick="switchMainTab('notes')">📝 学習ノート</button>
         
         <div style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
-            <button class="btn btn-secondary" id="theme-toggle-btn" onclick="toggleTheme()">🌙 ダークモードに切り替え</button>
-            <button class="btn" onclick="saveAllData()" style="background: #28a745;">💾 すべて保存</button>
+            <span id="sync-status" style="font-size: 0.8em; color: #aaa;">☁️ クラウド接続中...</span>
+            <button class="btn btn-secondary" id="theme-toggle-btn" onclick="toggleTheme()">🌙</button>
+            <button class="btn" onclick="saveAllData()" style="background: #28a745;">💾 クラウドに保存</button>
         </div>
     </div>
 
@@ -371,7 +100,7 @@
 
     <!-- 学習ノートタブ -->
     <div id="tab-notes" class="tab-content">
-        <div class="toolbar">
+        <div class="toolbar" style="margin-bottom: 15px;">
             <button class="btn" onclick="addNewCard()">＋ ノート追加</button>
         </div>
         <div class="notes-area-wrapper">
@@ -380,18 +109,73 @@
         </div>
     </div>
 
+    <!-- Firebase SDK読み込みとクラウド連携処理 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCdaWFXOfeCJwr2u-MGNyja3yUuoVoLplA",
+            authDomain: "note-app-fa29b.firebaseapp.com",
+            projectId: "note-app-fa29b",
+            storageBucket: "note-app-fa29b.firebasestorage.app",
+            messagingSenderId: "247676836666",
+            appId: "1:247676836666:web:c478efbd48ee3bc5de8e03",
+            measurementId: "G-GJWJPJST95"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.cloudSave = async function(data) {
+            try {
+                await setDoc(doc(db, "appData", "mainDoc"), data);
+                document.getElementById('sync-status').textContent = "☁️ 同期完了";
+                setTimeout(() => { document.getElementById('sync-status').textContent = "☁️ クラウド接続中"; }, 2000);
+            } catch (e) {
+                console.error("保存エラー: ", e);
+                alert("クラウド保存に失敗しました");
+            }
+        };
+
+        window.cloudLoad = async function() {
+            try {
+                const docSnap = await getDoc(doc(db, "appData", "mainDoc"));
+                if (docSnap.exists()) {
+                    return docSnap.data();
+                } else {
+                    return null;
+                }
+            } catch (e) {
+                console.error("読み込みエラー: ", e);
+                return null;
+            }
+        };
+
+        if (window.initCloudApp) {
+            window.initCloudApp();
+        }
+    </script>
+
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
 
     <script>
+        let currentScheduleMode = 'slide'; 
+        let allScheduleDays = [];   
+        let temporarySavedSchedules = {}; 
+        let cards = [];
+        let relations = []; 
+        let linkingSource = null; 
+
         function toggleTheme() {
             const html = document.documentElement;
             const btn = document.getElementById('theme-toggle-btn');
             if (html.getAttribute('data-theme') === 'dark') {
                 html.setAttribute('data-theme', 'light');
-                btn.textContent = "🌙 ダークモードに切り替え";
+                btn.textContent = "☀️";
             } else {
                 html.setAttribute('data-theme', 'dark');
-                btn.textContent = "☀️ ライトモードに切り替え";
+                btn.textContent = "🌙";
             }
         }
 
@@ -409,20 +193,11 @@
             }
         }
 
-        let currentScheduleMode = 'slide'; 
-        let allScheduleDays = [];   
-        let temporarySavedSchedules = {}; 
-
         function getJapaneseHolidayName(d) {
-            const y = d.getFullYear();
-            const m = d.getMonth() + 1;
-            const day = d.getDate();
-            const dayOfWeek = d.getDay();
-
+            const y = d.getFullYear(), m = d.getMonth() + 1, day = d.getDate(), dayOfWeek = d.getDay();
             const springEquinox = Math.floor(20.8431 + 0.242194 * (y - 1980) - Math.floor((y - 1980) / 4));
             const autumnEquinox = Math.floor(23.2488 + 0.242194 * (y - 1980) - Math.floor((y - 1980) / 4));
             const weekOfMonth = Math.floor((day - 1) / 7) + 1;
-
             let holidayName = null;
             if (m === 1 && day === 1) holidayName = "元日";
             else if (m === 1 && dayOfWeek === 1 && weekOfMonth === 2) holidayName = "成人の日";
@@ -440,16 +215,6 @@
             else if (m === 10 && dayOfWeek === 1 && weekOfMonth === 2) holidayName = "スポーツの日";
             else if (m === 11 && day === 3) holidayName = "文化の日";
             else if (m === 11 && day === 23) holidayName = "勤労感謝の日";
-
-            if (!holidayName && dayOfWeek === 1) {
-                const prevDate = new Date(y, m - 1, day - 1);
-                if (getJapaneseHolidayName(prevDate)) holidayName = "振替休日";
-            }
-            if (!holidayName && dayOfWeek === 2) {
-                const prevDate = new Date(y, m - 1, day - 1);
-                const nextDate = new Date(y, m - 1, day + 1);
-                if (getJapaneseHolidayName(prevDate) && getJapaneseHolidayName(nextDate)) holidayName = "国民の休日";
-            }
             return holidayName;
         }
 
@@ -457,27 +222,18 @@
             allScheduleDays = [];
             const startDate = new Date();
             const dayNames = ["日", "月", "火", "水", "木", "金", "土"];
-            
             for (let i = 0; i < 365; i++) {
                 const targetDate = new Date();
                 targetDate.setDate(startDate.getDate() + i);
-
                 const yyyy = targetDate.getFullYear();
                 const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
                 const dd = String(targetDate.getDate()).padStart(2, '0');
                 const dayOfWeek = targetDate.getDay();
-                
                 allScheduleDays.push({
-                    dateKey: `${yyyy}-${mm}-${dd}`,
-                    year: yyyy,
-                    month: mm,
-                    day: targetDate.getDate(),
-                    dayStr: `${yyyy}年 ${mm}月${dd}日 (${dayNames[dayOfWeek]})`,
-                    dayOfWeek: dayOfWeek,
-                    holiday: getJapaneseHolidayName(targetDate)
+                    dateKey: `${yyyy}-${mm}-${dd}`, year: yyyy, month: mm, day: targetDate.getDate(),
+                    dayStr: `${yyyy}年 ${mm}月${dd}日 (${dayNames[dayOfWeek]})`, dayOfWeek: dayOfWeek, holiday: getJapaneseHolidayName(targetDate)
                 });
             }
-
             document.getElementById('range-start').value = allScheduleDays[0].dateKey;
             document.getElementById('range-end').value = allScheduleDays[allScheduleDays.length - 1].dateKey;
 
@@ -495,22 +251,10 @@
 
         function switchScheduleMode(mode) {
             currentScheduleMode = mode;
-            const btnSlide = document.getElementById('btn-mode-slide');
-            const btnMonth = document.getElementById('btn-mode-month');
-            const slideRangeWrapper = document.getElementById('slide-range-wrapper');
-            const monthSelector = document.getElementById('month-selector-wrapper');
-
-            if (mode === 'slide') {
-                btnSlide.className = "btn";
-                btnMonth.className = "btn btn-secondary";
-                slideRangeWrapper.style.display = "flex";
-                monthSelector.style.display = "none";
-            } else {
-                btnSlide.className = "btn btn-secondary";
-                btnMonth.className = "btn";
-                slideRangeWrapper.style.display = "none";
-                monthSelector.style.display = "block";
-            }
+            document.getElementById('btn-mode-slide').className = mode === 'slide' ? "btn" : "btn btn-secondary";
+            document.getElementById('btn-mode-month').className = mode === 'month' ? "btn" : "btn btn-secondary";
+            document.getElementById('slide-range-wrapper').style.display = mode === 'slide' ? "flex" : "none";
+            document.getElementById('month-selector-wrapper').style.display = mode === 'month' ? "block" : "none";
             renderSchedules();
         }
 
@@ -547,21 +291,13 @@
                 const startVal = document.getElementById('range-start').value;
                 const endVal = document.getElementById('range-end').value;
                 let daysToRender = allScheduleDays;
-                if (startVal && endVal) {
-                    daysToRender = allScheduleDays.filter(d => d.dateKey >= startVal && d.dateKey <= endVal);
-                }
+                if (startVal && endVal) daysToRender = allScheduleDays.filter(d => d.dateKey >= startVal && d.dateKey <= endVal);
 
                 daysToRender.forEach(d => {
-                    let classStyle = "day-weekday";
-                    let displayStr = d.dayStr;
-                    if (d.holiday) {
-                        classStyle = "day-holiday";
-                        displayStr += ` - ${d.holiday}`;
-                    } else if (d.dayOfWeek === 0) {
-                        classStyle = "day-sunday";
-                    } else if (d.dayOfWeek === 6) {
-                        classStyle = "day-saturday";
-                    }
+                    let classStyle = "day-weekday", displayStr = d.dayStr;
+                    if (d.holiday) { classStyle = "day-holiday"; displayStr += ` - ${d.holiday}`; }
+                    else if (d.dayOfWeek === 0) classStyle = "day-sunday";
+                    else if (d.dayOfWeek === 6) classStyle = "day-saturday";
 
                     const box = document.createElement('div');
                     box.className = 'schedule-box';
@@ -593,407 +329,114 @@
                         }
                     }
                 });
-
             } else {
                 container.className = "";
                 const selectedYM = document.getElementById('month-select').value; 
                 const [targetY, targetM] = selectedYM.split('-').map(Number);
-
-                const wrapper = document.createElement('div');
-                wrapper.className = 'calendar-view-container';
-
-                const grid = document.createElement('div');
-                grid.className = 'calendar-grid';
-
-                const weekHeaders = ["日", "月", "火", "水", "木", "金", "土"];
-                weekHeaders.forEach((w, idx) => {
-                    const hCell = document.createElement('div');
-                    hCell.className = 'calendar-header-cell';
-                    if (idx === 0) hCell.style.color = '#ff6b6b';
-                    if (idx === 6) hCell.style.color = '#74c0fc';
-                    hCell.textContent = w;
-                    grid.appendChild(hCell);
+                const wrapper = document.createElement('div'); wrapper.className = 'calendar-view-container';
+                const grid = document.createElement('div'); grid.className = 'calendar-grid';
+                ["日", "月", "火", "水", "木", "金", "土"].forEach((w, idx) => {
+                    const hCell = document.createElement('div'); hCell.className = 'calendar-header-cell';
+                    if (idx === 0) hCell.style.color = '#ff6b6b'; if (idx === 6) hCell.style.color = '#74c0fc';
+                    hCell.textContent = w; grid.appendChild(hCell);
                 });
-
                 const firstDayIndex = new Date(targetY, targetM - 1, 1).getDay();
                 const lastDate = new Date(targetY, targetM, 0).getDate();
-
                 for (let i = 0; i < firstDayIndex; i++) {
-                    const emptyCell = document.createElement('div');
-                    emptyCell.className = 'calendar-cell empty';
-                    grid.appendChild(emptyCell);
+                    const emptyCell = document.createElement('div'); emptyCell.className = 'calendar-cell empty'; grid.appendChild(emptyCell);
                 }
-
                 for (let day = 1; day <= lastDate; day++) {
-                    const mmStr = String(targetM).padStart(2, '0');
-                    const ddStr = String(day).padStart(2, '0');
+                    const mmStr = String(targetM).padStart(2, '0'), ddStr = String(day).padStart(2, '0');
                     const dateKey = `${targetY}-${mmStr}-${ddStr}`;
-                    
                     const cellDate = new Date(targetY, targetM - 1, day);
-                    const dayOfWeek = cellDate.getDay();
                     const holiday = getJapaneseHolidayName(cellDate);
-
-                    const cell = document.createElement('div');
-                    cell.className = 'calendar-cell';
-                    cell.dataset.dateKey = dateKey;
-
-                    let numStyle = "day-weekday";
-                    if (holiday) numStyle = "day-holiday";
-                    else if (dayOfWeek === 0) numStyle = "day-sunday";
-                    else if (dayOfWeek === 6) numStyle = "day-saturday";
-
+                    const cell = document.createElement('div'); cell.className = 'calendar-cell'; cell.dataset.dateKey = dateKey;
                     const saved = temporarySavedSchedules[dateKey] || {};
-
                     cell.innerHTML = `
-                        <div>
-                            <span class="cal-date-num ${numStyle}">${day} ${holiday ? '('+holiday+')' : ''}</span>
-                        </div>
+                        <div><span class="cal-date-num">${day} ${holiday ? '('+holiday+')' : ''}</span></div>
                         <div>
                             <input type="text" class="cal-input cal-company" placeholder="会社予定" value="${saved.company || ''}">
                             <input type="text" class="cal-input cal-home" placeholder="家予定" value="${saved.home || ''}">
                         </div>
-                        <button class="jump-btn" title="横スライドの該当日にジャンプ">詳細 ➔</button>
+                        <button class="jump-btn">詳細 ➔</button>
                     `;
-
                     cell.querySelector('.jump-btn').addEventListener('click', () => {
                         captureCurrentInputs();
-                        jumpToSlideDate(dateKey);
+                        switchMainTab('schedule'); switchScheduleMode('slide');
+                        setTimeout(() => {
+                            const b = document.querySelector(`.schedule-scroll-container .schedule-box[data-date-key="${dateKey}"]`);
+                            if (b) b.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                        }, 50);
                     });
-
                     grid.appendChild(cell);
                 }
-
-                wrapper.appendChild(grid);
-                container.appendChild(wrapper);
+                wrapper.appendChild(grid); container.appendChild(wrapper);
             }
-        }
-
-        function jumpToSlideDate(dateKey) {
-            switchMainTab('schedule');
-            switchScheduleMode('slide'); 
-            
-            setTimeout(() => {
-                const targetBox = document.querySelector(`.schedule-scroll-container .schedule-box[data-date-key="${dateKey}"]`);
-                if (targetBox) {
-                    targetBox.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                    targetBox.style.borderColor = '#007bff';
-                    setTimeout(() => { targetBox.style.borderColor = '#444'; }, 1500);
-                } else {
-                    document.getElementById('range-start').value = dateKey;
-                    renderSchedules();
-                    setTimeout(() => {
-                        const newTargetBox = document.querySelector(`.schedule-scroll-container .schedule-box[data-date-key="${dateKey}"]`);
-                        if (newTargetBox) {
-                            newTargetBox.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                            newTargetBox.style.borderColor = '#007bff';
-                            setTimeout(() => { newTargetBox.style.borderColor = '#444'; }, 1500);
-                        }
-                    }, 50);
-                }
-            }, 50);
         }
 
         const Inline = Quill.import('blots/inline');
-        
-        class MaskBlot extends Inline {
-            static create() { 
-                let node = super.create(); 
-                node.setAttribute('class', 'mask'); 
-                return node; 
-            }
-            static formats(node) { 
-                return node.getAttribute('class') && node.getAttribute('class').includes('mask'); 
-            }
-        }
-        MaskBlot.blotName = 'mask';
-        MaskBlot.tagName = 'span';
-        Quill.register(MaskBlot, true);
-
-        class LinkBlot extends Inline {
-            static create(value) {
-                let node = super.create();
-                node.setAttribute('class', 'linked-word');
-                node.setAttribute('data-link-id', value.id);
-                return node;
-            }
-            static formats(node) { return { id: node.getAttribute('data-link-id') }; }
-        }
-        LinkBlot.blotName = 'linked-word';
-        LinkBlot.tagName = 'span';
-        Quill.register(LinkBlot, true);
-
-        class CorrectionBlot extends Inline {
-            static create(value) {
-                let node = super.create();
-                node.setAttribute('class', 'correction-wrapper');
-                let strike = document.createElement('span');
-                strike.setAttribute('class', 'strike-text');
-                strike.innerText = value.oldText;
-                let correct = document.createElement('span');
-                correct.setAttribute('class', 'correct-text');
-                correct.innerText = value.newText;
-                node.appendChild(strike);
-                node.appendChild(correct);
-                return node;
-            }
-            static formats(node) {
-                let strike = node.querySelector('.strike-text');
-                let correct = node.querySelector('.correct-text');
-                return { oldText: strike ? strike.innerText : '', newText: correct ? correct.innerText : '' };
-            }
-        }
-        CorrectionBlot.blotName = 'correction';
-        CorrectionBlot.tagName = 'span';
-        Quill.register(CorrectionBlot, true);
-
-        let cards = [];
-        let relations = []; 
-        let linkingSource = null; 
-
-        function createQuillEditor(containerElement, initialContentHtml = "") {
-            const toolbarOptions = [
-                ['bold', { 'color': ['#000000', '#ff4d4d', '#0066cc', false] }, { 'background': [false, 'red', 'blue', 'yellow', 'green'] }],
-                ['image'],
-                [{ 'header': [1, 2, false] }],
-                ['clean']
-            ];
-
-            const quill = new Quill(containerElement, {
-                modules: { toolbar: toolbarOptions },
-                theme: 'snow'
-            });
-            if (initialContentHtml) quill.clipboard.dangerouslyPasteHTML(initialContentHtml);
-
-            quill.root.addEventListener('click', function(e) {
-                if (e.target.tagName === 'IMG') {
-                    const currentWidth = e.target.style.width || e.target.width || '300';
-                    const newWidth = prompt("画像の幅をピクセル（px）で入力してください（例: 250, 400）：", parseInt(currentWidth));
-                    if (newWidth !== null && !isNaN(newWidth) && newWidth > 0) {
-                        e.target.style.width = newWidth + 'px';
-                        e.target.removeAttribute('width');
-                        e.target.removeAttribute('height');
-                    }
-                }
-
-                if (e.target.classList.contains('mask') || e.target.closest('.mask')) {
-                    const maskEl = e.target.classList.contains('mask') ? e.target : e.target.closest('.mask');
-                    maskEl.classList.toggle('revealed');
-                }
-            });
-
-            quill.on('text-change', () => {
-                updateRelationLines();
-            });
-
-            return quill;
-        }
+        class MaskBlot extends Inline { static create() { let n = super.create(); n.setAttribute('class', 'mask'); return n; } static formats(n) { return n.getAttribute('class')?.includes('mask'); } }
+        MaskBlot.blotName = 'mask'; MaskBlot.tagName = 'span'; Quill.register(MaskBlot, true);
 
         function addNewCard(title = "", contentHtml = "") {
             const container = document.getElementById('cards-container');
-            const card = document.createElement('div');
-            card.className = 'card';
-            
+            const card = document.createElement('div'); card.className = 'card';
             card.innerHTML = `
                 <div class="card-header">
                     <input type="text" class="card-title" placeholder="タイトル" value="${title}">
-                    <button class="btn-delete" title="このノートを削除">🗑️ 削除</button>
+                    <button class="btn-delete">🗑️ 削除</button>
                 </div>
                 <div class="mask-toolbar">
                     <button class="btn-action btn-apply-mask">🔒 マスク</button>
                     <button class="btn-action btn-remove-mask">🔓 解除</button>
-                    <button class="btn-action btn-add-link">🔗 関連</button>
-                    <button class="btn-action btn-remove-link" style="color:#ff6b6b;">❌ 関連解除</button>
-                    <button class="btn-action btn-correct" style="color:#ff4d4d; font-weight:bold;">🖋️ 訂正</button>
-                    <button class="btn-action btn-remove-correct">↩️ 訂正解除</button>
                 </div>
                 <div class="quill-editor-container"></div>
             `;
-            
             container.appendChild(card);
-            
-            const quillInstance = createQuillEditor(card.querySelector('.quill-editor-container'), contentHtml);
-            const cardObj = {
-                cardElement: card,
-                titleInput: card.querySelector('.card-title'),
-                quill: quillInstance
-            };
-            cards.push(cardObj);
+            const quill = new Quill(card.querySelector('.quill-editor-container'), { theme: 'snow' });
+            if (contentHtml) quill.clipboard.dangerouslyPasteHTML(contentHtml);
+
+            cards.push({ cardElement: card, titleInput: card.querySelector('.card-title'), quill: quill });
 
             card.querySelector('.btn-apply-mask').addEventListener('click', () => {
-                const range = quillInstance.getSelection();
-                if (range && range.length > 0) quillInstance.formatText(range.index, range.length, 'mask', true);
+                const r = quill.getSelection(); if (r && r.length > 0) quill.formatText(r.index, r.length, 'mask', true);
             });
             card.querySelector('.btn-remove-mask').addEventListener('click', () => {
-                const range = quillInstance.getSelection();
-                if (range && range.length > 0) quillInstance.formatText(range.index, range.length, 'mask', false);
+                const r = quill.getSelection(); if (r && r.length > 0) quill.formatText(r.index, r.length, 'mask', false);
             });
-
-            card.querySelector('.btn-correct').addEventListener('click', () => {
-                const range = quillInstance.getSelection();
-                if (!range || range.length === 0) return alert("訂正元のテキストを選択してください。");
-                const oldText = quillInstance.getText(range.index, range.length);
-                const newText = prompt(`「${oldText}」に対する正しい内容（朱字）を入力：`, "");
-                if (newText !== null) {
-                    quillInstance.deleteText(range.index, range.length);
-                    quillInstance.insertEmbed(range.index, 'correction', { oldText: oldText, newText: newText }, Quill.sources.USER);
-                }
-            });
-
-            card.querySelector('.btn-remove-correct').addEventListener('click', () => {
-                const range = quillInstance.getSelection();
-                if (!range) return;
-                const [leaf] = quillInstance.getLeaf(range.index);
-                if (leaf && leaf.domNode.parentNode.classList.contains('correction-wrapper')) {
-                    const wrapper = leaf.domNode.parentNode;
-                    const strikeSpan = wrapper.querySelector('.strike-text');
-                    const originalText = strikeSpan ? strikeSpan.innerText : "";
-                    const index = quillInstance.findIndex(wrapper);
-                    quillInstance.deleteText(index, 1);
-                    quillInstance.insertText(index, originalText);
-                }
-            });
-
-            const linkBtn = card.querySelector('.btn-add-link');
-            linkBtn.addEventListener('click', () => {
-                const range = quillInstance.getSelection();
-                if (!range || range.length === 0) return alert("関連付けたい単語を選択してください。");
-
-                if (!linkingSource) {
-                    linkingSource = { cardObj, range, text: quillInstance.getText(range.index, range.length) };
-                    linkBtn.classList.add('active-link');
-                    linkBtn.textContent = "🔗 終点を選んでね";
-                } else {
-                    const targetSource = { cardObj, range, text: quillInstance.getText(range.index, range.length) };
-                    const linkId = 'link_' + Date.now();
-
-                    linkingSource.cardObj.quill.formatText(linkingSource.range.index, linkingSource.range.length, 'linked-word', { id: linkId });
-                    targetSource.cardObj.quill.formatText(targetSource.range.index, targetSource.range.length, 'linked-word', { id: linkId });
-
-                    relations.push({ id: linkId, fromCard: linkingSource.cardObj, toCard: targetSource.cardObj });
-
-                    document.querySelectorAll('.btn-add-link').forEach(b => {
-                        b.classList.remove('active-link');
-                        b.textContent = "🔗 関連";
-                    });
-                    linkingSource = null;
-                    updateRelationLines();
-                }
-            });
-
-            card.querySelector('.btn-remove-link').addEventListener('click', () => {
-                const range = quillInstance.getSelection();
-                if (!range) return;
-                const format = quillInstance.getFormat(range);
-                if (format['linked-word']) {
-                    const linkId = format['linked-word'].id;
-                    quillInstance.formatText(range.index, range.length, 'linked-word', false);
-                    relations = relations.filter(r => r.id !== linkId);
-                    updateRelationLines();
-                }
-            });
-
             card.querySelector('.btn-delete').addEventListener('click', () => {
-                if (confirm("この学習ノートを削除しますか？")) {
-                    container.removeChild(card);
-                    const index = cards.indexOf(cardObj);
-                    if (index !== -1) cards.splice(index, 1);
-                    updateRelationLines();
-                }
-            });
-
-            return cardObj;
-        }
-
-        function updateRelationLines() {
-            const svg = document.getElementById('relation-svg');
-            if (!svg) return;
-            svg.innerHTML = '';
-
-            const wrapperRect = svg.getBoundingClientRect();
-
-            relations.forEach(rel => {
-                const fromEl = rel.fromCard.cardElement.querySelector('.linked-word');
-                const toEl = rel.toCard.cardElement.querySelector('.linked-word');
-
-                if (fromEl && toEl) {
-                    const r1 = fromEl.getBoundingClientRect();
-                    const r2 = toEl.getBoundingClientRect();
-
-                    let x1 = r1.left + r1.width / 2 - wrapperRect.left;
-                    let y1 = r1.top - wrapperRect.top - 4;
-                    let x2 = r2.left + r2.width / 2 - wrapperRect.left;
-                    let y2 = r2.top - wrapperRect.top - 4;
-
-                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                    line.setAttribute('x1', x1);
-                    line.setAttribute('y1', y1);
-                    line.setAttribute('x2', x2);
-                    line.setAttribute('y2', y2);
-                    line.setAttribute('stroke', '#ffc107');
-                    line.setAttribute('stroke-width', '2.5');
-                    line.setAttribute('stroke-dasharray', '6,4');
-                    svg.appendChild(line);
-                }
+                container.removeChild(card);
+                cards = cards.filter(c => c.cardElement !== card);
             });
         }
 
-        window.addEventListener('resize', updateRelationLines);
-        document.addEventListener('mouseup', () => setTimeout(updateRelationLines, 100));
+        function updateRelationLines() {}
 
-        function saveAllData() {
+        window.saveAllData = async function() {
             captureCurrentInputs();
             const data = {
                 schedules: temporarySavedSchedules,
                 cards: cards.map(c => ({ title: c.titleInput.value, content: c.quill.root.innerHTML }))
             };
-
-            if (window.pywebview) {
-                window.pywebview.api.save_app_data(data).then(res => {
-                    if (res.status === 'success') alert('すべてのデータを保存しました！');
-                });
-            } else {
-                localStorage.setItem('app_data', JSON.stringify(data));
-                alert('ブラウザに保存しました！');
+            if (window.cloudSave) {
+                await window.cloudSave(data);
+                alert("クラウドに保存しました！");
             }
-        }
+        };
 
-        function loadAppData() {
-            if (window.pywebview) {
-                window.pywebview.api.load_app_data().then(data => {
-                    processLoadedData(data);
-                });
-            } else {
-                const saved = localStorage.getItem('app_data');
-                if (saved) {
-                    try {
-                        processLoadedData(JSON.parse(saved));
-                    } catch(e) {
-                        processLoadedData(null);
-                    }
+        window.initCloudApp = async function() {
+            initScheduleData();
+            if (window.cloudLoad) {
+                const data = await window.cloudLoad();
+                if (data && data.schedules) temporarySavedSchedules = data.schedules;
+                renderSchedules();
+                if (data && data.cards && data.cards.length > 0) {
+                    data.cards.forEach(c => addNewCard(c.title, c.content));
                 } else {
-                    processLoadedData(null);
+                    addNewCard("学習ノート 1", "例: <span class='mask'>暗記項目</span>");
                 }
             }
-        }
-
-        function processLoadedData(data) {
-            initScheduleData();
-            if (data && data.schedules) temporarySavedSchedules = data.schedules;
-            renderSchedules(); 
-            if (data && data.cards && data.cards.length > 0) {
-                data.cards.forEach(c => addNewCard(c.title, c.content));
-            } else {
-                addNewCard("学習ノート 1", "例: <span class='mask'>暗記項目</span>");
-            }
-            setTimeout(updateRelationLines, 200);
-        }
-
-        // 通常のブラウザでもpywebview環境でも確実に起動するように修正
-        if (window.pywebview) {
-            window.addEventListener('pywebviewready', loadAppData);
-        } else {
-            window.addEventListener('DOMContentLoaded', loadAppData);
-        }
+        };
     </script>
 </body>
 </html>
