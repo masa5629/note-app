@@ -9,11 +9,11 @@
     <style>
         :root[data-theme="dark"] {
             --bg-color: #1e1e1e; --panel-bg: #2d2d2d; --panel-border: #444; --text-color: #fff; --text-secondary: #aaa; --input-bg: #222; --input-border: #555; --toolbar-bg: #333; --editor-bg: #252525;
-            --sunday-bg: #3a2222; --saturday-bg: #222b3a; --holiday-bg: #3a2e22; /* ダークモード時の土日祝の背景色 */
+            --sunday-bg: #3b2323 !important; --saturday-bg: #232b3b !important; --holiday-bg: #3b3023 !important;
         }
         :root[data-theme="light"] {
             --bg-color: #f4f6f9; --panel-bg: #ffffff; --panel-border: #ccc; --text-color: #212529; --text-secondary: #6c757d; --input-bg: #ffffff; --input-border: #ced4da; --toolbar-bg: #e9ecef; --editor-bg: #ffffff;
-            --sunday-bg: #fdf2f2; --saturday-bg: #f2f7fd; --holiday-bg: #fef6ed; /* ライトモード時の土日祝の背景色 */
+            --sunday-bg: #fae8e8 !important; --saturday-bg: #e8f0fe !important; --holiday-bg: #faefe3 !important;
         }
         body { font-family: sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; transition: background 0.3s, color 0.3s; }
         .main-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--panel-border); padding-bottom: 10px; align-items: center; }
@@ -30,7 +30,7 @@
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; }
         .calendar-header-cell { text-align: center; font-weight: bold; padding: 8px; background: var(--toolbar-bg); border-radius: 4px; font-size: 0.9em; }
         
-        /* カレンダーセルの曜日別背景色 */
+        /* カレンダーセルの曜日別背景色（強制適用） */
         .calendar-cell { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 6px; min-height: 110px; padding: 6px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
         .calendar-cell.cell-sunday { background-color: var(--sunday-bg); }
         .calendar-cell.cell-saturday { background-color: var(--saturday-bg); }
@@ -41,7 +41,7 @@
         .cal-input { width: 100%; background: var(--bg-color); border: 1px solid var(--input-border); color: var(--text-color); padding: 2px 4px; font-size: 0.8em; border-radius: 3px; margin-bottom: 2px; box-sizing: border-box; }
         .jump-btn { font-size: 0.7em; background: #007bff; color: white; border: none; border-radius: 3px; padding: 1px 4px; cursor: pointer; margin-top: 2px; align-self: flex-end; }
         
-        /* 横スライドカードの曜日別背景色 */
+        /* 横スライドカードの曜日別背景色（強制適用） */
         .schedule-box { background: var(--panel-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--panel-border); min-width: 380px; flex: 0 0 auto; }
         .schedule-box.box-sunday { background-color: var(--sunday-bg); }
         .schedule-box.box-saturday { background-color: var(--saturday-bg); }
@@ -193,6 +193,7 @@
                 html.setAttribute('data-theme', 'dark');
                 btn.textContent = "🌙";
             }
+            renderSchedules();
         }
 
         function switchMainTab(tabName) {
