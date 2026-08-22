@@ -354,13 +354,6 @@
             <button class="btn" id="btn-mode-slide" onclick="switchScheduleMode('slide')">4ヶ月横スライド</button>
             <button class="btn btn-secondary" id="btn-mode-month" onclick="switchScheduleMode('month')">ひと月ごとカレンダー表示</button>
             
-            <!-- Googleカレンダー同期用コントロール -->
-            <div style="display: flex; gap: 5px; align-items: center; margin-left: 20px; background: var(--input-bg); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--input-border);">
-                <span style="font-size: 0.85em;">Googleカレンダー(iCal):</span>
-                <input type="text" id="gcal-url-input" placeholder="非公開 iCal URLを貼り付け" style="width: 220px; font-size: 0.8em; padding: 3px;">
-                <button class="btn" style="font-size: 0.8em; padding: 4px 8px; background: #28a745;" onclick="syncGoogleCalendar()">🔄 同期</button>
-            </div>
-
             <div id="slide-range-wrapper" class="date-range-wrapper">
                 <label>範囲:</label>
                 <input type="date" id="range-start" onchange="renderSchedules()">
@@ -419,7 +412,6 @@
         let currentScheduleMode = 'slide'; 
         let allScheduleDays = [];   
         let temporarySavedSchedules = {}; 
-        let gcalEventsData = {}; 
 
         function getJapaneseHolidayName(d) {
             const y = d.getFullYear();
@@ -466,7 +458,7 @@
             const startDate = new Date();
             const dayNames = ["日", "月", "火", "水", "木", "金", "土"];
             
-            for (let i = 0; i < 365; i++) { // 表示日数を1年に拡大
+            for (let i = 0; i < 365; i++) {
                 const targetDate = new Date();
                 targetDate.setDate(startDate.getDate() + i);
 
@@ -542,36 +534,6 @@
                     temporarySavedSchedules[dateKey].company = cell.querySelector('.cal-company').value;
                     temporarySavedSchedules[dateKey].home = cell.querySelector('.cal-home').value;
                 });
-            }
-        }
-
-        function syncGoogleCalendar() {
-            const urlInput = document.getElementById('gcal-url-input').value.trim();
-            if (!urlInput) {
-                alert("Googleカレンダーの非公開 iCal URLを入力してください。");
-                return;
-            }
-
-            if (window.pywebview) {
-                window.pywebview.api.fetch_gcal_ics(urlInput).then(res => {
-                    if (res.status === 'success') {
-                        gcalEventsData = res.events;
-                        
-                        let count = 0;
-                        for (const dateKey in gcalEventsData) {
-                            if (!temporarySavedSchedules[dateKey]) temporarySavedSchedules[dateKey] = {};
-                            // Googleカレンダーの予定を会社予定に反映
-                            temporarySavedSchedules[dateKey].company = gcalEventsData[dateKey].join(', ');
-                            count++;
-                        }
-                        renderSchedules();
-                        alert(`Googleカレンダーから予定を同期しました！（反映対象の日付数: ${count}日）`);
-                    } else {
-                        alert("同期に失敗しました: " + res.message);
-                    }
-                });
-            } else {
-                alert("pywebview環境でのみ動作します。");
             }
         }
 
@@ -991,23 +953,47 @@
                 });
             } else {
                 localStorage.setItem('app_data', JSON.stringify(data));
-                alert('保存しました');
+                alert('ブラウザに保存しました！');
             }
         }
 
-        window.addEventListener('pywebviewready', function() {
-            initScheduleData();
-            window.pywebview.api.load_app_data().then(data => {
-                if (data && data.schedules) temporarySavedSchedules = data.schedules;
-                renderSchedules(); 
-                if (data && data.cards && data.cards.length > 0) {
-                    data.cards.forEach(c => addNewCard(c.title, c.content));
+        function loadAppData() {
+            if (window.pywebview) {
+                window.pywebview.api.load_app_data().then(data => {
+                    processLoadedData(data);
+                });
+            } else {
+                const saved = localStorage.getItem('app_data');
+                if (saved) {
+                    try {
+                        processLoadedData(JSON.parse(saved));
+                    } catch(e) {
+                        processLoadedData(null);
+                    }
                 } else {
-                    addNewCard("学習ノート 1", "例: <span class='mask'>暗記項目</span>");
+                    processLoadedData(null);
                 }
-                setTimeout(updateRelationLines, 200);
-            });
-        });
+            }
+        }
+
+        function processLoadedData(data) {
+            initScheduleData();
+            if (data && data.schedules) temporarySavedSchedules = data.schedules;
+            renderSchedules(); 
+            if (data && data.cards && data.cards.length > 0) {
+                data.cards.forEach(c => addNewCard(c.title, c.content));
+            } else {
+                addNewCard("学習ノート 1", "例: <span class='mask'>暗記項目</span>");
+            }
+            setTimeout(updateRelationLines, 200);
+        }
+
+        // 通常のブラウザでもpywebview環境でも確実に起動するように修正
+        if (window.pywebview) {
+            window.addEventListener('pywebviewready', loadAppData);
+        } else {
+            window.addEventListener('DOMContentLoaded', loadAppData);
+        }
     </script>
 </body>
 </html>
