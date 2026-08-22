@@ -68,16 +68,21 @@
         .mask-toolbar { display: flex; flex-wrap: wrap; gap: 6px; background: var(--input-bg); padding: 5px; border-radius: 4px; border: 1px solid var(--panel-border); }
         .btn-action { background: var(--toolbar-bg); color: var(--text-color); border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 0.8em; }
         .btn-action:hover { opacity: 0.8; }
-        .btn-action.active-link { background: #ffc107; color: black; font-weight: bold; }
 
         .quill-editor-container { flex-grow: 1; display: flex; flex-direction: column; }
         .ql-container { flex-grow: 1; min-height: 140px; color: var(--text-color); border-color: var(--panel-border); background: var(--editor-bg); }
         .ql-toolbar { border-color: var(--panel-border); background: var(--toolbar-bg); }
 
-        /* Quill内のカスタム装飾スタイル */
+        /* Quill内のカラー・背景色選択肢を見やすくするスタイル */
+        .ql-snow .ql-picker.ql-color .ql-picker-options [data-value="red"] { background-color: red; }
+        .ql-snow .ql-picker.ql-color .ql-picker-options [data-value="#e60000"] { background-color: #e60000; }
+        .ql-snow .ql-picker.ql-color .ql-picker-options [data-value="#0066cc"] { background-color: #0066cc; }
+        .ql-snow .ql-picker.ql-color .ql-picker-options [data-value="#009900"] { background-color: #009900; }
+        .ql-snow .ql-picker.ql-color .ql-picker-options [data-value="#ff6600"] { background-color: #ff6600; }
+
+        /* カスタム装飾スタイル */
         .ql-editor .mask { background-color: black !important; color: black !important; cursor: pointer; user-select: none; border-radius: 2px; }
         .ql-editor .mask.revealed { background-color: #333 !important; color: #fff !important; }
-        .ql-editor .linked-word { border-bottom: 2px dashed #ffc107; color: #ffc107; padding: 0 2px; }
         
         .ql-editor .correction-wrapper { display: inline-flex; flex-direction: column; align-items: center; vertical-align: bottom; margin: 0 3px; }
         .ql-editor .strike-text { text-decoration: line-through double red; color: #aaa; }
@@ -211,7 +216,6 @@
             } else {
                 document.querySelector('.main-tabs button:nth-child(2)').classList.add('active');
                 document.getElementById('tab-notes').classList.add('active');
-                setTimeout(updateRelationLines, 50);
             }
         }
 
@@ -406,7 +410,7 @@
             }
         }
 
-        // Quill カスタムBlot登録（マスク、訂正）
+        // Quill カスタムBlot（マスク、訂正）
         const Inline = Quill.import('blots/inline');
         
         class MaskBlot extends Inline {
@@ -457,11 +461,11 @@
             `;
             container.appendChild(card);
             
-            // 色変え・マーカー用のツールバー設定
+            // 文字の色変え・背景色マーカーを確実に有効にしたツールバー
             const toolbarOptions = [
                 ['bold', 'italic', 'underline', 'strike'],
-                [{ 'color': ['#000000', '#e60000', '#0066cc', '#009900', '#990099', '#ff6600', false] }],
-                [{ 'background': ['#ffff00', '#00ff00', '#00ffff', '#ff99ff', '#ff9999', false] }],
+                [{ 'color': ['#000000', '#e60000', '#0066cc', '#009900', '#990099', '#ff6600'] }],
+                [{ 'background': ['#ffff00', '#00ff00', '#00ffff', '#ff99ff', '#ff9999'] }],
                 ['image'],
                 [{ 'header': [1, 2, false] }],
                 ['clean']
@@ -482,7 +486,7 @@
 
             cards.push({ cardElement: card, titleInput: card.querySelector('.card-title'), quill: quill });
 
-            // マスクボタン
+            // マスク機能
             card.querySelector('.btn-apply-mask').addEventListener('click', () => {
                 const r = quill.getSelection(); if (r && r.length > 0) quill.formatText(r.index, r.length, 'mask', true);
             });
@@ -490,19 +494,19 @@
                 const r = quill.getSelection(); if (r && r.length > 0) quill.formatText(r.index, r.length, 'mask', false);
             });
 
-            // 訂正ボタン
+            // 訂正機能
             card.querySelector('.btn-correct').addEventListener('click', () => {
                 const r = quill.getSelection();
                 if (!r || r.length === 0) return alert("訂正するテキストを選択してください。");
                 const oldText = quill.getText(r.index, r.length);
-                const newText = prompt(`「${oldText}」に対する正しい内容を入力：`, "");
+                const newText = prompt(`「${oldText}」に対する正しい内容（朱字）を入力：`, "");
                 if (newText !== null) {
                     quill.deleteText(r.index, r.length);
                     quill.insertEmbed(r.index, 'correction', { oldText: oldText, newText: newText }, Quill.sources.USER);
                 }
             });
 
-            // 訂正解除ボタン
+            // 訂正解除機能
             card.querySelector('.btn-remove-correct').addEventListener('click', () => {
                 const r = quill.getSelection();
                 if (!r) return;
@@ -522,8 +526,6 @@
                 cards = cards.filter(c => c.cardElement !== card);
             });
         }
-
-        function updateRelationLines() {}
 
         window.saveAllData = async function() {
             captureCurrentInputs();
