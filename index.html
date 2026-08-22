@@ -2,7 +2,7 @@
 <html lang="ja" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>学習用カードノートアプリ (クラウド同期版)</title>
+    <title>学習用カードノートアプリ (完全版)</title>
     
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
 
@@ -30,7 +30,6 @@
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; }
         .calendar-header-cell { text-align: center; font-weight: bold; padding: 8px; background: var(--toolbar-bg); border-radius: 4px; font-size: 0.9em; }
         
-        /* カレンダーセルの曜日別背景色（強制適用） */
         .calendar-cell { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 6px; min-height: 110px; padding: 6px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
         .calendar-cell.cell-sunday { background-color: var(--sunday-bg); }
         .calendar-cell.cell-saturday { background-color: var(--saturday-bg); }
@@ -41,7 +40,6 @@
         .cal-input { width: 100%; background: var(--bg-color); border: 1px solid var(--input-border); color: var(--text-color); padding: 2px 4px; font-size: 0.8em; border-radius: 3px; margin-bottom: 2px; box-sizing: border-box; }
         .jump-btn { font-size: 0.7em; background: #007bff; color: white; border: none; border-radius: 3px; padding: 1px 4px; cursor: pointer; margin-top: 2px; align-self: flex-end; }
         
-        /* 横スライドカードの曜日別背景色（強制適用） */
         .schedule-box { background: var(--panel-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--panel-border); min-width: 380px; flex: 0 0 auto; }
         .schedule-box.box-sunday { background-color: var(--sunday-bg); }
         .schedule-box.box-saturday { background-color: var(--saturday-bg); }
@@ -57,21 +55,34 @@
         th, td { border: 1px solid var(--panel-border); padding: 6px; text-align: center; font-size: 0.9em; }
         th { background: var(--toolbar-bg); }
         input[type="text"] { width: 95%; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-color); padding: 4px; border-radius: 3px; }
+        
         .notes-area-wrapper { position: relative; }
         .cards-container { display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-start; position: relative; z-index: 1; }
         #relation-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+        
         .card { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 10px; position: relative; resize: both; overflow: auto; width: 400px; min-width: 340px; min-height: 280px; }
         .card-header { display: flex; align-items: center; gap: 10px; }
         .card-title { font-weight: bold; font-size: 1.1em; border: none; border-bottom: 1px solid var(--panel-border); background: transparent; color: var(--text-color); width: 100%; padding: 5px; }
         .btn-delete { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; font-size: 0.8em; flex-shrink: 0; }
+        
         .mask-toolbar { display: flex; flex-wrap: wrap; gap: 6px; background: var(--input-bg); padding: 5px; border-radius: 4px; border: 1px solid var(--panel-border); }
         .btn-action { background: var(--toolbar-bg); color: var(--text-color); border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 0.8em; }
+        .btn-action:hover { opacity: 0.8; }
         .btn-action.active-link { background: #ffc107; color: black; font-weight: bold; }
+
+        .quill-editor-container { flex-grow: 1; display: flex; flex-direction: column; }
         .ql-container { flex-grow: 1; min-height: 140px; color: var(--text-color); border-color: var(--panel-border); background: var(--editor-bg); }
         .ql-toolbar { border-color: var(--panel-border); background: var(--toolbar-bg); }
+
+        /* Quill内のカスタム装飾スタイル */
         .ql-editor .mask { background-color: black !important; color: black !important; cursor: pointer; user-select: none; border-radius: 2px; }
         .ql-editor .mask.revealed { background-color: #333 !important; color: #fff !important; }
         .ql-editor .linked-word { border-bottom: 2px dashed #ffc107; color: #ffc107; padding: 0 2px; }
+        
+        .ql-editor .correction-wrapper { display: inline-flex; flex-direction: column; align-items: center; vertical-align: bottom; margin: 0 3px; }
+        .ql-editor .strike-text { text-decoration: line-through double red; color: #aaa; }
+        .ql-editor .correct-text { color: #ff4d4d; font-weight: bold; font-size: 0.9em; line-height: 1em; }
+
         .btn { background: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn:hover { background: #0056b3; }
         .btn-secondary { background: #6c757d; }
@@ -129,7 +140,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
-        // ★★★ ご自身のFirebase設定に書き換えてください ★★★
         const firebaseConfig = {
             apiKey: "AIzaSyCdaWFXOfeCJwr2u-MGNyja3yUuoVoLplA",
             authDomain: "note-app-fa29b.firebaseapp.com",
@@ -157,20 +167,15 @@
         window.cloudLoad = async function() {
             try {
                 const docSnap = await getDoc(doc(db, "appData", "mainDoc"));
-                if (docSnap.exists()) {
-                    return docSnap.data();
-                } else {
-                    return null;
-                }
+                if (docSnap.exists()) return docSnap.data();
+                return null;
             } catch (e) {
                 console.error("読み込みエラー: ", e);
                 return null;
             }
         };
 
-        if (window.initCloudApp) {
-            window.initCloudApp();
-        }
+        if (window.initCloudApp) window.initCloudApp();
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
@@ -401,36 +406,117 @@
             }
         }
 
+        // Quill カスタムBlot登録（マスク、訂正）
         const Inline = Quill.import('blots/inline');
-        class MaskBlot extends Inline { static create() { let n = super.create(); n.setAttribute('class', 'mask'); return n; } static formats(n) { return n.getAttribute('class')?.includes('mask'); } }
+        
+        class MaskBlot extends Inline {
+            static create() { let n = super.create(); n.setAttribute('class', 'mask'); return n; }
+            static formats(n) { return n.getAttribute('class')?.includes('mask'); }
+        }
         MaskBlot.blotName = 'mask'; MaskBlot.tagName = 'span'; Quill.register(MaskBlot, true);
+
+        class CorrectionBlot extends Inline {
+            static create(value) {
+                let node = super.create();
+                node.setAttribute('class', 'correction-wrapper');
+                let strike = document.createElement('span');
+                strike.setAttribute('class', 'strike-text');
+                strike.innerText = value.oldText;
+                let correct = document.createElement('span');
+                correct.setAttribute('class', 'correct-text');
+                correct.innerText = value.newText;
+                node.appendChild(strike);
+                node.appendChild(correct);
+                return node;
+            }
+            static formats(node) {
+                let strike = node.querySelector('.strike-text');
+                let correct = node.querySelector('.correct-text');
+                return { oldText: strike ? strike.innerText : '', newText: correct ? correct.innerText : '' };
+            }
+        }
+        CorrectionBlot.blotName = 'correction'; CorrectionBlot.tagName = 'span'; Quill.register(CorrectionBlot, true);
+
 
         function addNewCard(title = "", contentHtml = "") {
             const container = document.getElementById('cards-container');
             const card = document.createElement('div'); card.className = 'card';
+            
             card.innerHTML = `
                 <div class="card-header">
                     <input type="text" class="card-title" placeholder="タイトル" value="${title}">
-                    <button class="btn-delete">🗑️ 削除</button>
+                    <button class="btn-delete" title="削除">🗑️ 削除</button>
                 </div>
                 <div class="mask-toolbar">
                     <button class="btn-action btn-apply-mask">🔒 マスク</button>
                     <button class="btn-action btn-remove-mask">🔓 解除</button>
+                    <button class="btn-action btn-correct" style="color:#ff4d4d; font-weight:bold;">🖋️ 訂正</button>
+                    <button class="btn-action btn-remove-correct">↩️ 訂正解除</button>
                 </div>
                 <div class="quill-editor-container"></div>
             `;
             container.appendChild(card);
-            const quill = new Quill(card.querySelector('.quill-editor-container'), { theme: 'snow' });
+            
+            // 色変え・マーカー用のツールバー設定
+            const toolbarOptions = [
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'color': ['#000000', '#e60000', '#0066cc', '#009900', '#990099', '#ff6600', false] }],
+                [{ 'background': ['#ffff00', '#00ff00', '#00ffff', '#ff99ff', '#ff9999', false] }],
+                ['image'],
+                [{ 'header': [1, 2, false] }],
+                ['clean']
+            ];
+
+            const quill = new Quill(card.querySelector('.quill-editor-container'), {
+                modules: { toolbar: toolbarOptions },
+                theme: 'snow'
+            });
             if (contentHtml) quill.clipboard.dangerouslyPasteHTML(contentHtml);
+
+            quill.root.addEventListener('click', function(e) {
+                if (e.target.classList.contains('mask') || e.target.closest('.mask')) {
+                    const maskEl = e.target.classList.contains('mask') ? e.target : e.target.closest('.mask');
+                    maskEl.classList.toggle('revealed');
+                }
+            });
 
             cards.push({ cardElement: card, titleInput: card.querySelector('.card-title'), quill: quill });
 
+            // マスクボタン
             card.querySelector('.btn-apply-mask').addEventListener('click', () => {
                 const r = quill.getSelection(); if (r && r.length > 0) quill.formatText(r.index, r.length, 'mask', true);
             });
             card.querySelector('.btn-remove-mask').addEventListener('click', () => {
                 const r = quill.getSelection(); if (r && r.length > 0) quill.formatText(r.index, r.length, 'mask', false);
             });
+
+            // 訂正ボタン
+            card.querySelector('.btn-correct').addEventListener('click', () => {
+                const r = quill.getSelection();
+                if (!r || r.length === 0) return alert("訂正するテキストを選択してください。");
+                const oldText = quill.getText(r.index, r.length);
+                const newText = prompt(`「${oldText}」に対する正しい内容を入力：`, "");
+                if (newText !== null) {
+                    quill.deleteText(r.index, r.length);
+                    quill.insertEmbed(r.index, 'correction', { oldText: oldText, newText: newText }, Quill.sources.USER);
+                }
+            });
+
+            // 訂正解除ボタン
+            card.querySelector('.btn-remove-correct').addEventListener('click', () => {
+                const r = quill.getSelection();
+                if (!r) return;
+                const [leaf] = quill.getLeaf(r.index);
+                if (leaf && leaf.domNode.parentNode.classList.contains('correction-wrapper')) {
+                    const wrapper = leaf.domNode.parentNode;
+                    const strikeSpan = wrapper.querySelector('.strike-text');
+                    const originalText = strikeSpan ? strikeSpan.innerText : "";
+                    const index = quill.findIndex(wrapper);
+                    quill.deleteText(index, 1);
+                    quill.insertText(index, originalText);
+                }
+            });
+
             card.querySelector('.btn-delete').addEventListener('click', () => {
                 container.removeChild(card);
                 cards = cards.filter(c => c.cardElement !== card);
