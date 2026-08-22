@@ -9,9 +9,11 @@
     <style>
         :root[data-theme="dark"] {
             --bg-color: #1e1e1e; --panel-bg: #2d2d2d; --panel-border: #444; --text-color: #fff; --text-secondary: #aaa; --input-bg: #222; --input-border: #555; --toolbar-bg: #333; --editor-bg: #252525;
+            --sunday-bg: #3a2222; --saturday-bg: #222b3a; --holiday-bg: #3a2e22; /* ダークモード時の土日祝の背景色 */
         }
         :root[data-theme="light"] {
             --bg-color: #f4f6f9; --panel-bg: #ffffff; --panel-border: #ccc; --text-color: #212529; --text-secondary: #6c757d; --input-bg: #ffffff; --input-border: #ced4da; --toolbar-bg: #e9ecef; --editor-bg: #ffffff;
+            --sunday-bg: #fdf2f2; --saturday-bg: #f2f7fd; --holiday-bg: #fef6ed; /* ライトモード時の土日祝の背景色 */
         }
         body { font-family: sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; transition: background 0.3s, color 0.3s; }
         .main-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--panel-border); padding-bottom: 10px; align-items: center; }
@@ -27,17 +29,30 @@
         .calendar-view-container { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 8px; padding: 15px; margin-bottom: 20px; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; }
         .calendar-header-cell { text-align: center; font-weight: bold; padding: 8px; background: var(--toolbar-bg); border-radius: 4px; font-size: 0.9em; }
-        .calendar-cell { background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 6px; min-height: 110px; padding: 6px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+        
+        /* カレンダーセルの曜日別背景色 */
+        .calendar-cell { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 6px; min-height: 110px; padding: 6px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+        .calendar-cell.cell-sunday { background-color: var(--sunday-bg); }
+        .calendar-cell.cell-saturday { background-color: var(--saturday-bg); }
+        .calendar-cell.cell-holiday { background-color: var(--holiday-bg); }
         .calendar-cell.empty { background: transparent; border: none; }
+
         .cal-date-num { font-weight: bold; font-size: 0.9em; display: inline-block; padding: 2px 6px; border-radius: 4px; margin-bottom: 4px; }
         .cal-input { width: 100%; background: var(--bg-color); border: 1px solid var(--input-border); color: var(--text-color); padding: 2px 4px; font-size: 0.8em; border-radius: 3px; margin-bottom: 2px; box-sizing: border-box; }
         .jump-btn { font-size: 0.7em; background: #007bff; color: white; border: none; border-radius: 3px; padding: 1px 4px; cursor: pointer; margin-top: 2px; align-self: flex-end; }
+        
+        /* 横スライドカードの曜日別背景色 */
         .schedule-box { background: var(--panel-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--panel-border); min-width: 380px; flex: 0 0 auto; }
+        .schedule-box.box-sunday { background-color: var(--sunday-bg); }
+        .schedule-box.box-saturday { background-color: var(--saturday-bg); }
+        .schedule-box.box-holiday { background-color: var(--holiday-bg); }
+
         .date-display { font-weight: bold; margin-bottom: 10px; padding: 5px 10px; border-radius: 4px; display: inline-block; }
-        .day-saturday { background-color: #cce5ff; color: blue; }
-        .day-sunday { background-color: #ffcccc; color: red; }
-        .day-holiday { background-color: #ffe5cc; color: #ff6600; }
-        .day-weekday { background-color: #e2e3e5; color: black; }
+        .day-saturday { color: #4dabf7; }
+        .day-sunday { color: #ff6b6b; }
+        .day-holiday { color: #ffa94d; }
+        .day-weekday { color: var(--text-color); }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid var(--panel-border); padding: 6px; text-align: center; font-size: 0.9em; }
         th { background: var(--toolbar-bg); }
@@ -114,6 +129,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
+        // ★★★ ご自身のFirebase設定に書き換えてください ★★★
         const firebaseConfig = {
             apiKey: "AIzaSyCdaWFXOfeCJwr2u-MGNyja3yUuoVoLplA",
             authDomain: "note-app-fa29b.firebaseapp.com",
@@ -294,16 +310,16 @@
                 if (startVal && endVal) daysToRender = allScheduleDays.filter(d => d.dateKey >= startVal && d.dateKey <= endVal);
 
                 daysToRender.forEach(d => {
-                    let classStyle = "day-weekday", displayStr = d.dayStr;
-                    if (d.holiday) { classStyle = "day-holiday"; displayStr += ` - ${d.holiday}`; }
-                    else if (d.dayOfWeek === 0) classStyle = "day-sunday";
-                    else if (d.dayOfWeek === 6) classStyle = "day-saturday";
+                    let boxClass = "schedule-box", dateClass = "day-weekday", displayStr = d.dayStr;
+                    if (d.holiday) { boxClass += " box-holiday"; dateClass = "day-holiday"; displayStr += ` - ${d.holiday}`; }
+                    else if (d.dayOfWeek === 0) { boxClass += " box-sunday"; dateClass = "day-sunday"; }
+                    else if (d.dayOfWeek === 6) { boxClass += " box-saturday"; dateClass = "day-saturday"; }
 
                     const box = document.createElement('div');
-                    box.className = 'schedule-box';
+                    box.className = boxClass;
                     box.dataset.dateKey = d.dateKey;
                     box.innerHTML = `
-                        <div class="date-display ${classStyle}">${displayStr}</div>
+                        <div class="date-display ${dateClass}">${displayStr}</div>
                         <div style="margin-top: 8px; font-size: 0.9em;">
                             <label>会社: <input type="text" class="plan-company" placeholder="会社の予定"></label>
                             <label style="margin-top: 5px; display:block;">家: &nbsp;&nbsp;&nbsp;&nbsp;<input type="text" class="plan-home" placeholder="家の予定"></label>
@@ -349,11 +365,21 @@
                     const mmStr = String(targetM).padStart(2, '0'), ddStr = String(day).padStart(2, '0');
                     const dateKey = `${targetY}-${mmStr}-${ddStr}`;
                     const cellDate = new Date(targetY, targetM - 1, day);
+                    const dayOfWeek = cellDate.getDay();
                     const holiday = getJapaneseHolidayName(cellDate);
-                    const cell = document.createElement('div'); cell.className = 'calendar-cell'; cell.dataset.dateKey = dateKey;
+
+                    let cellClass = "calendar-cell", numStyle = "day-weekday";
+                    if (holiday) { cellClass += " cell-holiday"; numStyle = "day-holiday"; }
+                    else if (dayOfWeek === 0) { cellClass += " cell-sunday"; numStyle = "day-sunday"; }
+                    else if (dayOfWeek === 6) { cellClass += " cell-saturday"; numStyle = "day-saturday"; }
+
+                    const cell = document.createElement('div'); 
+                    cell.className = cellClass; 
+                    cell.dataset.dateKey = dateKey;
+
                     const saved = temporarySavedSchedules[dateKey] || {};
                     cell.innerHTML = `
-                        <div><span class="cal-date-num">${day} ${holiday ? '('+holiday+')' : ''}</span></div>
+                        <div><span class="cal-date-num ${numStyle}">${day} ${holiday ? '('+holiday+')' : ''}</span></div>
                         <div>
                             <input type="text" class="cal-input cal-company" placeholder="会社予定" value="${saved.company || ''}">
                             <input type="text" class="cal-input cal-home" placeholder="家予定" value="${saved.home || ''}">
