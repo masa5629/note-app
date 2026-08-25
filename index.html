@@ -819,6 +819,19 @@
       font-size: 13px;
     }
 
+    /* インポートモーダル内専用スタイル */
+    .import-textarea {
+      width: 100%;
+      height: 220px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 13px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: vertical;
+      margin-bottom: 12px;
+    }
+
     /* マトリックス表：日付・曜日列を先頭に固定（スライド可能） */
     .matrix-table-container {
       width: 100%;
@@ -838,8 +851,8 @@
       border: 1px solid #cfd8dc;
       padding: 6px;
       vertical-align: top;
-      width: 130px;
-      min-width: 130px;
+      width: 200px;
+      min-width: 200px;
     }
 
     .matrix-table th {
@@ -989,6 +1002,26 @@
     <div id="base-canvas" contenteditable="true" spellcheck="false"></div>
   </div>
 
+  <!-- テキスト一括取込用モーダル -->
+  <div class="modal-overlay" id="text-import-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📋 予定テキストを一括取込</h2>
+        <button class="modal-close-btn" id="close-text-import-btn">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 8px; font-size: 13px; color: #666;">
+          以下の形式でテキストを貼り付けてください（例: <code>8/20 test</code>）。「予定(仕事)」「予定(家)」「書籍・サイト1〜4」のブロックごとに自動で日程に組み込まれます。
+        </p>
+        <textarea id="import-schedule-textarea" class="import-textarea" placeholder="予定(仕事)&#10;8/20 test&#10;&#10;予定(家)&#10;8/21 test&#10;&#10;書籍・サイト２&#10;8/23 test3"></textarea>
+        <div style="display:flex; justify-content: flex-end; gap: 8px;">
+          <button class="btn" id="cancel-text-import-btn">キャンセル</button>
+          <button class="btn btn-primary" id="execute-text-import-btn">一括反映する</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 機能説明モーダル -->
   <div class="modal-overlay" id="help-modal">
     <div class="modal-content">
@@ -997,24 +1030,19 @@
         <button class="modal-close-btn" id="close-help-btn" title="閉じる">✕</button>
       </div>
       <div class="modal-body">
-        <h3>📅 スケジュールマトリックス ＆ 15日スライド</h3>
+        <h3>📅 スケジュールマトリックス ＆ テキスト一括取込</h3>
         <ul>
-          <li><b>15日間の表示 ＆ 横スライド</b>: スケジュールタブを開くと、初期表示として15日間のスケジュール表が展開され、横にスクロールして未来の日付を確認できます。</li>
-          <li><b>左端列の固定</b>: 横スクロールしても、「日付」「曜日」「予定(仕事)」「予定(家)」「書籍・サイト1〜4」のラベル列は左端に固定されるため、項目名が見失われません[cite: 2]。</li>
-          <li><b>タスク管理（4行）</b>: 予定(仕事)、予定(家)、および「書籍・サイト1〜4」のグリッド管理、翌日スライド機能がご利用いただけます[cite: 2]。</li>
-        </ul>
-
-        <h3>📌 基本操作・ノート機能</h3>
-        <ul>
-          <li><b>自由入力 &amp; スクロール</b>: 背景のドット領域をクリックして通常のノートとして直接テキスト入力できます[cite: 2]。スクロールバーが自動で適切に短くなります[cite: 2]。</li>
-          <li><b>ページ管理</b>: 上部タブの「＋ ページ追加」で複数ページを挿入・切り替え・削除できます[cite: 2]。</li>
+          <li><b>期間表示 (8/20 〜 11/30)</b>: 初期表示で長期間に対応。横にスムーズにスライドして未来の日付を確認できます。</li>
+          <li><b>行頭の固定</b>: 横スクロールしても「日付」「曜日」「予定(仕事)」「予定(家)」などの行頭ラベルは左側にピタッと固定されます。</li>
+          <li><b>予定記載欄の幅拡張</b>: 各日のセル幅を広めに確保しているため、ゆったりとテキストを書き込めます。</li>
+          <li><b>📋 予定テキストを一括取込</b>: 「予定(仕事)」「予定(家)」「書籍・サイト」などのセクションと「8/20 test」のような日付テキストを貼り付けるだけで、一瞬でスケジュールへ自動反映できます。</li>
         </ul>
       </div>
     </div>
   </div>
 
   <script>
-    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V8';
+    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V9';
 
     const NOTE_THEMES = {
       yellow: { bg: '#fffdf0', header: '#fff3a8', border: '#e0d080', text: '#5d5218' },
@@ -1052,11 +1080,11 @@
     let autoSaveTimer = null;
     let areAllMasksRevealed = false;
 
-    // スケジュールマトリックスデータ（初期表示を約15日間に設定）
+    // スケジュールマトリックスデータ（8/20 〜 11/30 初期設定）
     let scheduleData = {
       goal: '応用情報技術者試験 絶対合格！！',
       startDate: '2026-08-20',
-      endDate: '2026-09-03', // 15日間
+      endDate: '2026-11-30',
       books: ['キタミ式イラストIT塾', '科目B 重点対策', '過去問道場', '参考書'],
       cells: {}
     };
@@ -1088,6 +1116,12 @@
     const openHelpBtn = document.getElementById('open-help-btn');
     const closeHelpBtn = document.getElementById('close-help-btn');
 
+    const textImportModal = document.getElementById('text-import-modal');
+    const closeTextImportBtn = document.getElementById('close-text-import-btn');
+    const cancelTextImportBtn = document.getElementById('cancel-text-import-btn');
+    const executeTextImportBtn = document.getElementById('execute-text-import-btn');
+    const importScheduleTextarea = document.getElementById('import-schedule-textarea');
+
     // --- スケジュールタブ専用マトリックスビュー生成 ---
     function renderSchedulePageContent() {
       let html = `
@@ -1105,8 +1139,7 @@
             <span>〜</span>
             <input type="date" id="matrix-end-date" value="${scheduleData.endDate}">
             <button class="btn btn-primary" id="matrix-update-btn">表示更新</button>
-            <button class="btn" id="matrix-3months-btn">今日から3ヶ月</button>
-            <button class="btn" id="matrix-15days-btn">15日間</button>
+            <button class="btn btn-success" id="open-text-import-modal-btn">📋 予定テキストを一括取込</button>
           </div>
 
           <!-- マトリックス表（左端固定・横スライド） -->
@@ -1144,42 +1177,99 @@
         });
       }
 
-      const btn3M = document.getElementById('matrix-3months-btn');
-      if (btn3M) {
-        btn3M.addEventListener('click', () => {
-          const today = new Date();
-          const startStr = today.toISOString().slice(0, 10);
-          const future = new Date(today);
-          future.setMonth(future.getMonth() + 3);
-          const endStr = future.toISOString().slice(0, 10);
-
-          scheduleData.startDate = startStr;
-          scheduleData.endDate = endStr;
-          renderPage('schedule-page');
-          triggerAutoSave();
-          showStatus('📅 今日から3ヶ月の期間に設定しました');
-        });
-      }
-
-      const btn15D = document.getElementById('matrix-15days-btn');
-      if (btn15D) {
-        btn15D.addEventListener('click', () => {
-          const today = new Date();
-          const startStr = today.toISOString().slice(0, 10);
-          const future = new Date(today);
-          future.setDate(future.getDate() + 14); // 15日間
-          const endStr = future.toISOString().slice(0, 10);
-
-          scheduleData.startDate = startStr;
-          scheduleData.endDate = endStr;
-          renderPage('schedule-page');
-          triggerAutoSave();
-          showStatus('📅 15日間の期間に設定しました');
+      const openImportModalBtn = document.getElementById('open-text-import-modal-btn');
+      if (openImportModalBtn) {
+        openImportModalBtn.addEventListener('click', () => {
+          textImportModal.style.display = 'flex';
         });
       }
 
       buildMatrixTable();
     }
+
+    // --- テキスト一括取込のパース処理 ---
+    function parseAndApplyScheduleText(rawText) {
+      const lines = rawText.split(/\r?\n/);
+      let currentSection = null; // 'work', 'home', または 'book_0' など
+
+      let currentYear = new Date().getFullYear();
+
+      for (let line of lines) {
+        line = line.trim();
+        if (!line) continue;
+
+        // セクション判定
+        if (line.includes('予定(仕事)') || line.includes('予定（仕事）') || line === '仕事予定') {
+          currentSection = 'work';
+          continue;
+        } else if (line.includes('予定(家)') || line.includes('予定（家）') || line === '家予定') {
+          currentSection = 'home';
+          continue;
+        } else if (line.includes('書籍・サイト１') || line.includes('書籍・サイト1')) {
+          currentSection = 'book_0';
+          continue;
+        } else if (line.includes('書籍・サイト２') || line.includes('書籍・サイト2')) {
+          currentSection = 'book_1';
+          continue;
+        } else if (line.includes('書籍・サイト３') || line.includes('書籍・サイト3')) {
+          currentSection = 'book_2';
+          continue;
+        } else if (line.includes('書籍・サイト４') || line.includes('書籍・サイト4')) {
+          currentSection = 'book_3';
+          continue;
+        }
+
+        // 日付形式チェック (例: "8/20 test" または "2026/8/20 test")
+        const datePattern = /^(\d{1,4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+(.+)$|^(\d{1,2})[\/\-](\d{1,2})\s+(.+)$/;
+        const match = line.match(datePattern);
+
+        if (match && currentSection) {
+          let y, m, d, textContent;
+          if (match[5]) {
+            // "8/20 test" 形式
+            y = currentYear;
+            m = match[5];
+            d = match[6];
+            textContent = match[7];
+          } else {
+            // "2026/8/20 test" または "2026-8-20 test" 形式
+            y = match[1];
+            m = match[2];
+            d = match[3];
+            textContent = match[4];
+          }
+
+          const mm = String(m).padStart(2, '0');
+          const dd = String(d).padStart(2, '0');
+          const dateStr = `${y}-${mm}-${dd}`;
+
+          if (!scheduleData.cells[dateStr]) scheduleData.cells[dateStr] = {};
+          const existing = scheduleData.cells[dateStr][currentSection] || '';
+          scheduleData.cells[dateStr][currentSection] = existing ? `${existing}\n${textContent}` : textContent;
+        }
+      }
+
+      buildMatrixTable();
+      triggerAutoSave();
+      textImportModal.style.display = 'none';
+      importScheduleTextarea.value = '';
+      showStatus('✨ スケジュールテキストを一括反映しました！');
+    }
+
+    executeTextImportBtn.addEventListener('click', () => {
+      const text = importScheduleTextarea.value;
+      if (!text.trim()) {
+        alert('テキストを入力してください。');
+        return;
+      }
+      parseAndApplyScheduleText(text);
+    });
+
+    closeTextImportBtn.addEventListener('click', () => { textImportModal.style.display = 'none'; });
+    cancelTextImportBtn.addEventListener('click', () => { textImportModal.style.display = 'none'; });
+    textImportModal.addEventListener('click', (e) => {
+      if (e.target === textImportModal) textImportModal.style.display = 'none';
+    });
 
     function buildMatrixTable() {
       const tableEl = document.getElementById('matrix-table-el');
@@ -1381,6 +1471,8 @@
     function loadSavedData() {
       const candidateKeys = [
         PERSISTENT_STORAGE_KEY,
+        'STICKY_NOTE_APP_DATA_SCHEDULE_V8',
+        'STICKY_NOTE_APP_DATA_SCHEDULE_V7',
         'STICKY_NOTE_APP_DATA_SCHEDULE_V6',
         'STICKY_NOTE_APP_DATA_SCHEDULE_V5',
         'STICKY_NOTE_APP_DATA_SCHEDULE_V4',
@@ -1538,6 +1630,7 @@
       }
       if (e.key === 'Escape') {
         if (helpModal.style.display === 'flex') closeHelp();
+        if (textImportModal.style.display === 'flex') textImportModal.style.display = 'none';
         if (isConnectMode) resetConnectMode();
       }
     });
