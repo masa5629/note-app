@@ -1011,9 +1011,9 @@
       </div>
       <div class="modal-body">
         <p style="margin-bottom: 8px; font-size: 13px; color: #666;">
-          以下の形式でテキストを貼り付けてください（例: <code>8/20 test</code>）。「予定(仕事)」「予定(家)」「書籍・サイト1〜4」のブロックごとに自動で日程に組み込まれます。
+          以下の形式でテキストを貼り付けてください（例: <code>8/20 test</code>、日付のみの下に複数行書く形式にも対応）。「予定(仕事)」「予定(家)」「書籍・サイト 1〜4」のブロックごとに自動で日程に組み込まれます。
         </p>
-        <textarea id="import-schedule-textarea" class="import-textarea" placeholder="予定(仕事)&#10;8/20 test&#10;&#10;予定(家)&#10;8/21 test&#10;&#10;書籍・サイト２&#10;8/23 test3"></textarea>
+        <textarea id="import-schedule-textarea" class="import-textarea" placeholder="予定(仕事)&#10;8/26 感動大学&#10;&#10;書籍・サイト 3&#10;8/28&#10;基礎理論 123&#10;基礎理論 123"></textarea>
         <div style="display:flex; justify-content: flex-end; gap: 8px;">
           <button class="btn" id="cancel-text-import-btn">キャンセル</button>
           <button class="btn btn-primary" id="execute-text-import-btn">一括反映する</button>
@@ -1034,15 +1034,15 @@
         <ul>
           <li><b>期間表示 (8/20 〜 11/30)</b>: 初期表示で長期間に対応。横にスムーズにスライドして未来の日付を確認できます。</li>
           <li><b>行頭の固定</b>: 横スクロールしても「日付」「曜日」「予定(仕事)」「予定(家)」などの行頭ラベルは左側にピタッと固定されます。</li>
-          <li><b>予定記載欄の幅拡張</b>: 各日のセル幅を広めに確保しているため、ゆったりとテキストを書き込めます。</li>
-          <li><b>📋 予定テキストを一括取込</b>: 「予定(仕事)」「予定(家)」「書籍・サイト」などのセクションと「8/20 test」のような日付テキストを貼り付けるだけで、一瞬でスケジュールへ自動反映できます。</li>
+          <li><b>予定記載欄の幅拡張</b>: 各日のセル幅（200px）を広めに確保しているため、ゆったりとテキストを書き込めます。</li>
+          <li><b>📋 予定テキストを一括取込</b>: 「予定(仕事)」「予定(家)」「書籍・サイト 3」などのセクション名の下に日付や複数行のテキストを貼り付けるだけで、一瞬でスケジュールへ自動反映できます。</li>
         </ul>
       </div>
     </div>
   </div>
 
   <script>
-    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V9';
+    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V10';
 
     const NOTE_THEMES = {
       yellow: { bg: '#fffdf0', header: '#fff3a8', border: '#e0d080', text: '#5d5218' },
@@ -1187,65 +1187,96 @@
       buildMatrixTable();
     }
 
-    // --- テキスト一括取込のパース処理 ---
+    // --- 強化版テキスト一括取込のパース処理 ---
     function parseAndApplyScheduleText(rawText) {
       const lines = rawText.split(/\r?\n/);
-      let currentSection = null; // 'work', 'home', または 'book_0' など
-
+      let currentSection = null; // 'work', 'home', 'book_0', 'book_1', 'book_2', 'book_3'
       let currentYear = new Date().getFullYear();
+      let activeDateStr = null;
 
-      for (let line of lines) {
-        line = line.trim();
-        if (!line) continue;
+      for (let rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line) {
+          activeDateStr = null;
+          continue;
+        }
 
         // セクション判定
         if (line.includes('予定(仕事)') || line.includes('予定（仕事）') || line === '仕事予定') {
           currentSection = 'work';
+          activeDateStr = null;
           continue;
         } else if (line.includes('予定(家)') || line.includes('予定（家）') || line === '家予定') {
           currentSection = 'home';
+          activeDateStr = null;
           continue;
-        } else if (line.includes('書籍・サイト１') || line.includes('書籍・サイト1')) {
-          currentSection = 'book_0';
-          continue;
-        } else if (line.includes('書籍・サイト２') || line.includes('書籍・サイト2')) {
-          currentSection = 'book_1';
-          continue;
-        } else if (line.includes('書籍・サイト３') || line.includes('書籍・サイト3')) {
-          currentSection = 'book_2';
-          continue;
-        } else if (line.includes('書籍・サイト４') || line.includes('書籍・サイト4')) {
-          currentSection = 'book_3';
+        } else {
+          // 書籍・サイトセクションの判定 (例: "書籍・サイト 3", "書籍・サイト３", "書籍・サイト3" など)
+          let matchedBook = false;
+          for (let i = 0; i < scheduleData.books.length; i++) {
+            const num = i + 1;
+            if (line.includes(`書籍・サイト ${num}`) || line.includes(`書籍・サイト${num}`) || line.includes(`書籍・サイト ${num}`) ||
+                line.includes(`書籍・サイト ３`)[0] === '書' && line.includes(String(num))) { // 簡易全半角対応
+              // より確実にマッチさせる
+              if (line.replace(/\s+/g, '').includes(`書籍・サイト${num}`) || line.replace(/\s+/g, '').includes(`書籍・サイト${['１','２','３','４'][i]}`)) {
+                currentSection = `book_${i}`;
+                activeDateStr = null;
+                matchedBook = true;
+                break;
+              }
+            }
+          }
+          if (matchedBook) continue;
+        }
+
+        // 日付単独の行かチェック (例: "8/28", "2026/8/28", "8-28")
+        const dateOnlyMatch = line.match(/^(\d{1,4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/) || line.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
+        if (dateOnlyMatch) {
+          if (dateOnlyMatch[3]) {
+            currentYear = dateOnlyMatch[1];
+            const m = String(dateOnlyMatch[2]).padStart(2, '0');
+            const d = String(dateOnlyMatch[3]).padStart(2, '0');
+            activeDateStr = `${currentYear}-${m}-${d}`;
+          } else {
+            const m = String(dateOnlyMatch[1]).padStart(2, '0');
+            const d = String(dateOnlyMatch[2]).padStart(2, '0');
+            activeDateStr = `${currentYear}-${m}-${d}`;
+          }
           continue;
         }
 
-        // 日付形式チェック (例: "8/20 test" または "2026/8/20 test")
-        const datePattern = /^(\d{1,4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+(.+)$|^(\d{1,2})[\/\-](\d{1,2})\s+(.+)$/;
-        const match = line.match(datePattern);
-
-        if (match && currentSection) {
+        // 日付＋内容が同じ行にある場合 (例: "8/26 感動大学")
+        const dateContentMatch = line.match(/^(\d{1,4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+(.+)$/) || line.match(/^(\d{1,2})[\/\-](\d{1,2})\s+(.+)$/);
+        if (dateContentMatch) {
           let y, m, d, textContent;
-          if (match[5]) {
-            // "8/20 test" 形式
-            y = currentYear;
-            m = match[5];
-            d = match[6];
-            textContent = match[7];
+          if (dateContentMatch[4]) {
+            y = dateOnlyMatch && dateOnlyMatch[3] ? dateContentMatch[1] : currentYear;
+            m = dateContentMatch[2];
+            d = dateContentMatch[3];
+            textContent = dateContentMatch[4];
           } else {
-            // "2026/8/20 test" または "2026-8-20 test" 形式
-            y = match[1];
-            m = match[2];
-            d = match[3];
-            textContent = match[4];
+            y = currentYear;
+            m = dateContentMatch[1];
+            d = dateContentMatch[2];
+            textContent = dateContentMatch[3];
           }
-
           const mm = String(m).padStart(2, '0');
           const dd = String(d).padStart(2, '0');
-          const dateStr = `${y}-${mm}-${dd}`;
+          activeDateStr = `${y}-${mm}-${dd}`;
 
-          if (!scheduleData.cells[dateStr]) scheduleData.cells[dateStr] = {};
-          const existing = scheduleData.cells[dateStr][currentSection] || '';
-          scheduleData.cells[dateStr][currentSection] = existing ? `${existing}\n${textContent}` : textContent;
+          if (currentSection && activeDateStr) {
+            if (!scheduleData.cells[activeDateStr]) scheduleData.cells[activeDateStr] = {};
+            const existing = scheduleData.cells[activeDateStr][currentSection] || '';
+            scheduleData.cells[activeDateStr][currentSection] = existing ? `${existing}\n${textContent}` : textContent;
+          }
+          continue;
+        }
+
+        // 上で日付を指定したあとに続く内容の行（書籍のタイトル複数行など）
+        if (activeDateStr && currentSection) {
+          if (!scheduleData.cells[activeDateStr]) scheduleData.cells[activeDateStr] = {};
+          const existing = scheduleData.cells[activeDateStr][currentSection] || '';
+          scheduleData.cells[activeDateStr][currentSection] = existing ? `${existing}\n${line}` : line;
         }
       }
 
@@ -1471,6 +1502,7 @@
     function loadSavedData() {
       const candidateKeys = [
         PERSISTENT_STORAGE_KEY,
+        'STICKY_NOTE_APP_DATA_SCHEDULE_V9',
         'STICKY_NOTE_APP_DATA_SCHEDULE_V8',
         'STICKY_NOTE_APP_DATA_SCHEDULE_V7',
         'STICKY_NOTE_APP_DATA_SCHEDULE_V6',
