@@ -1,743 +1,1347 @@
 <!DOCTYPE html>
-<html lang="ja" data-theme="dark">
+<html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>学習用カードノートアプリ (完全版)</title>
+  <meta charset="UTF-8">
+  <title>カード型ノート・高機能スケジュールアプリ</title>
+  <style>
+    :root {
+      --bg-color: #f7f9fa;
+      --card-bg: #ffffff;
+      --border-color: #e2e8f0;
+      --text-main: #2d3748;
+      --primary: #3182ce;
+      --primary-hover: #2b6cb0;
+      --accent-red: #e53e3e;
+      --accent-blue: #3182ce;
+      --accent-orange: #dd6b20;
+      --line-color: #3182ce;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ツールバー */
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 100;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: #ffffff;
+      border: 1px solid #cbd5e0;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #4a5568;
+    }
+
+    .btn:hover {
+      background: #f7fafc;
+      border-color: #a0aec0;
+    }
+
+    .btn.active {
+      background: #ebf8ff;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      color: #ffffff;
+    }
+
+    .btn-success {
+      background: #38a169;
+      color: #ffffff;
+      border-color: #38a169;
+    }
+
+    .btn-success:hover {
+      background: #2f855a;
+    }
+
+    .btn-danger {
+      background: #e53e3e;
+      color: #ffffff;
+      border-color: #e53e3e;
+    }
+
+    .divider {
+      width: 1px;
+      height: 24px;
+      background: #e2e8f0;
+      margin: 0 4px;
+    }
+
+    .color-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #edf2f7;
+      padding: 3px 6px;
+      border-radius: 6px;
+    }
+
+    .color-group-label {
+      font-size: 11px;
+      font-weight: bold;
+      color: #718096;
+      margin-right: 2px;
+    }
+
+    .color-dot-btn {
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      border: 1px solid rgba(0,0,0,0.15);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+      transition: transform 0.1s;
+    }
+
+    .color-dot-btn:hover {
+      transform: scale(1.15);
+    }
+
+    .status-text {
+      font-size: 12px;
+      color: #718096;
+      margin-left: auto;
+      background: #edf2f7;
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    /* ページタブバー */
+    #page-bar {
+      background: #edf2f7;
+      border-bottom: 1px solid var(--border-color);
+      padding: 6px 16px 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+    }
+
+    .page-tab {
+      background: #e2e8f0;
+      border: 1px solid #cbd5e0;
+      border-bottom: none;
+      padding: 6px 14px;
+      border-radius: 6px 6px 0 0;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #4a5568;
+      user-select: none;
+    }
+
+    .page-tab.active {
+      background: #ffffff;
+      color: var(--primary);
+      font-weight: bold;
+      border-bottom: 1px solid #ffffff;
+      margin-bottom: -1px;
+    }
+
+    .page-tab.schedule-tab {
+      background: #e6fffa;
+      color: #234e52;
+      border-color: #b2f5ea;
+    }
+    .page-tab.schedule-tab.active {
+      background: #ffffff;
+      color: #234e52;
+      border-bottom: 1px solid #ffffff;
+    }
+
+    .tab-close {
+      border: none;
+      background: none;
+      font-size: 12px;
+      cursor: pointer;
+      color: #a0aec0;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tab-close:hover {
+      background: rgba(0,0,0,0.1);
+      color: #2d3748;
+    }
+
+    .add-page-btn {
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px dashed #a0aec0;
+      background: transparent;
+      cursor: pointer;
+      font-size: 13px;
+      margin-bottom: 4px;
+      color: #4a5568;
+    }
+
+    .add-page-btn:hover {
+      background: #ffffff;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* メイン作業領域 */
+    #workspace {
+      position: relative;
+      flex: 1;
+      overflow: auto;
+      background-image: radial-gradient(#cbd5e0 1.2px, transparent 1.2px);
+      background-size: 24px 24px;
+      background-color: #f7fafc;
+    }
+
+    #base-canvas {
+      width: 100%;
+      min-width: 1800px;
+      min-height: 1800px;
+      padding: 40px;
+      position: relative;
+    }
+
+    #svg-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .connector-line {
+      stroke: var(--primary);
+      stroke-width: 2.5;
+      stroke-dasharray: 6 4;
+      fill: none;
+    }
+
+    /* 付箋カード */
+    .note-card {
+      position: absolute;
+      min-width: 260px;
+      min-height: 180px;
+      width: 320px;
+      height: 240px;
+      background: #fffff0;
+      border: 1px solid #ecc94b;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      resize: both;
+      overflow: hidden;
+      z-index: 20;
+    }
+
+    .note-card.selected-for-connect {
+      outline: 3px solid var(--primary);
+      box-shadow: 0 0 15px rgba(49, 130, 206, 0.5);
+    }
+
+    .note-header {
+      background: #fefcbf;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: grab;
+      user-select: none;
+      font-size: 12px;
+      font-weight: 600;
+      color: #744210;
+      border-bottom: 1px solid #f6e05e;
+    }
+
+    .note-header:active {
+      cursor: grabbing;
+    }
+
+    .note-body {
+      flex: 1;
+      padding: 12px;
+      outline: none;
+      font-size: 14px;
+      line-height: 1.8;
+      overflow-y: auto;
+      background: #fffff0;
+    }
+
+    /* 画像カード (ワードの折り返し機能付き) */
+    .image-card {
+      position: absolute;
+      min-width: 200px;
+      min-height: 150px;
+      width: 380px;
+      height: 300px;
+      background: #ffffff;
+      border: 1.5px solid #d6bcfa;
+      border-radius: 8px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      resize: both;
+      overflow: hidden;
+      z-index: 22;
+    }
+
+    .image-card.selected-for-connect {
+      outline: 3px solid var(--primary);
+    }
+
+    .image-header {
+      background: #faf5ff;
+      color: #553c9a;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: grab;
+      font-size: 12px;
+      font-weight: 600;
+      border-bottom: 1px solid #e9d8fd;
+    }
+
+    .image-body {
+      flex: 1;
+      padding: 10px;
+      overflow: auto;
+      background: #ffffff;
+      position: relative;
+    }
+
+    .image-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
     
-    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
+    .image-container img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
 
-    <style>
-        :root[data-theme="dark"] {
-            --bg-color: #1e1e1e; --panel-bg: #2d2d2d; --panel-border: #444; --text-color: #fff; --text-secondary: #aaa; --input-bg: #222; --input-border: #555; --toolbar-bg: #333; --editor-bg: #252525;
-            --sunday-bg: #3b2323 !important; --saturday-bg: #232b3b !important; --holiday-bg: #3b3023 !important;
-        }
-        :root[data-theme="light"] {
-            --bg-color: #f4f6f9; --panel-bg: #ffffff; --panel-border: #ccc; --text-color: #212529; --text-secondary: #6c757d; --input-bg: #ffffff; --input-border: #ced4da; --toolbar-bg: #e9ecef; --editor-bg: #ffffff;
-            --sunday-bg: #fae8e8 !important; --saturday-bg: #e8f0fe !important; --holiday-bg: #faefe3 !important;
-        }
-        body { font-family: sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; transition: background 0.3s, color 0.3s; }
-        .main-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--panel-border); padding-bottom: 10px; align-items: center; }
-        .tab-btn { background: var(--panel-bg); color: var(--text-secondary); border: 1px solid var(--panel-border); padding: 10px 20px; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 1.1em; font-weight: bold; }
-        .tab-btn.active { background: #007bff; color: white; border-color: #007bff; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .schedule-controls { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-bottom: 15px; background: var(--panel-bg); padding: 10px 15px; border-radius: 8px; border: 1px solid var(--panel-border); }
-        .date-range-wrapper { display: flex; align-items: center; gap: 8px; margin-left: auto; }
-        .schedule-scroll-container { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 20px; scroll-behavior: smooth; }
-        .schedule-scroll-container::-webkit-scrollbar { height: 10px; }
-        .schedule-scroll-container::-webkit-scrollbar-thumb { background: var(--text-secondary); border-radius: 5px; }
-        .calendar-view-container { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 8px; padding: 15px; margin-bottom: 20px; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; }
-        .calendar-header-cell { text-align: center; font-weight: bold; padding: 8px; background: var(--toolbar-bg); border-radius: 4px; font-size: 0.9em; }
-        
-        .calendar-cell { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 6px; min-height: 110px; padding: 6px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
-        .calendar-cell.cell-sunday { background-color: var(--sunday-bg); }
-        .calendar-cell.cell-saturday { background-color: var(--saturday-bg); }
-        .calendar-cell.cell-holiday { background-color: var(--holiday-bg); }
-        .calendar-cell.empty { background: transparent; border: none; }
+    /* ワード風の折り返しモード */
+    .wrap-inline img {
+      float: left;
+      margin: 0 12px 8px 0;
+      max-width: 45%;
+    }
+    .wrap-square img {
+      float: right;
+      margin: 0 0 8px 12px;
+      max-width: 45%;
+    }
+    .wrap-topbottom img {
+      display: block;
+      margin: 0 auto 8px auto;
+      max-width: 100%;
+    }
 
-        .cal-date-num { font-weight: bold; font-size: 0.9em; display: inline-block; padding: 2px 6px; border-radius: 4px; margin-bottom: 4px; }
-        .cal-input { width: 100%; background: var(--bg-color); border: 1px solid var(--input-border); color: var(--text-color); padding: 2px 4px; font-size: 0.8em; border-radius: 3px; margin-bottom: 2px; box-sizing: border-box; }
-        .jump-btn { font-size: 0.7em; background: #007bff; color: white; border: none; border-radius: 3px; padding: 1px 4px; cursor: pointer; margin-top: 2px; align-self: flex-end; }
-        
-        .schedule-box { background: var(--panel-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--panel-border); min-width: 380px; flex: 0 0 auto; }
-        .schedule-box.box-sunday { background-color: var(--sunday-bg); }
-        .schedule-box.box-saturday { background-color: var(--saturday-bg); }
-        .schedule-box.box-holiday { background-color: var(--holiday-bg); }
+    .image-text-content {
+      outline: none;
+      font-size: 14px;
+      line-height: 1.8;
+      min-height: 100%;
+    }
 
-        .date-display { font-weight: bold; margin-bottom: 10px; padding: 5px 10px; border-radius: 4px; display: inline-block; }
-        .day-saturday { color: #4dabf7; }
-        .day-sunday { color: #ff6b6b; }
-        .day-holiday { color: #ffa94d; }
-        .day-weekday { color: var(--text-color); }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid var(--panel-border); padding: 6px; text-align: center; font-size: 0.9em; }
-        th { background: var(--toolbar-bg); }
-        input[type="text"] { width: 95%; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-color); padding: 4px; border-radius: 3px; }
-        
-        /* ノートカテゴリタブ用スタイル */
-        .note-category-tabs { display: flex; gap: 8px; margin-bottom: 15px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid var(--panel-border); padding-bottom: 10px; }
-        .note-cat-btn { background: var(--panel-bg); color: var(--text-color); border: 1px solid var(--panel-border); padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 6px; }
-        .note-cat-btn.active { background: #28a745; color: white; border-color: #28a745; }
-        .note-cat-input { background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); padding: 4px 6px; border-radius: 3px; font-weight: bold; width: 120px; }
+    /* マスク機能 */
+    .test-mask {
+      display: inline-block;
+      padding: 1px 6px;
+      margin: 0 2px;
+      border-radius: 4px;
+      cursor: pointer;
+      user-select: none;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    .test-mask.masked {
+      background-color: #2d3748 !important;
+      color: transparent !important;
+      box-shadow: inset 0 0 4px rgba(0,0,0,0.4);
+    }
+    .test-mask.revealed {
+      background-color: #e6fffa !important;
+      color: #234e52 !important;
+      border: 1px dashed #319795;
+    }
 
-        .notes-area-wrapper { position: relative; }
-        .cards-container { display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-start; position: relative; z-index: 1; }
-        
-        .card { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 10px; position: relative; resize: both; overflow: auto; width: 400px; min-width: 320px; min-height: 280px; }
-        .card-header { display: flex; align-items: center; gap: 10px; }
-        .card-title { font-weight: bold; font-size: 1.1em; border: none; border-bottom: 1px solid var(--panel-border); background: transparent; color: var(--text-color); width: 100%; padding: 5px; }
-        .btn-delete { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; font-size: 0.8em; flex-shrink: 0; }
-        
-        .mask-toolbar { display: flex; flex-wrap: wrap; gap: 6px; background: var(--input-bg); padding: 5px; border-radius: 4px; border: 1px solid var(--panel-border); }
-        .btn-action { background: var(--toolbar-bg); color: var(--text-color); border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 0.8em; }
-        .btn-action:hover { opacity: 0.8; }
+    /* 校正 (二重線＋訂正) */
+    .correction-wrapper {
+      display: inline-flex;
+      flex-direction: column;
+      vertical-align: middle;
+      margin: 0 3px;
+      line-height: 1.1;
+      padding: 1px 4px;
+      background: rgba(229, 62, 62, 0.05);
+      border: 1px dashed rgba(229, 62, 62, 0.3);
+      border-radius: 3px;
+    }
+    .correction-del {
+      text-decoration: line-through double var(--accent-red);
+      color: #a0aec0;
+      font-size: 0.95em;
+    }
+    .correction-ins {
+      color: var(--accent-red);
+      font-size: 0.8em;
+      font-weight: bold;
+      text-decoration: none;
+      margin-top: 1px;
+    }
 
-        .quill-editor-container { flex-grow: 1; display: flex; flex-direction: column; }
-        .ql-container { flex-grow: 1; min-height: 140px; color: var(--text-color); border-color: var(--panel-border); background: var(--editor-bg); }
-        .ql-toolbar { border-color: var(--panel-border); background: var(--toolbar-bg); }
+    .custom-bold { font-weight: bold; }
+    .highlight-marker { padding: 2px 4px; border-radius: 3px; }
 
-        /* ツールバーのアイコン色切替 */
-        :root[data-theme="dark"] .ql-toolbar .ql-stroke { stroke: #fff !important; }
-        :root[data-theme="dark"] .ql-toolbar .ql-fill { fill: #fff !important; }
-        :root[data-theme="dark"] .ql-toolbar .ql-picker { color: #fff !important; }
-        :root[data-theme="light"] .ql-toolbar .ql-stroke { stroke: #212529 !important; }
-        :root[data-theme="light"] .ql-toolbar .ql-fill { fill: #212529 !important; }
-        :root[data-theme="light"] .ql-toolbar .ql-picker { color: #212529 !important; }
+    .text-anchor {
+      border-bottom: 2px dashed var(--primary);
+      background-color: rgba(49, 130, 206, 0.08);
+      padding: 1px 3px;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+    .text-anchor.selected-for-connect {
+      background-color: #bee3f8;
+      outline: 1px solid var(--primary);
+    }
 
-        .ql-editor a { color: #4dabf7; text-decoration: underline; cursor: pointer; }
-        .ql-editor img { max-width: none !important; width: 250px; height: auto; cursor: pointer; display: inline-block; border: 2px solid transparent; }
-        .ql-editor img.selected-img { border-color: #007bff; box-shadow: 0 0 8px rgba(0,123,255,0.6); }
+    /* スケジュールマトリックスデザイン */
+    .matrix-app-wrapper {
+      max-width: 1500px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+      border: 1px solid var(--border-color);
+    }
 
-        .ql-editor .mask { background-color: black !important; color: black !important; cursor: pointer; user-select: none; border-radius: 2px; }
-        .ql-editor .mask.revealed { background-color: #333 !important; color: #fff !important; }
-        
-        .ql-editor .correction-wrapper { display: inline-flex; flex-direction: column; align-items: center; vertical-align: bottom; margin: 0 3px; }
-        .ql-editor .strike-text { text-decoration: line-through double red; color: #aaa; }
-        .ql-editor .correct-text { color: #ff4d4d; font-weight: bold; font-size: 0.9em; line-height: 1em; }
+    .matrix-table-container {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid #cbd5e0;
+      border-radius: 6px;
+      margin-top: 15px;
+    }
 
-        .btn { background: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn:hover { background: #0056b3; }
-        .btn-secondary { background: #6c757d; }
-        select, input[type="date"] { background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); padding: 5px; border-radius: 4px; }
-    </style>
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 13px;
+      background: #fff;
+    }
+
+    .matrix-table th, .matrix-table td {
+      border: 1px solid #e2e8f0;
+      padding: 6px;
+      vertical-align: middle;
+    }
+
+    .matrix-table th {
+      background: #edf2f7;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .col-header-date {
+      font-size: 13px;
+      color: var(--primary);
+      background: #ebf8ff !important;
+    }
+
+    .col-header-day {
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .col-header-day.sun { color: var(--accent-red); background: #fff5f5 !important; }
+    .col-header-day.sat { color: var(--accent-blue); background: #ebf8ff !important; }
+    .col-header-day.hol { color: var(--accent-orange); background: #fffaf0 !important; }
+
+    .matrix-row-label {
+      width: 140px;
+      font-weight: bold;
+      background: #f7fafc;
+      text-align: center;
+      font-size: 12px;
+    }
+    .matrix-row-label.work { color: #2b6cb0; background: #ebf8ff; }
+    .matrix-row-label.home { color: #2f855a; background: #f0fff4; }
+
+    .matrix-cell-textarea {
+      width: 100%;
+      height: 60px;
+      padding: 6px;
+      font-size: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      resize: vertical;
+      font-family: inherit;
+      outline: none;
+    }
+    .matrix-cell-textarea:focus { border-color: var(--primary); }
+  </style>
 </head>
 <body>
 
-    <div class="main-tabs">
-        <button class="tab-btn active" onclick="switchMainTab('schedule')">📅 スケジュール・タスク</button>
-        <button class="tab-btn" onclick="switchMainTab('notes')">📝 学習ノート</button>
-        
-        <div style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
-            <span id="sync-status" style="font-size: 0.8em; color: #aaa;">☁️ クラウド接続中...</span>
-            <button class="btn btn-secondary" id="theme-toggle-btn" onclick="toggleTheme()">🌙</button>
-            <button class="btn" onclick="saveAllData()" style="background: #28a745;">💾 クラウドに保存</button>
-        </div>
+  <header>
+    <button class="btn btn-primary" id="add-note-btn">＋ 付箋を追加</button>
+    <button class="btn" id="add-image-btn" title="画像を配置 (Ctrl+V貼り付け対応)">🖼 画像を追加</button>
+    <input type="file" id="image-file-input" accept="image/*" style="display:none;">
+
+    <div class="divider"></div>
+
+    <!-- 穴埋めマスク -->
+    <button class="btn btn-success" id="add-mask-btn" title="選択テキストを穴埋めマスクにする">🙈 穴埋めマスク</button>
+    <button class="btn" id="toggle-all-masks-btn" title="全マスクの表示/非表示切替">👀 全マスク表示/隠す</button>
+
+    <div class="divider"></div>
+
+    <!-- 保存 -->
+    <button class="btn btn-primary" id="save-btn" title="ブラウザに保存 (Ctrl+S)">💾 保存</button>
+    <button class="btn" id="export-btn" title="データ書出">📤 出力</button>
+    <button class="btn" id="import-btn" title="データ読込">📥 読込</button>
+    <input type="file" id="import-file-input" accept=".json" style="display:none;">
+
+    <div class="divider"></div>
+
+    <!-- 太字カラー -->
+    <div class="color-group">
+      <span class="color-group-label">太字:</span>
+      <button class="color-dot-btn" data-type="bold" data-color="#2d3748" style="background:#2d3748; color:#fff;" title="黒">B</button>
+      <button class="color-dot-btn" data-type="bold" data-color="#e53e3e" style="background:#fff5f5; color:#e53e3e;" title="赤">B</button>
+      <button class="color-dot-btn" data-type="bold" data-color="#3182ce" style="background:#ebf8ff; color:#3182ce;" title="青">B</button>
     </div>
 
-    <!-- スケジュールタブ -->
-    <div id="tab-schedule" class="tab-content active">
-        <div class="schedule-controls">
-            <span>表示モード:</span>
-            <button class="btn" id="btn-mode-slide" onclick="switchScheduleMode('slide')">4ヶ月横スライド</button>
-            <button class="btn btn-secondary" id="btn-mode-month" onclick="switchScheduleMode('month')">ひと月ごとカレンダー表示</button>
-            
-            <div id="slide-range-wrapper" class="date-range-wrapper">
-                <label>範囲:</label>
-                <input type="date" id="range-start" onchange="renderSchedules()">
-                <span>〜</span>
-                <input type="date" id="range-end" onchange="renderSchedules()">
-            </div>
-
-            <div id="month-selector-wrapper" style="display: none; margin-left: auto;">
-                <label for="month-select">表示する月:</label>
-                <select id="month-select" onchange="renderSchedules()"></select>
-            </div>
-        </div>
-        <div id="schedule-container"></div>
+    <!-- マーカー -->
+    <div class="color-group">
+      <span class="color-group-label">マーカー:</span>
+      <button class="color-dot-btn" data-type="marker" data-color="#fed7d7" style="background:#fed7d7;" title="赤"> </button>
+      <button class="color-dot-btn" data-type="marker" data-color="#fefcbf" style="background:#fefcbf;" title="黄"> </button>
+      <button class="color-dot-btn" data-type="marker" data-color="#bee3f8" style="background:#bee3f8;" title="青"> </button>
+      <button class="color-dot-btn" data-type="clear-marker" style="background:#fff; color:#e53e3e;" title="解除">✕</button>
     </div>
 
-    <!-- 学習ノートタブ -->
-    <div id="tab-notes" class="tab-content">
-        <div class="note-category-tabs" id="note-category-tabs-container"></div>
+    <button class="btn" id="correct-btn" title="二重線と訂正">✂ 二重線で訂正</button>
+    <button class="btn" id="undo-correct-btn" title="訂正・マスク解除">↩ 訂正/マスク解除</button>
 
-        <div class="toolbar" style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <button class="btn" onclick="addNewCardToCurrentTab()">＋ このタブにノート追加</button>
-            <button class="btn btn-secondary" onclick="addNewCategoryTab()">＋ 新しいノートタブ追加</button>
+    <div class="divider"></div>
+
+    <button class="btn" id="connect-toggle-btn" title="言葉や付箋の関連付け">🔗 関連付け</button>
+    <button class="btn btn-danger" id="cancel-connect-btn" style="display:none;" title="中止">✕ 中止</button>
+    <button class="btn" id="clear-lines-btn">接続全解除</button>
+
+    <span class="status-text" id="status-message">自動保存有効</span>
+  </header>
+
+  <div id="page-bar">
+    <div id="tabs-container" style="display: flex; gap: 6px;"></div>
+    <button class="add-page-btn" id="add-page-btn">＋ ページ追加</button>
+  </div>
+
+  <div id="workspace">
+    <svg id="svg-layer"></svg>
+    <div id="base-canvas" contenteditable="true" spellcheck="false"></div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'CARD_NOTE_SCHEDULE_APP_V1';
+
+    const DEFAULT_PAGES = [
+      {
+        id: 'page-1',
+        title: 'ノート 1',
+        content: '<h1>学習ノートスペース</h1><p>背景や付箋に自由に書き込んでください。</p>',
+        notes: [
+          { id: 'note-1', title: '付箋 #1', text: 'ここに重要なポイントを記載', x: 850, y: 80, w: 280, h: 200 }
+        ],
+        images: [],
+        connections: []
+      }
+    ];
+
+    let pages = [];
+    let currentPageId = 'schedule-page';
+    let noteIdCounter = 100;
+    let imageIdCounter = 100;
+    let pageIdCounter = 10;
+    let anchorIdCounter = 100;
+    let isConnectMode = false;
+    let connectSourceId = null;
+    let areAllMasksRevealed = false;
+
+    // スケジュールデータ
+    let scheduleData = {
+      startDate: '2026-08-20',
+      endDate: '2026-08-27',
+      cells: {}
+    };
+
+    const workspace = document.getElementById('workspace');
+    const baseCanvas = document.getElementById('base-canvas');
+    const svgLayer = document.getElementById('svg-layer');
+    const tabsContainer = document.getElementById('tabs-container');
+    const addPageBtn = document.getElementById('add-page-btn');
+    const addNoteBtn = document.getElementById('add-note-btn');
+    const addImageBtn = document.getElementById('add-image-btn');
+    const imageFileInput = document.getElementById('image-file-input');
+    const addMaskBtn = document.getElementById('add-mask-btn');
+    const toggleAllMasksBtn = document.getElementById('toggle-all-masks-btn');
+    const saveBtn = document.getElementById('save-btn');
+    const exportBtn = document.getElementById('export-btn');
+    const importBtn = document.getElementById('import-btn');
+    const importFileInput = document.getElementById('import-file-input');
+    const correctBtn = document.getElementById('correct-btn');
+    const undoCorrectBtn = document.getElementById('undo-correct-btn');
+    const connectToggleBtn = document.getElementById('connect-toggle-btn');
+    const cancelConnectBtn = document.getElementById('cancel-connect-btn');
+    const clearLinesBtn = document.getElementById('clear-lines-btn');
+    const statusMsg = document.getElementById('status-message');
+
+    // 祝日判定（簡易版）
+    function getJapaneseHoliday(date) {
+      const m = date.getMonth() + 1;
+      const d = date.getDate();
+      if (m === 1 && d === 1) return "元日";
+      if (m === 2 && d === 11) return "建国記念の日";
+      if (m === 4 && d === 29) return "昭和の日";
+      if (m === 5 && d === 3) return "憲法記念日";
+      if (m === 5 && d === 4) return "みどりの日";
+      if (m === 5 && d === 5) return "こどもの日";
+      if (m === 8 && d === 11) return "山の日";
+      if (m === 11 && d === 3) return "文化の日";
+      if (m === 11 && d === 23) return "勤労感謝の日";
+      return null;
+    }
+
+    // --- スケジュールページのHTML生成 ---
+    function renderSchedulePageContent() {
+      return `
+        <div class="matrix-app-wrapper">
+          <div style="display:flex; gap:10px; align-items:center; margin-bottom:15px; background:#f7fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
+            <label style="font-weight:bold; font-size:13px;">期間表示設定：</label>
+            <input type="date" id="sched-start" value="${scheduleData.startDate}" style="padding:4px; border:1px solid #cbd5e0; border-radius:4px;">
+            <span>〜</span>
+            <input type="date" id="sched-end" value="${scheduleData.endDate}" style="padding:4px; border:1px solid #cbd5e0; border-radius:4px;">
+            <button class="btn btn-primary" id="sched-update-btn">表示更新</button>
+          </div>
+
+          <div class="matrix-table-container">
+            <table class="matrix-table" id="matrix-table-el"></table>
+          </div>
         </div>
-        <div class="notes-area-wrapper">
-            <div id="cards-container" class="cards-container"></div>
+      `;
+    }
+
+    function initScheduleDOM() {
+      const updateBtn = document.getElementById('sched-update-btn');
+      if (updateBtn) {
+        updateBtn.addEventListener('click', () => {
+          scheduleData.startDate = document.getElementById('sched-start').value;
+          scheduleData.endDate = document.getElementById('sched-end').value;
+          renderPage('schedule-page');
+          saveToStorage();
+        });
+      }
+      buildMatrixTable();
+    }
+
+    function buildMatrixTable() {
+      const tableEl = document.getElementById('matrix-table-el');
+      if (!tableEl) return;
+
+      const start = new Date(scheduleData.startDate);
+      const end = new Date(scheduleData.endDate);
+      if (isNaN(start) || isNaN(end) || start > end) return;
+
+      let dateList = [];
+      let curr = new Date(start);
+      while (curr <= end) {
+        dateList.push(new Date(curr));
+        curr.setDate(curr.getDate() + 1);
+      }
+
+      const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+
+      // 1行1列：日付・曜日・祝日
+      let html = `<thead><tr><th class="matrix-row-label">日付</th>`;
+      dateList.forEach(d => {
+        html += `<th class="col-header-date">${d.getMonth()+1}/${d.getDate()}</th>`;
+      });
+      html += `</tr><tr><th class="matrix-row-label">曜日・祝日</th>`;
+      
+      dateList.forEach(d => {
+        const wIdx = d.getDay();
+        const holiday = getJapaneseHoliday(d);
+        let cls = 'col-header-day';
+        let txt = weekdays[wIdx];
+        if (holiday) {
+          cls += ' hol';
+          txt += `(${holiday})`;
+        } else if (wIdx === 0) {
+          cls += ' sun';
+        } else if (wIdx === 6) {
+          cls += ' sat';
+        }
+        html += `<th class="${cls}">${txt}</th>`;
+      });
+      html += `</tr></thead><tbody>`;
+
+      // 予定欄（会社・家）
+      ['会社 予定', '家 予定'].forEach((label, idx) => {
+        const fieldKey = idx === 0 ? 'company' : 'home';
+        html += `<tr><td class="matrix-row-label ${idx === 0 ? 'work' : 'home'}">${label}</td>`;
+        dateList.forEach(d => {
+          const dateStr = d.toISOString().slice(0, 10);
+          if (!scheduleData.cells[dateStr]) scheduleData.cells[dateStr] = {};
+          const val = scheduleData.cells[dateStr][fieldKey] || '';
+          html += `<td><textarea class="matrix-cell-textarea" data-date="${dateStr}" data-field="${fieldKey}">${val}</textarea></td>`;
+        });
+        html += `</tr>`;
+      });
+
+      // 1行2列：タスク（予定と実績）
+      ['タスク1 予定', 'タスク1 実績', 'タスク2 予定', 'タスク2 実績'].forEach((label, idx) => {
+        const fieldKey = `task_${idx}`;
+        html += `<tr><td class="matrix-row-label">${label}</td>`;
+        dateList.forEach(d => {
+          const dateStr = d.toISOString().slice(0, 10);
+          if (!scheduleData.cells[dateStr]) scheduleData.cells[dateStr] = {};
+          const val = scheduleData.cells[dateStr][fieldKey] || '';
+          html += `<td><textarea class="matrix-cell-textarea" data-date="${dateStr}" data-field="${fieldKey}">${val}</textarea></td>`;
+        });
+        html += `</tr>`;
+      });
+
+      html += `</tbody>`;
+      tableEl.innerHTML = html;
+
+      tableEl.querySelectorAll('.matrix-cell-textarea').forEach(ta => {
+        ta.addEventListener('input', (e) => {
+          const dt = e.target.dataset.date;
+          const fd = e.target.dataset.field;
+          if (!scheduleData.cells[dt]) scheduleData.cells[dt] = {};
+          scheduleData.cells[dt][fd] = e.target.value;
+          saveToStorage();
+        });
+      });
+    }
+
+    // --- データ保存 ---
+    function saveToStorage() {
+      saveCurrentPageState();
+      const data = {
+        pages,
+        currentPageId,
+        noteIdCounter,
+        imageIdCounter,
+        pageIdCounter,
+        anchorIdCounter,
+        scheduleData
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function loadFromStorage() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          if (data && data.pages) {
+            pages = data.pages;
+            currentPageId = data.currentPageId || 'schedule-page';
+            noteIdCounter = data.noteIdCounter || 100;
+            imageIdCounter = data.imageIdCounter || 100;
+            pageIdCounter = data.pageIdCounter || 10;
+            anchorIdCounter = data.anchorIdCounter || 100;
+            if (data.scheduleData) scheduleData = data.scheduleData;
+            return;
+          }
+        } catch(e) {}
+      }
+      pages = JSON.parse(JSON.stringify(DEFAULT_PAGES));
+      currentPageId = 'schedule-page';
+    }
+
+    // --- ページ切り替え管理 ---
+    function getCurrentPage() {
+      if (currentPageId === 'schedule-page') return { id: 'schedule-page', title: 'スケジュール' };
+      return pages.find(p => p.id === currentPageId) || pages[0];
+    }
+
+    function saveCurrentPageState() {
+      const page = getCurrentPage();
+      if (!page || page.id === 'schedule-page') return;
+
+      page.content = baseCanvas.innerHTML;
+      page.notes = [];
+      document.querySelectorAll('.note-card').forEach(el => {
+        page.notes.push({
+          id: el.id,
+          title: el.querySelector('.note-header span').textContent,
+          text: el.querySelector('.note-body').innerHTML,
+          x: parseInt(el.style.left, 10) || 0,
+          y: parseInt(el.style.top, 10) || 0,
+          w: el.offsetWidth,
+          h: el.offsetHeight
+        });
+      });
+
+      page.images = [];
+      document.querySelectorAll('.image-card').forEach(el => {
+        page.images.push({
+          id: el.id,
+          title: el.querySelector('.image-header span').textContent.replace('🖼 ', ''),
+          src: el.querySelector('.image-container img').src,
+          wrapMode: el.dataset.wrapMode || 'inline',
+          text: el.querySelector('.image-text-content').innerHTML,
+          x: parseInt(el.style.left, 10) || 0,
+          y: parseInt(el.style.top, 10) || 0,
+          w: el.offsetWidth,
+          h: el.offsetHeight
+        });
+      });
+    }
+
+    function renderPage(pageId) {
+      document.querySelectorAll('.note-card, .image-card').forEach(el => el.remove());
+      resetConnectMode();
+      currentPageId = pageId;
+
+      if (pageId === 'schedule-page') {
+        baseCanvas.innerHTML = renderSchedulePageContent();
+        baseCanvas.contentEditable = 'false';
+        initScheduleDOM();
+      } else {
+        const page = getCurrentPage();
+        baseCanvas.innerHTML = page.content;
+        baseCanvas.contentEditable = 'true';
+        if (page.notes) page.notes.forEach(n => createNoteElement(n));
+        if (page.images) page.images.forEach(img => createImageElement(img));
+      }
+      renderTabs();
+      renderLines();
+    }
+
+    function renderTabs() {
+      tabsContainer.innerHTML = '';
+      
+      const sTab = document.createElement('div');
+      sTab.className = `page-tab schedule-tab ${currentPageId === 'schedule-page' ? 'active' : ''}`;
+      sTab.innerHTML = `<span>📅 スケジュール</span>`;
+      sTab.addEventListener('click', () => {
+        if (currentPageId !== 'schedule-page') {
+          saveCurrentPageState();
+          renderPage('schedule-page');
+          saveToStorage();
+        }
+      });
+      tabsContainer.appendChild(sTab);
+
+      pages.forEach(p => {
+        const tab = document.createElement('div');
+        tab.className = `page-tab ${p.id === currentPageId ? 'active' : ''}`;
+        tab.innerHTML = `
+          <span>${p.title}</span>
+          ${pages.length > 1 ? `<button class="tab-close">✕</button>` : ''}
+        `;
+        tab.addEventListener('click', (e) => {
+          if (e.target.classList.contains('tab-close')) return;
+          if (p.id !== currentPageId) {
+            saveCurrentPageState();
+            renderPage(p.id);
+            saveToStorage();
+          }
+        });
+        if (pages.length > 1) {
+          tab.querySelector('.tab-close').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (confirm(`「${p.title}」を削除しますか？`)) {
+              pages = pages.filter(x => x.id !== p.id);
+              renderPage(pages[0].id);
+              saveToStorage();
+            }
+          });
+        }
+        tabsContainer.appendChild(tab);
+      });
+    }
+
+    addPageBtn.addEventListener('click', () => {
+      saveCurrentPageState();
+      const newId = `page-${pageIdCounter++}`;
+      const newPage = {
+        id: newId,
+        title: `ノート ${pages.length + 1}`,
+        content: `<p>新しいページです。</p>`,
+        notes: [], images: [], connections: []
+      };
+      pages.push(newPage);
+      renderPage(newId);
+      saveToStorage();
+    });
+
+    // --- 付箋カード追加 ---
+    function createNoteElement(data) {
+      const el = document.createElement('div');
+      el.className = 'note-card';
+      el.id = data.id;
+      el.style.left = `${data.x}px`;
+      el.style.top = `${data.y}px`;
+      if (data.w) el.style.width = `${data.w}px`;
+      if (data.h) el.style.height = `${data.h}px`;
+
+      el.innerHTML = `
+        <div class="note-header">
+          <span>${data.title}</span>
+          <button class="btn" style="padding:1px 5px; font-size:11px;" onclick="document.getElementById('${data.id}').remove(); renderLines(); saveToStorage();">✕</button>
         </div>
-    </div>
+        <div class="note-body" contenteditable="true" spellcheck="false">${data.text}</div>
+      `;
+      workspace.appendChild(el);
+      initDraggable(el, el.querySelector('.note-header'));
 
-    <!-- Firebase SDK読み込みとクラウド連携処理 -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+      el.addEventListener('click', () => {
+        if (isConnectMode) processConnection(data.id);
+      });
+      el.querySelector('.note-body').addEventListener('input', () => {
+        renderLines();
+        saveToStorage();
+      });
+      return el;
+    }
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCdaWFXOfeCJwr2u-MGNyja3yUuoVoLplA",
-            authDomain: "note-app-fa29b.firebaseapp.com",
-            projectId: "note-app-fa29b",
-            storageBucket: "note-app-fa29b.firebasestorage.app",
-            messagingSenderId: "247676836666",
-            appId: "1:247676836666:web:c478efbd48ee3bc5de8e03",
-            measurementId: "G-GJWJPJST95"
+    addNoteBtn.addEventListener('click', () => {
+      if (currentPageId === 'schedule-page') {
+        alert('スケジュール内には付箋を追加できません。ノートページを選択してください。');
+        return;
+      }
+      const newId = `note-${noteIdCounter++}`;
+      createNoteElement({
+        id: newId,
+        title: `付箋 #${noteIdCounter-1}`,
+        text: '新しいメモ',
+        x: workspace.scrollLeft + 100,
+        y: workspace.scrollTop + 100,
+        w: 280, h: 200
+      });
+      renderLines();
+      saveToStorage();
+    });
+
+    // --- 画像追加（ワードの折り返し機能付き） ---
+    addImageBtn.addEventListener('click', () => imageFileInput.click());
+
+    imageFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (currentPageId === 'schedule-page') {
+          alert('スケジュール内には画像を配置できません。');
+          return;
+        }
+        const imgData = {
+          id: `img-${imageIdCounter++}`,
+          title: file.name.slice(0, 15),
+          src: event.target.result,
+          wrapMode: 'inline',
+          text: 'ここに画像の周りに回り込むテキストを入力できます。ワードの文字列の折り返しのように、画像とテキストが連動します。',
+          x: workspace.scrollLeft + 150,
+          y: workspace.scrollTop + 150,
+          w: 380, h: 300
         };
+        const page = getCurrentPage();
+        if (!page.images) page.images = [];
+        page.images.push(imgData);
+        createImageElement(imgData);
+        saveToStorage();
+        imageFileInput.value = '';
+      };
+      reader.readAsDataURL(file);
+    });
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+    function createImageElement(data) {
+      const el = document.createElement('div');
+      el.className = 'image-card';
+      el.id = data.id;
+      el.style.left = `${data.x}px`;
+      el.style.top = `${data.y}px`;
+      if (data.w) el.style.width = `${data.w}px`;
+      if (data.h) el.style.height = `${data.h}px`;
+      el.dataset.wrapMode = data.wrapMode || 'inline';
 
-        window.cloudSave = async function(data) {
-            try {
-                await setDoc(doc(db, "appData", "mainDoc"), data);
-                document.getElementById('sync-status').textContent = "☁️ 同期完了";
-                setTimeout(() => { document.getElementById('sync-status').textContent = "☁️ クラウド接続中"; }, 2000);
-            } catch (e) {
-                console.error("保存エラー: ", e);
-                alert("クラウド保存に失敗しました");
+      el.innerHTML = `
+        <div class="image-header">
+          <span>🖼 ${data.title}</span>
+          <div style="display:flex; gap:4px; align-items:center;">
+            <select class="wrap-selector" style="font-size:10px; padding:1px;">
+              <option value="inline" ${data.wrapMode==='inline'?'selected':''}>四角形(左)</option>
+              <option value="square" ${data.wrapMode==='square'?'selected':''}>四角形(右)</option>
+              <option value="topbottom" ${data.wrapMode==='topbottom'?'selected':''}>上下</option>
+            </select>
+            <button class="btn" style="padding:1px 5px; font-size:11px;" onclick="document.getElementById('${data.id}').remove(); renderLines(); saveToStorage();">✕</button>
+          </div>
+        </div>
+        <div class="image-body">
+          <div class="image-container wrap-${data.wrapMode}">
+            <img src="${data.src}" alt="画像">
+            <div class="image-text-content" contenteditable="true" spellcheck="false">${data.text}</div>
+          </div>
+        </div>
+      `;
+      workspace.appendChild(el);
+      initDraggable(el, el.querySelector('.image-header'));
+
+      el.querySelector('.wrap-selector').addEventListener('change', (e) => {
+        const mode = e.target.value;
+        el.dataset.wrapMode = mode;
+        el.querySelector('.image-container').className = `image-container wrap-${mode}`;
+        saveToStorage();
+      });
+
+      el.querySelector('.image-text-content').addEventListener('input', () => saveToStorage());
+      return el;
+    }
+
+    // --- ドラッグ移動共通 ---
+    function initDraggable(element, handle) {
+      let isDragging = false;
+      let startX, startY, initialLeft, initialTop;
+
+      handle.addEventListener('mousedown', (e) => {
+        if (isConnectMode || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT') return;
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        initialLeft = element.offsetLeft;
+        initialTop = element.offsetTop;
+        element.style.zIndex = 30;
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      });
+
+      function onMouseMove(e) {
+        if (!isDragging) return;
+        element.style.left = `${Math.max(0, initialLeft + (e.clientX - startX))}px`;
+        element.style.top = `${Math.max(0, initialTop + (e.clientY - startY))}px`;
+        renderLines();
+      }
+
+      function onMouseUp() {
+        isDragging = false;
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        saveToStorage();
+      }
+    }
+
+    // --- 穴埋めマスク機能 ---
+    addMaskBtn.addEventListener('click', () => {
+      const sel = window.getSelection();
+      if (!sel.rangeCount || sel.isCollapsed) {
+        alert('穴埋めにするテキストを選択してください。');
+        return;
+      }
+      const range = sel.getRangeAt(0);
+      const span = document.createElement('span');
+      span.className = 'test-mask masked';
+      span.contentEditable = 'false';
+      span.textContent = range.toString();
+
+      range.deleteContents();
+      range.insertNode(span);
+      saveToStorage();
+    });
+
+    toggleAllMasksBtn.addEventListener('click', () => {
+      const masks = document.querySelectorAll('.test-mask');
+      if (masks.length === 0) return;
+      areAllMasksRevealed = !areAllMasksRevealed;
+      masks.forEach(m => {
+        if (areAllMasksRevealed) {
+          m.classList.remove('masked');
+          m.classList.add('revealed');
+        } else {
+          m.classList.remove('revealed');
+          m.classList.add('masked');
+        }
+      });
+    });
+
+    workspace.addEventListener('click', (e) => {
+      const mask = e.target.closest('.test-mask');
+      if (mask && !isConnectMode) {
+        if (mask.classList.contains('masked')) {
+          mask.classList.remove('masked');
+          mask.classList.add('revealed');
+        } else {
+          mask.classList.remove('revealed');
+          mask.classList.add('masked');
+        }
+      }
+    });
+
+    // --- 文字装飾 (太字・マーカー・訂正) ---
+    document.querySelectorAll('.color-dot-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const type = btn.dataset.type;
+        const color = btn.dataset.color;
+        const sel = window.getSelection();
+
+        if (type === 'clear-marker') {
+          if (!sel.rangeCount) return;
+          let node = sel.anchorNode;
+          while (node && node !== workspace) {
+            if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('highlight-marker')) {
+              const parent = node.parentNode;
+              while (node.firstChild) parent.insertBefore(node.firstChild, node);
+              parent.removeChild(node);
+              break;
             }
-        };
-
-        window.cloudLoad = async function() {
-            try {
-                const docSnap = await getDoc(doc(db, "appData", "mainDoc"));
-                if (docSnap.exists()) return docSnap.data();
-                return null;
-            } catch (e) {
-                console.error("読み込みエラー: ", e);
-                return null;
-            }
-        };
-
-        if (window.initCloudApp) window.initCloudApp();
-    </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
-
-    <script>
-        let currentScheduleMode = 'slide'; 
-        let allScheduleDays = [];   
-        let temporarySavedSchedules = {}; 
-        let noteTabs = [];
-        let currentTabId = null;
-        let cards = [];
-
-        function updateEditorToolbarTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const targetColor = (currentTheme === 'dark') ? '#ffffff' : '#000000';
-            document.querySelectorAll('.ql-toolbar').forEach(toolbar => {
-                toolbar.querySelectorAll('.ql-stroke').forEach(el => el.style.stroke = targetColor);
-                toolbar.querySelectorAll('.ql-fill').forEach(el => el.style.fill = targetColor);
-                toolbar.querySelectorAll('.ql-picker').forEach(el => el.style.color = targetColor);
-                toolbar.querySelectorAll('.ql-picker-label').forEach(el => el.style.color = targetColor);
-            });
+            node = node.parentNode;
+          }
+          saveToStorage();
+          return;
         }
 
-        function toggleTheme() {
-            const html = document.documentElement;
-            const btn = document.getElementById('theme-toggle-btn');
-            if (html.getAttribute('data-theme') === 'dark') {
-                html.setAttribute('data-theme', 'light');
-                btn.textContent = "☀️";
-            } else {
-                html.setAttribute('data-theme', 'dark');
-                btn.textContent = "🌙";
-            }
-            renderSchedules();
-            updateEditorToolbarTheme();
+        if (!sel.rangeCount || sel.isCollapsed) return;
+        const range = sel.getRangeAt(0);
+        const content = range.extractContents();
+        const span = document.createElement('span');
+
+        if (type === 'bold') {
+          span.className = 'custom-bold';
+          span.style.color = color;
+        } else if (type === 'marker') {
+          span.className = 'highlight-marker';
+          span.style.backgroundColor = color;
         }
+        span.appendChild(content);
+        range.insertNode(span);
+        saveToStorage();
+      });
+    });
 
-        function switchMainTab(tabName) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    correctBtn.addEventListener('click', () => {
+      const sel = window.getSelection();
+      if (!sel.rangeCount || sel.isCollapsed) {
+        alert('訂正したい文字を選択してください。');
+        return;
+      }
+      const text = sel.toString();
+      const correction = prompt(`「${text}」に対する訂正を入力:`);
+      if (correction === null) return;
 
-            if (tabName === 'schedule') {
-                document.querySelector('.main-tabs button:nth-child(1)').classList.add('active');
-                document.getElementById('tab-schedule').classList.add('active');
-            } else {
-                document.querySelector('.main-tabs button:nth-child(2)').classList.add('active');
-                document.getElementById('tab-notes').classList.add('active');
-                setTimeout(updateEditorToolbarTheme, 50);
-            }
+      const range = sel.getRangeAt(0);
+      const wrapper = document.createElement('span');
+      wrapper.className = 'correction-wrapper';
+      wrapper.contentEditable = 'false';
+
+      wrapper.innerHTML = `<del class="correction-del">${text}</del><ins class="correction-ins">${correction}</ins>`;
+      range.deleteContents();
+      range.insertNode(wrapper);
+      saveToStorage();
+    });
+
+    undoCorrectBtn.addEventListener('click', () => {
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+      let node = sel.anchorNode;
+      while (node && node !== workspace) {
+        if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('correction-wrapper')) {
+          const del = node.querySelector('.correction-del');
+          const txt = document.createTextNode(del ? del.textContent : '');
+          node.parentNode.replaceChild(txt, node);
+          saveToStorage();
+          break;
         }
+        node = node.parentNode;
+      }
+    });
 
-        function getJapaneseHolidayName(d) {
-            const y = d.getFullYear(), m = d.getMonth() + 1, day = d.getDate(), dayOfWeek = d.getDay();
-            const springEquinox = Math.floor(20.8431 + 0.242194 * (y - 1980) - Math.floor((y - 1980) / 4));
-            const autumnEquinox = Math.floor(23.2488 + 0.242194 * (y - 1980) - Math.floor((y - 1980) / 4));
-            const weekOfMonth = Math.floor((day - 1) / 7) + 1;
-            let holidayName = null;
-            if (m === 1 && day === 1) holidayName = "元日";
-            else if (m === 1 && dayOfWeek === 1 && weekOfMonth === 2) holidayName = "成人の日";
-            else if (m === 2 && day === 11) holidayName = "建国記念の日";
-            else if (m === 2 && day === 23) holidayName = "天皇誕生日";
-            else if (m === 3 && day === springEquinox) holidayName = "春分の日";
-            else if (m === 4 && day === 29) holidayName = "昭和の日";
-            else if (m === 5 && day === 3) holidayName = "憲法記念日";
-            else if (m === 5 && day === 4) holidayName = "みどりの日";
-            else if (m === 5 && day === 5) holidayName = "こどもの日";
-            else if (m === 7 && dayOfWeek === 1 && weekOfMonth === 3) holidayName = "海の日";
-            else if (m === 8 && day === 11) holidayName = "山の日";
-            else if (m === 9 && dayOfWeek === 1 && weekOfMonth === 3) holidayName = "敬老の日";
-            else if (m === 9 && day === autumnEquinox) holidayName = "秋分の日";
-            else if (m === 10 && dayOfWeek === 1 && weekOfMonth === 2) holidayName = "スポーツの日";
-            else if (m === 11 && day === 3) holidayName = "文化の日";
-            else if (m === 11 && day === 23) holidayName = "勤労感謝の日";
-            return holidayName;
-        }
+    // --- 言語・付箋の関連付け機能 ---
+    connectToggleBtn.addEventListener('click', () => {
+      isConnectMode = !isConnectMode;
+      connectToggleBtn.classList.toggle('active', isConnectMode);
+      cancelConnectBtn.style.display = isConnectMode ? 'inline-flex' : 'none';
+      if (!isConnectMode) resetConnectMode();
+    });
 
-        function initScheduleData() {
-            allScheduleDays = [];
-            const startDate = new Date();
-            const dayNames = ["日", "月", "火", "水", "木", "金", "土"];
-            for (let i = 0; i < 365; i++) {
-                const targetDate = new Date();
-                targetDate.setDate(startDate.getDate() + i);
-                const yyyy = targetDate.getFullYear();
-                const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
-                const dd = String(targetDate.getDate()).padStart(2, '0');
-                const dayOfWeek = targetDate.getDay();
-                allScheduleDays.push({
-                    dateKey: `${yyyy}-${mm}-${dd}`, year: yyyy, month: mm, day: targetDate.getDate(),
-                    dayStr: `${yyyy}年 ${mm}月${dd}日 (${dayNames[dayOfWeek]})`, dayOfWeek: dayOfWeek, holiday: getJapaneseHolidayName(targetDate)
-                });
-            }
-            document.getElementById('range-start').value = allScheduleDays[0].dateKey;
-            document.getElementById('range-end').value = allScheduleDays[allScheduleDays.length - 1].dateKey;
+    cancelConnectBtn.addEventListener('click', resetConnectMode);
 
-            const selectElem = document.getElementById('month-select');
-            const monthsSet = [...new Set(allScheduleDays.map(d => `${d.year}-${d.month}`))];
-            selectElem.innerHTML = "";
-            monthsSet.forEach(ym => {
-                const [y, m] = ym.split('-');
-                const opt = document.createElement('option');
-                opt.value = ym;
-                opt.textContent = `${y}年 ${m}月`;
-                selectElem.appendChild(opt);
-            });
-        }
+    function resetConnectMode() {
+      isConnectMode = false;
+      connectSourceId = null;
+      connectToggleBtn.classList.remove('active');
+      cancelConnectBtn.style.display = 'none';
+      document.querySelectorAll('.selected-for-connect').forEach(el => el.classList.remove('selected-for-connect'));
+    }
 
-        function switchScheduleMode(mode) {
-            currentScheduleMode = mode;
-            document.getElementById('btn-mode-slide').className = mode === 'slide' ? "btn" : "btn btn-secondary";
-            document.getElementById('btn-mode-month').className = mode === 'month' ? "btn" : "btn btn-secondary";
-            document.getElementById('slide-range-wrapper').style.display = mode === 'slide' ? "flex" : "none";
-            document.getElementById('month-selector-wrapper').style.display = mode === 'month' ? "block" : "none";
-            renderSchedules();
-        }
+    workspace.addEventListener('mouseup', () => {
+      if (!isConnectMode) return;
+      const sel = window.getSelection();
+      if (sel.rangeCount && !sel.isCollapsed) {
+        const range = sel.getRangeAt(0);
+        const anchor = document.createElement('span');
+        anchor.className = 'text-anchor';
+        anchor.id = `anchor-${anchorIdCounter++}`;
+        anchor.textContent = range.toString();
+        range.deleteContents();
+        range.insertNode(anchor);
+        processConnection(anchor.id);
+        sel.removeAllRanges();
+      }
+    });
 
-        function captureCurrentInputs() {
-            if (currentScheduleMode === 'slide') {
-                document.querySelectorAll('.schedule-scroll-container .schedule-box').forEach(box => {
-                    const dateKey = box.dataset.dateKey;
-                    if (!temporarySavedSchedules[dateKey]) temporarySavedSchedules[dateKey] = {};
-                    temporarySavedSchedules[dateKey].company = box.querySelector('.plan-company').value;
-                    temporarySavedSchedules[dateKey].home = box.querySelector('.plan-home').value;
-                    temporarySavedSchedules[dateKey].tasks = [
-                        {p: box.querySelector('.t-p-1').value, a: box.querySelector('.t-a-1').value},
-                        {p: box.querySelector('.t-p-2').value, a: box.querySelector('.t-a-2').value},
-                        {p: box.querySelector('.t-p-3').value, a: box.querySelector('.t-a-3').value}
-                    ];
-                });
-            } else {
-                document.querySelectorAll('.calendar-cell:not(.empty)').forEach(cell => {
-                    const dateKey = cell.dataset.dateKey;
-                    if (!temporarySavedSchedules[dateKey]) temporarySavedSchedules[dateKey] = {};
-                    temporarySavedSchedules[dateKey].company = cell.querySelector('.cal-company').value;
-                    temporarySavedSchedules[dateKey].home = cell.querySelector('.cal-home').value;
-                });
-            }
-        }
+    function processConnection(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (!connectSourceId) {
+        connectSourceId = id;
+        el.classList.add('selected-for-connect');
+      } else if (connectSourceId !== id) {
+        const page = getCurrentPage();
+        if (!page.connections) page.connections = [];
+        page.connections.push({ from: connectSourceId, to: id });
+        renderLines();
+        saveToStorage();
+        resetConnectMode();
+      }
+    }
 
-        function renderSchedules() {
-            captureCurrentInputs();
-            const container = document.getElementById('schedule-container');
-            container.innerHTML = "";
+    clearLinesBtn.addEventListener('click', () => {
+      const page = getCurrentPage();
+      if (page.connections) page.connections = [];
+      renderLines();
+      saveToStorage();
+    });
 
-            if (currentScheduleMode === 'slide') {
-                container.className = "schedule-scroll-container";
-                const startVal = document.getElementById('range-start').value;
-                const endVal = document.getElementById('range-end').value;
-                let daysToRender = allScheduleDays;
-                if (startVal && endVal) daysToRender = allScheduleDays.filter(d => d.dateKey >= startVal && d.dateKey <= endVal);
+    function renderLines() {
+      svgLayer.innerHTML = '';
+      const page = getCurrentPage();
+      if (!page || !page.connections) return;
 
-                daysToRender.forEach(d => {
-                    let boxClass = "schedule-box", dateClass = "day-weekday", displayStr = d.dayStr;
-                    if (d.holiday) { boxClass += " box-holiday"; dateClass = "day-holiday"; displayStr += ` - ${d.holiday}`; }
-                    else if (d.dayOfWeek === 0) { boxClass += " box-sunday"; dateClass = "day-sunday"; }
-                    else if (d.dayOfWeek === 6) { boxClass += " box-saturday"; dateClass = "day-saturday"; }
+      const wsRect = workspace.getBoundingClientRect();
+      page.connections.forEach(conn => {
+        const fromEl = document.getElementById(conn.from);
+        const toEl = document.getElementById(conn.to);
+        if (!fromEl || !toEl) return;
 
-                    const box = document.createElement('div');
-                    box.className = boxClass;
-                    box.dataset.dateKey = d.dateKey;
-                    box.innerHTML = `
-                        <div class="date-display ${dateClass}">${displayStr}</div>
-                        <div style="margin-top: 8px; font-size: 0.9em;">
-                            <label>会社: <input type="text" class="plan-company" placeholder="会社の予定"></label>
-                            <label style="margin-top: 5px; display:block;">家: &nbsp;&nbsp;&nbsp;&nbsp;<input type="text" class="plan-home" placeholder="家の予定"></label>
-                        </div>
-                        <table>
-                            <tr><th>#</th><th>タスク予定</th><th>タスク実績</th></tr>
-                            <tr><td>1</td><td><input type="text" class="t-p-1"></td><td><input type="text" class="t-a-1"></td></tr>
-                            <tr><td>2</td><td><input type="text" class="t-p-2"></td><td><input type="text" class="t-a-2"></td></tr>
-                            <tr><td>3</td><td><input type="text" class="t-p-3"></td><td><input type="text" class="t-a-3"></td></tr>
-                        </table>
-                    `;
-                    container.appendChild(box);
+        const r1 = fromEl.getBoundingClientRect();
+        const r2 = toEl.getBoundingClientRect();
 
-                    if (temporarySavedSchedules[d.dateKey]) {
-                        const saved = temporarySavedSchedules[d.dateKey];
-                        box.querySelector('.plan-company').value = saved.company || "";
-                        box.querySelector('.plan-home').value = saved.home || "";
-                        if (saved.tasks) {
-                            saved.tasks.forEach((t, i) => {
-                                box.querySelector(`.t-p-${i+1}`).value = t.p || "";
-                                box.querySelector(`.t-a-${i+1}`).value = t.a || "";
-                            });
-                        }
-                    }
-                });
-            } else {
-                container.className = "";
-                const selectedYM = document.getElementById('month-select').value; 
-                const [targetY, targetM] = selectedYM.split('-').map(Number);
-                const wrapper = document.createElement('div'); wrapper.className = 'calendar-view-container';
-                const grid = document.createElement('div'); grid.className = 'calendar-grid';
-                ["日", "月", "火", "水", "木", "金", "土"].forEach((w, idx) => {
-                    const hCell = document.createElement('div'); hCell.className = 'calendar-header-cell';
-                    if (idx === 0) hCell.style.color = '#ff6b6b'; if (idx === 6) hCell.style.color = '#74c0fc';
-                    hCell.textContent = w; grid.appendChild(hCell);
-                });
-                const firstDayIndex = new Date(targetY, targetM - 1, 1).getDay();
-                const lastDate = new Date(targetY, targetM, 0).getDate();
-                for (let i = 0; i < firstDayIndex; i++) {
-                    const emptyCell = document.createElement('div'); emptyCell.className = 'calendar-cell empty'; grid.appendChild(emptyCell);
-                }
-                for (let day = 1; day <= lastDate; day++) {
-                    const mmStr = String(targetM).padStart(2, '0'), ddStr = String(day).padStart(2, '0');
-                    const dateKey = `${targetY}-${mmStr}-${ddStr}`;
-                    const cellDate = new Date(targetY, targetM - 1, day);
-                    const dayOfWeek = cellDate.getDay();
-                    const holiday = getJapaneseHolidayName(cellDate);
+        const x1 = r1.left - wsRect.left + workspace.scrollLeft + r1.width / 2;
+        const y1 = r1.top - wsRect.top + workspace.scrollTop + r1.height / 2;
+        const x2 = r2.left - wsRect.left + workspace.scrollLeft + r2.width / 2;
+        const y2 = r2.top - wsRect.top + workspace.scrollTop + r2.height / 2;
 
-                    let cellClass = "calendar-cell", numStyle = "day-weekday";
-                    if (holiday) { cellClass += " cell-holiday"; numStyle = "day-holiday"; }
-                    else if (dayOfWeek === 0) { cellClass += " cell-sunday"; numStyle = "day-sunday"; }
-                    else if (dayOfWeek === 6) { cellClass += " cell-saturday"; numStyle = "day-saturday"; }
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        line.setAttribute('class', 'connector-line');
+        svgLayer.appendChild(line);
+      });
+    }
 
-                    const cell = document.createElement('div'); 
-                    cell.className = cellClass; 
-                    cell.dataset.dateKey = dateKey;
+    workspace.addEventListener('scroll', renderLines);
 
-                    const saved = temporarySavedSchedules[dateKey] || {};
-                    cell.innerHTML = `
-                        <div><span class="cal-date-num ${numStyle}">${day} ${holiday ? '('+holiday+')' : ''}</span></div>
-                        <div>
-                            <input type="text" class="cal-input cal-company" placeholder="会社予定" value="${saved.company || ''}">
-                            <input type="text" class="cal-input cal-home" placeholder="家予定" value="${saved.home || ''}">
-                        </div>
-                        <button class="jump-btn">詳細 ➔</button>
-                    `;
-                    cell.querySelector('.jump-btn').addEventListener('click', () => {
-                        captureCurrentInputs();
-                        switchMainTab('schedule'); switchScheduleMode('slide');
-                        setTimeout(() => {
-                            const b = document.querySelector(`.schedule-scroll-container .schedule-box[data-date-key="${dateKey}"]`);
-                            if (b) b.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-                        }, 50);
-                    });
-                    grid.appendChild(cell);
-                }
-                wrapper.appendChild(grid); container.appendChild(wrapper);
-            }
-        }
+    // --- ファイル出入庫 ---
+    exportBtn.addEventListener('click', () => {
+      saveCurrentPageState();
+      const data = { pages, currentPageId, scheduleData };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'notebook_data.json';
+      a.click();
+    });
 
-        // Quill カスタムBlot（マスク、訂正）
-        const Inline = Quill.import('blots/inline');
-        
-        class MaskBlot extends Inline {
-            static create() { let n = super.create(); n.setAttribute('class', 'mask'); return n; }
-            static formats(n) { return n.getAttribute('class')?.includes('mask'); }
-        }
-        MaskBlot.blotName = 'mask'; MaskBlot.tagName = 'span'; Quill.register(MaskBlot, true);
+    importBtn.addEventListener('click', () => importFileInput.click());
+    importFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target.result);
+          if (data && data.pages) {
+            pages = data.pages;
+            currentPageId = data.currentPageId || 'schedule-page';
+            if (data.scheduleData) scheduleData = data.scheduleData;
+            saveToStorage();
+            renderPage(currentPageId);
+            alert('データを読み込みました！');
+          }
+        } catch(err) { alert('読込失敗'); }
+      };
+      reader.readAsText(file);
+    });
 
-        class CorrectionBlot extends Inline {
-            static create(value) {
-                let node = super.create();
-                node.setAttribute('class', 'correction-wrapper');
-                let strike = document.createElement('span');
-                strike.setAttribute('class', 'strike-text');
-                strike.innerText = value.oldText;
-                let correct = document.createElement('span');
-                correct.setAttribute('class', 'correct-text');
-                correct.innerText = value.newText;
-                node.appendChild(strike);
-                node.appendChild(correct);
-                return node;
-            }
-            static formats(node) {
-                let strike = node.querySelector('.strike-text');
-                let correct = node.querySelector('.correct-text');
-                return { oldText: strike ? strike.innerText : '', newText: correct ? correct.innerText : '' };
-            }
-        }
-        CorrectionBlot.blotName = 'correction'; CorrectionBlot.tagName = 'span'; Quill.register(CorrectionBlot, true);
+    saveBtn.addEventListener('click', () => {
+      saveToStorage();
+      alert('保存しました！');
+    });
 
-
-        // --- ノートタブ管理システム ---
-        function saveCurrentCardsToActiveTab() {
-            if (!currentTabId) return;
-            const currentTab = noteTabs.find(t => t.id === currentTabId);
-            if (!currentTab) return;
-
-            currentTab.cards = cards.map(c => ({
-                title: c.titleInput.value,
-                content: c.quill.root.innerHTML
-            }));
-        }
-
-        function switchNoteTab(tabId) {
-            saveCurrentCardsToActiveTab();
-            currentTabId = tabId;
-            renderNoteTabsUI();
-            renderCardsForCurrentTab();
-        }
-
-        function addNewCategoryTab() {
-            saveCurrentCardsToActiveTab();
-            const newId = 'tab_' + Date.now();
-            noteTabs.push({
-                id: newId,
-                name: '新しいタブ',
-                cards: [{ title: '新規ノート', content: '例: <span class="mask">暗記項目</span>' }]
-            });
-            switchNoteTab(newId);
-        }
-
-        function deleteCategoryTab(tabId, event) {
-            event.stopPropagation();
-            if (noteTabs.length <= 1) {
-                alert("最後のタブは削除できません。");
-                return;
-            }
-            if (!confirm("このノートタブと中のカードをすべて削除しますか？")) return;
-
-            noteTabs = noteTabs.filter(t => t.id !== tabId);
-            if (currentTabId === tabId) {
-                currentTabId = noteTabs[0].id;
-            }
-            renderNoteTabsUI();
-            renderCardsForCurrentTab();
-        }
-
-        function renderNoteTabsUI() {
-            const container = document.getElementById('note-category-tabs-container');
-            container.innerHTML = "";
-
-            noteTabs.forEach(tab => {
-                const btn = document.createElement('div');
-                btn.className = `note-cat-btn ${tab.id === currentTabId ? 'active' : ''}`;
-                
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.className = 'note-cat-input';
-                input.value = tab.name;
-                input.onchange = (e) => {
-                    tab.name = e.target.value;
-                };
-
-                btn.appendChild(input);
-
-                if (noteTabs.length > 1) {
-                    const delSpan = document.createElement('span');
-                    delSpan.textContent = '❌';
-                    delSpan.style.cursor = 'pointer';
-                    delSpan.style.fontSize = '0.8em';
-                    delSpan.onclick = (e) => deleteCategoryTab(tab.id, e);
-                    btn.appendChild(delSpan);
-                }
-
-                btn.onclick = (e) => {
-                    if (e.target !== input) {
-                        switchNoteTab(tab.id);
-                    }
-                };
-
-                container.appendChild(btn);
-            });
-        }
-
-        function renderCardsForCurrentTab() {
-            const container = document.getElementById('cards-container');
-            container.innerHTML = "";
-            cards = [];
-
-            const currentTab = noteTabs.find(t => t.id === currentTabId);
-            if (!currentTab || !currentTab.cards) return;
-
-            currentTab.cards.forEach(cData => {
-                addNewCard(cData.title, cData.content);
-            });
-        }
-
-        function addNewCardToCurrentTab() {
-            addNewCard("新しいノート", "");
-            saveCurrentCardsToActiveTab();
-        }
-
-        function addNewCard(title = "", contentHtml = "") {
-            const container = document.getElementById('cards-container');
-            const card = document.createElement('div'); card.className = 'card';
-            
-            card.innerHTML = `
-                <div class="card-header">
-                    <input type="text" class="card-title" placeholder="タイトル" value="${title}">
-                    <button class="btn-delete" title="削除">🗑️ 削除</button>
-                </div>
-                <div class="mask-toolbar">
-                    <button class="btn-action btn-apply-mask">🔒 マスク</button>
-                    <button class="btn-action btn-remove-mask">🔓 解除</button>
-                    <button class="btn-action btn-correct" style="color:#ff4d4d; font-weight:bold;">🖋️ 訂正</button>
-                    <button class="btn-action btn-remove-correct">↩️ 訂正解除</button>
-                    <button class="btn-action btn-resize-img" style="color:#007bff; font-weight:bold;">🖼️ 画像サイズ変更</button>
-                </div>
-                <div class="quill-editor-container"></div>
-            `;
-            container.appendChild(card);
-            
-            const toolbarOptions = [
-                ['bold', 'italic', 'underline', 'strike'],
-                [{ 'color': ['#000000', '#e60000', '#0066cc', '#009900', '#990099', '#ff6600'] }],
-                [{ 'background': ['#ffff00', '#00ff00', '#00ffff', '#ff99ff', '#ff9999'] }],
-                ['link', 'image'],
-                [{ 'header': [1, 2, false] }],
-                ['clean']
-            ];
-
-            const quill = new Quill(card.querySelector('.quill-editor-container'), {
-                modules: { toolbar: toolbarOptions },
-                theme: 'snow'
-            });
-            if (contentHtml) quill.clipboard.dangerouslyPasteHTML(contentHtml);
-
-            updateEditorToolbarTheme();
-
-            quill.on('text-change', (delta, oldDelta, source) => {
-                if (source === 'user') {
-                    const text = quill.getText();
-                    const urlRegex = /(https?:\/\/[^\s]+)/g;
-                    let match;
-                    while ((match = urlRegex.exec(text)) !== null) {
-                        const url = match[1];
-                        const index = match.index;
-                        const format = quill.getFormat(index, url.length);
-                        if (!format.link) {
-                            quill.formatText(index, url.length, 'link', url);
-                        }
-                    }
-                }
-                saveCurrentCardsToActiveTab();
-            });
-
-            card.querySelector('.card-title').addEventListener('input', () => {
-                saveCurrentCardsToActiveTab();
-            });
-
-            // スマホ（タッチ）とPC（クリック）の両方に対応したマスクめくり＆画像選択処理
-            const handleEditorInteraction = function(e) {
-                const target = e.target;
-                if (target.tagName === 'A') {
-                    e.preventDefault();
-                    window.open(target.href, '_blank');
-                } else if (target.tagName === 'IMG') {
-                    card.querySelectorAll('.ql-editor img').forEach(img => img.classList.remove('selected-img'));
-                    target.classList.add('selected-img');
-                } else if (target.classList.contains('mask') || target.closest('.mask')) {
-                    const maskEl = target.classList.contains('mask') ? target : target.closest('.mask');
-                    maskEl.classList.toggle('revealed');
-                    e.preventDefault();
-                }
-            };
-
-            quill.root.addEventListener('click', handleEditorInteraction);
-            quill.root.addEventListener('touchend', handleEditorInteraction);
-
-            cards.push({ cardElement: card, titleInput: card.querySelector('.card-title'), quill: quill });
-
-            card.querySelector('.btn-apply-mask').addEventListener('click', () => {
-                const r = quill.getSelection(); if (r && r.length > 0) { quill.formatText(r.index, r.length, 'mask', true); saveCurrentCardsToActiveTab(); }
-            });
-            card.querySelector('.btn-remove-mask').addEventListener('click', () => {
-                const r = quill.getSelection(); if (r && r.length > 0) { quill.formatText(r.index, r.length, 'mask', false); saveCurrentCardsToActiveTab(); }
-            });
-
-            card.querySelector('.btn-correct').addEventListener('click', () => {
-                const r = quill.getSelection();
-                if (!r || r.length === 0) return alert("訂正するテキストを選択してください。");
-                const oldText = quill.getText(r.index, r.length);
-                const newText = prompt(`「${oldText}」に対する正しい内容（朱字）を入力：`, "");
-                if (newText !== null) {
-                    quill.deleteText(r.index, r.length);
-                    quill.insertEmbed(r.index, 'correction', { oldText: oldText, newText: newText }, Quill.sources.USER);
-                    saveCurrentCardsToActiveTab();
-                }
-            });
-
-            card.querySelector('.btn-remove-correct').addEventListener('click', () => {
-                const r = quill.getSelection();
-                if (!r) return;
-                const [leaf] = quill.getLeaf(r.index);
-                if (leaf && leaf.domNode.parentNode.classList.contains('correction-wrapper')) {
-                    const wrapper = leaf.domNode.parentNode;
-                    const strikeSpan = wrapper.querySelector('.strike-text');
-                    const originalText = strikeSpan ? strikeSpan.innerText : "";
-                    const index = quill.findIndex(wrapper);
-                    quill.deleteText(index, 1);
-                    quill.insertText(index, originalText);
-                    saveCurrentCardsToActiveTab();
-                }
-            });
-
-            card.querySelector('.btn-resize-img').addEventListener('click', () => {
-                const selectedImg = card.querySelector('.ql-editor img.selected-img');
-                if (!selectedImg) {
-                    alert("サイズを変更したい画像をノート内でクリックして選択（青枠を表示）してください。");
-                    return;
-                }
-                const currentWidth = selectedImg.style.width || "250px";
-                const newWidth = prompt("画像の横幅を指定してください（例: 150px, 300px, 500px など）:", currentWidth);
-                if (newWidth) {
-                    selectedImg.style.width = newWidth;
-                    selectedImg.style.height = 'auto';
-                    saveCurrentCardsToActiveTab();
-                }
-            });
-
-            card.querySelector('.btn-delete').addEventListener('click', () => {
-                container.removeChild(card);
-                cards = cards.filter(c => c.cardElement !== card);
-                saveCurrentCardsToActiveTab();
-            });
-        }
-
-        window.saveAllData = async function() {
-            captureCurrentInputs();
-            saveCurrentCardsToActiveTab();
-            const data = {
-                schedules: temporarySavedSchedules,
-                noteTabs: noteTabs
-            };
-            if (window.cloudSave) {
-                await window.cloudSave(data);
-                alert("クラウドに保存しました！");
-            }
-        };
-
-        window.initCloudApp = async function() {
-            initScheduleData();
-            if (window.cloudLoad) {
-                const data = await window.cloudLoad();
-                if (data && data.schedules) temporarySavedSchedules = data.schedules;
-                renderSchedules();
-
-                if (data && data.noteTabs && data.noteTabs.length > 0) {
-                    noteTabs = data.noteTabs;
-                } else {
-                    noteTabs = [
-                        {
-                            id: 'tab_default',
-                            name: '学習ノート 1',
-                            cards: [{ title: 'サンプルノート', content: '例: <span class="mask">暗記項目</span>' }]
-                        }
-                    ];
-                }
-                currentTabId = noteTabs[0].id;
-                renderNoteTabsUI();
-                renderCardsForCurrentTab();
-            }
-        };
-    </script>
+    // 初期化
+    loadFromStorage();
+    renderPage(currentPageId);
+  </script>
 </body>
 </html>
