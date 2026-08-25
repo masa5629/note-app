@@ -2,7 +2,7 @@
 <html lang="ja" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>学習用カードノートアプリ (カテゴリタブ対応版)</title>
+    <title>学習用カードノートアプリ (完全版)</title>
     
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
 
@@ -86,6 +86,7 @@
         :root[data-theme="light"] .ql-toolbar .ql-fill { fill: #212529 !important; }
         :root[data-theme="light"] .ql-toolbar .ql-picker { color: #212529 !important; }
 
+        .ql-editor a { color: #4dabf7; text-decoration: underline; cursor: pointer; }
         .ql-editor img { max-width: none !important; width: 250px; height: auto; cursor: pointer; display: inline-block; border: 2px solid transparent; }
         .ql-editor img.selected-img { border-color: #007bff; box-shadow: 0 0 8px rgba(0,123,255,0.6); }
 
@@ -139,10 +140,7 @@
 
     <!-- 学習ノートタブ -->
     <div id="tab-notes" class="tab-content">
-        <!-- ノートのカテゴリタブエリア -->
-        <div class="note-category-tabs" id="note-category-tabs-container">
-            <!-- 動的生成 -->
-        </div>
+        <div class="note-category-tabs" id="note-category-tabs-container"></div>
 
         <div class="toolbar" style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
             <button class="btn" onclick="addNewCardToCurrentTab()">＋ このタブにノート追加</button>
@@ -202,11 +200,9 @@
         let currentScheduleMode = 'slide'; 
         let allScheduleDays = [];   
         let temporarySavedSchedules = {}; 
-        
-        // ノートカテゴリとカードの管理構造
-        // noteTabs = [{ id: 'tab_1', name: '一般', cards: [ {title, content} ] }]
         let noteTabs = [];
         let currentTabId = null;
+        let cards = [];
 
         function updateEditorToolbarTheme() {
             const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -524,7 +520,6 @@
                 const btn = document.createElement('div');
                 btn.className = `note-cat-btn ${tab.id === currentTabId ? 'active' : ''}`;
                 
-                const nameInput = document.createElement('inputtype');
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.className = 'note-cat-input';
@@ -630,18 +625,24 @@
                 saveCurrentCardsToActiveTab();
             });
 
-            quill.root.addEventListener('click', function(e) {
-                if (e.target.tagName === 'A') {
+            // スマホ（タッチ）とPC（クリック）の両方に対応したマスクめくり＆画像選択処理
+            const handleEditorInteraction = function(e) {
+                const target = e.target;
+                if (target.tagName === 'A') {
                     e.preventDefault();
-                    window.open(e.target.href, '_blank');
-                } else if (e.target.tagName === 'IMG') {
+                    window.open(target.href, '_blank');
+                } else if (target.tagName === 'IMG') {
                     card.querySelectorAll('.ql-editor img').forEach(img => img.classList.remove('selected-img'));
-                    e.target.classList.add('selected-img');
-                } else if (e.target.classList.contains('mask') || e.target.closest('.mask')) {
-                    const maskEl = e.target.classList.contains('mask') ? e.target : e.target.closest('.mask');
+                    target.classList.add('selected-img');
+                } else if (target.classList.contains('mask') || target.closest('.mask')) {
+                    const maskEl = target.classList.contains('mask') ? target : target.closest('.mask');
                     maskEl.classList.toggle('revealed');
+                    e.preventDefault();
                 }
-            });
+            };
+
+            quill.root.addEventListener('click', handleEditorInteraction);
+            quill.root.addEventListener('touchend', handleEditorInteraction);
 
             cards.push({ cardElement: card, titleInput: card.querySelector('.card-title'), quill: quill });
 
@@ -724,7 +725,6 @@
                 if (data && data.noteTabs && data.noteTabs.length > 0) {
                     noteTabs = data.noteTabs;
                 } else {
-                    // デフォルトの初期タブ
                     noteTabs = [
                         {
                             id: 'tab_default',
