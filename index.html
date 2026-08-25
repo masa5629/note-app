@@ -1,537 +1,99 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <title>カード型ノート・高機能スケジュールアプリ</title>
+  <title>カード型ノート・高機能スケジュールアプリ (クラウド同期版)</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
+
   <style>
-    :root {
-      --bg-color: #f7f9fa;
-      --card-bg: #ffffff;
-      --border-color: #e2e8f0;
-      --text-main: #2d3748;
-      --primary: #3182ce;
-      --primary-hover: #2b6cb0;
-      --accent-red: #e53e3e;
-      --accent-blue: #3182ce;
-      --accent-orange: #dd6b20;
-      --line-color: #3182ce;
+    :root[data-theme="dark"] {
+      --bg-color: #1e1e1e; --panel-bg: #2d2d2d; --panel-border: #444; --text-color: #fff; --text-secondary: #aaa; --input-bg: #222; --input-border: #555; --toolbar-bg: #333; --editor-bg: #252525;
+      --sunday-bg: #3a2222; --saturday-bg: #222b3a; --holiday-bg: #3a2e22;
+    }
+    :root[data-theme="light"] {
+      --bg-color: #f4f6f9; --panel-bg: #ffffff; --panel-border: #ccc; --text-color: #212529; --text-secondary: #6c757d; --input-bg: #ffffff; --input-border: #ced4da; --toolbar-bg: #e9ecef; --editor-bg: #ffffff;
+      --sunday-bg: #fdf2f2; --saturday-bg: #f2f7fd; --holiday-bg: #fef6ed;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background-color: var(--bg-color); color: var(--text-color); height: 100vh; display: flex; flex-direction: column; overflow: hidden; transition: background 0.3s, color 0.3s; }
 
     /* ツールバー */
-    header {
-      background: #ffffff;
-      border-bottom: 1px solid var(--border-color);
-      padding: 10px 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      z-index: 100;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      background: #ffffff;
-      border: 1px solid #cbd5e0;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: #4a5568;
-    }
-
-    .btn:hover {
-      background: #f7fafc;
-      border-color: #a0aec0;
-    }
-
-    .btn.active {
-      background: #ebf8ff;
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: #ffffff;
-      border-color: var(--primary);
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-hover);
-      color: #ffffff;
-    }
-
-    .btn-success {
-      background: #38a169;
-      color: #ffffff;
-      border-color: #38a169;
-    }
-
-    .btn-success:hover {
-      background: #2f855a;
-    }
-
-    .btn-danger {
-      background: #e53e3e;
-      color: #ffffff;
-      border-color: #e53e3e;
-    }
-
-    .divider {
-      width: 1px;
-      height: 24px;
-      background: #e2e8f0;
-      margin: 0 4px;
-    }
-
-    .color-group {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: #edf2f7;
-      padding: 3px 6px;
-      border-radius: 6px;
-    }
-
-    .color-group-label {
-      font-size: 11px;
-      font-weight: bold;
-      color: #718096;
-      margin-right: 2px;
-    }
-
-    .color-dot-btn {
-      width: 22px;
-      height: 22px;
-      border-radius: 4px;
-      border: 1px solid rgba(0,0,0,0.15);
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: bold;
-      transition: transform 0.1s;
-    }
-
-    .color-dot-btn:hover {
-      transform: scale(1.15);
-    }
-
-    .status-text {
-      font-size: 12px;
-      color: #718096;
-      margin-left: auto;
-      background: #edf2f7;
-      padding: 4px 10px;
-      border-radius: 4px;
-    }
+    header { background: var(--panel-bg); border-bottom: 1px solid var(--panel-border); padding: 8px 16px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; z-index: 100; }
+    .btn { background: var(--panel-bg); border: 1px solid var(--panel-border); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--text-color); font-weight: 500; display: inline-flex; align-items: center; gap: 4px; }
+    .btn:hover { background: var(--toolbar-bg); }
+    .btn-primary { background: #3182ce; color: #fff; border-color: #3182ce; }
+    .btn-primary:hover { background: #2b6cb0; }
+    .btn-success { background: #38a169; color: #fff; border-color: #38a169; }
+    .btn-success:hover { background: #2f855a; }
+    .btn-danger { background: #e53e3e; color: #fff; border-color: #e53e3e; }
+    .divider { width: 1px; height: 20px; background: var(--panel-border); margin: 0 4px; }
+    .status-text { font-size: 12px; color: var(--text-secondary); margin-left: auto; background: var(--input-bg); padding: 4px 10px; border-radius: 4px; border: 1px solid var(--panel-border); }
 
     /* ページタブバー */
-    #page-bar {
-      background: #edf2f7;
-      border-bottom: 1px solid var(--border-color);
-      padding: 6px 16px 0 16px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      overflow-x: auto;
-    }
-
-    .page-tab {
-      background: #e2e8f0;
-      border: 1px solid #cbd5e0;
-      border-bottom: none;
-      padding: 6px 14px;
-      border-radius: 6px 6px 0 0;
-      font-size: 13px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: #4a5568;
-      user-select: none;
-    }
-
-    .page-tab.active {
-      background: #ffffff;
-      color: var(--primary);
-      font-weight: bold;
-      border-bottom: 1px solid #ffffff;
-      margin-bottom: -1px;
-    }
-
-    .page-tab.schedule-tab {
-      background: #e6fffa;
-      color: #234e52;
-      border-color: #b2f5ea;
-    }
-    .page-tab.schedule-tab.active {
-      background: #ffffff;
-      color: #234e52;
-      border-bottom: 1px solid #ffffff;
-    }
-
-    .tab-close {
-      border: none;
-      background: none;
-      font-size: 12px;
-      cursor: pointer;
-      color: #a0aec0;
-      border-radius: 50%;
-      width: 16px;
-      height: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .tab-close:hover {
-      background: rgba(0,0,0,0.1);
-      color: #2d3748;
-    }
-
-    .add-page-btn {
-      padding: 4px 10px;
-      border-radius: 4px;
-      border: 1px dashed #a0aec0;
-      background: transparent;
-      cursor: pointer;
-      font-size: 13px;
-      margin-bottom: 4px;
-      color: #4a5568;
-    }
-
-    .add-page-btn:hover {
-      background: #ffffff;
-      border-color: var(--primary);
-      color: var(--primary);
-    }
+    #page-bar { background: var(--toolbar-bg); border-bottom: 1px solid var(--panel-border); padding: 6px 16px 0 16px; display: flex; align-items: center; gap: 6px; overflow-x: auto; }
+    .page-tab { background: var(--panel-bg); border: 1px solid var(--panel-border); border-bottom: none; padding: 6px 14px; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+    .page-tab.active { background: var(--bg-color); color: var(--text-color); font-weight: bold; border-bottom: 1px solid var(--bg-color); margin-bottom: -1px; }
+    .page-tab.schedule-tab { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
+    .page-tab.schedule-tab.active { background: var(--bg-color); color: #2e7d32; border-bottom: 1px solid var(--bg-color); }
+    .tab-close { border: none; background: none; font-size: 11px; cursor: pointer; color: var(--text-secondary); border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; }
+    .tab-close:hover { background: rgba(0,0,0,0.1); color: var(--text-color); }
+    .add-page-btn { padding: 4px 10px; border-radius: 4px; border: 1px dashed var(--text-secondary); background: transparent; cursor: pointer; font-size: 13px; margin-bottom: 4px; color: var(--text-color); }
+    .add-page-btn:hover { background: var(--panel-bg); border-color: #3182ce; color: #3182ce; }
 
     /* メイン作業領域 */
-    #workspace {
-      position: relative;
-      flex: 1;
-      overflow: auto;
-      background-image: radial-gradient(#cbd5e0 1.2px, transparent 1.2px);
-      background-size: 24px 24px;
-      background-color: #f7fafc;
-    }
-
-    #base-canvas {
-      width: 100%;
-      min-width: 1800px;
-      min-height: 1800px;
-      padding: 40px;
-      position: relative;
-    }
-
-    #svg-layer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 10;
-    }
-
-    .connector-line {
-      stroke: var(--primary);
-      stroke-width: 2.5;
-      stroke-dasharray: 6 4;
-      fill: none;
-    }
-
-    /* 付箋カード */
-    .note-card {
-      position: absolute;
-      min-width: 260px;
-      min-height: 180px;
-      width: 320px;
-      height: 240px;
-      background: #fffff0;
-      border: 1px solid #ecc94b;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      display: flex;
-      flex-direction: column;
-      resize: both;
-      overflow: hidden;
-      z-index: 20;
-    }
-
-    .note-card.selected-for-connect {
-      outline: 3px solid var(--primary);
-      box-shadow: 0 0 15px rgba(49, 130, 206, 0.5);
-    }
-
-    .note-header {
-      background: #fefcbf;
-      padding: 8px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: grab;
-      user-select: none;
-      font-size: 12px;
-      font-weight: 600;
-      color: #744210;
-      border-bottom: 1px solid #f6e05e;
-    }
-
-    .note-header:active {
-      cursor: grabbing;
-    }
-
-    .note-body {
-      flex: 1;
-      padding: 12px;
-      outline: none;
-      font-size: 14px;
-      line-height: 1.8;
-      overflow-y: auto;
-      background: #fffff0;
-    }
-
-    /* 画像カード (ワードの折り返し機能付き) */
-    .image-card {
-      position: absolute;
-      min-width: 200px;
-      min-height: 150px;
-      width: 380px;
-      height: 300px;
-      background: #ffffff;
-      border: 1.5px solid #d6bcfa;
-      border-radius: 8px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-      display: flex;
-      flex-direction: column;
-      resize: both;
-      overflow: hidden;
-      z-index: 22;
-    }
-
-    .image-card.selected-for-connect {
-      outline: 3px solid var(--primary);
-    }
-
-    .image-header {
-      background: #faf5ff;
-      color: #553c9a;
-      padding: 6px 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: grab;
-      font-size: 12px;
-      font-weight: 600;
-      border-bottom: 1px solid #e9d8fd;
-    }
-
-    .image-body {
-      flex: 1;
-      padding: 10px;
-      overflow: auto;
-      background: #ffffff;
-      position: relative;
-    }
-
-    .image-container {
-      position: relative;
-      width: 100%;
-      height: 100%;
-    }
-    
-    .image-container img {
-      max-width: 100%;
-      height: auto;
-      display: block;
-    }
-
-    /* ワード風の折り返しモード */
-    .wrap-inline img {
-      float: left;
-      margin: 0 12px 8px 0;
-      max-width: 45%;
-    }
-    .wrap-square img {
-      float: right;
-      margin: 0 0 8px 12px;
-      max-width: 45%;
-    }
-    .wrap-topbottom img {
-      display: block;
-      margin: 0 auto 8px auto;
-      max-width: 100%;
-    }
-
-    .image-text-content {
-      outline: none;
-      font-size: 14px;
-      line-height: 1.8;
-      min-height: 100%;
-    }
-
-    /* マスク機能 */
-    .test-mask {
-      display: inline-block;
-      padding: 1px 6px;
-      margin: 0 2px;
-      border-radius: 4px;
-      cursor: pointer;
-      user-select: none;
-      font-weight: bold;
-      transition: all 0.2s;
-    }
-    .test-mask.masked {
-      background-color: #2d3748 !important;
-      color: transparent !important;
-      box-shadow: inset 0 0 4px rgba(0,0,0,0.4);
-    }
-    .test-mask.revealed {
-      background-color: #e6fffa !important;
-      color: #234e52 !important;
-      border: 1px dashed #319795;
-    }
-
-    /* 校正 (二重線＋訂正) */
-    .correction-wrapper {
-      display: inline-flex;
-      flex-direction: column;
-      vertical-align: middle;
-      margin: 0 3px;
-      line-height: 1.1;
-      padding: 1px 4px;
-      background: rgba(229, 62, 62, 0.05);
-      border: 1px dashed rgba(229, 62, 62, 0.3);
-      border-radius: 3px;
-    }
-    .correction-del {
-      text-decoration: line-through double var(--accent-red);
-      color: #a0aec0;
-      font-size: 0.95em;
-    }
-    .correction-ins {
-      color: var(--accent-red);
-      font-size: 0.8em;
-      font-weight: bold;
-      text-decoration: none;
-      margin-top: 1px;
-    }
-
-    .custom-bold { font-weight: bold; }
-    .highlight-marker { padding: 2px 4px; border-radius: 3px; }
-
-    .text-anchor {
-      border-bottom: 2px dashed var(--primary);
-      background-color: rgba(49, 130, 206, 0.08);
-      padding: 1px 3px;
-      border-radius: 2px;
-      cursor: pointer;
-    }
-    .text-anchor.selected-for-connect {
-      background-color: #bee3f8;
-      outline: 1px solid var(--primary);
-    }
+    #workspace { flex: 1; overflow: auto; padding: 20px; position: relative; background-image: radial-gradient(var(--panel-border) 1px, transparent 1px); background-size: 20px 20px; }
+    #base-canvas { position: relative; min-width: 1800px; min-height: 1800px; }
+    #svg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+    .connector-line { stroke: #3182ce; stroke-width: 2.5; stroke-dasharray: 6 4; fill: none; }
 
     /* スケジュールマトリックスデザイン */
-    .matrix-app-wrapper {
-      max-width: 1500px;
-      margin: 0 auto;
-      background: #ffffff;
-      padding: 24px;
-      border-radius: 8px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
-      border: 1px solid var(--border-color);
-    }
+    .matrix-app-wrapper { max-width: 1600px; margin: 0 auto; background: var(--panel-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--panel-border); box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .resizable-cal { resize: both; overflow: auto; border: 2px solid #a5d6a7; min-width: 400px; min-height: 250px; padding: 10px; margin-bottom: 20px; background: var(--input-bg); border-radius: 6px; }
+    .matrix-table-container { width: 100%; overflow-x: auto; border: 1px solid var(--panel-border); border-radius: 6px; }
+    .matrix-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12px; background: var(--panel-bg); }
+    .matrix-table th, .matrix-table td { border: 1px solid var(--panel-border); padding: 4px; vertical-align: middle; }
+    .matrix-table th { background: var(--toolbar-bg); text-align: center; font-weight: bold; }
+    .col-header-date { font-size: 13px; color: #3182ce; background: #e3f2fd !important; }
+    .col-header-day { font-size: 12px; font-weight: bold; }
+    .col-header-day.sun { color: #d32f2f; background: var(--sunday-bg) !important; }
+    .col-header-day.sat { color: #1976d2; background: var(--saturday-bg) !important; }
+    .col-header-day.hol { color: #ff6600; background: var(--holiday-bg) !important; }
+    .matrix-row-label { width: 130px; font-weight: bold; background: var(--toolbar-bg); text-align: center; font-size: 12px; }
+    .matrix-row-label.work { color: #1565c0; background: #e3f2fd; }
+    .matrix-row-label.home { color: #2e7d32; background: #e8f5e9; }
+    .matrix-cell-textarea { width: 100%; height: 50px; padding: 4px; font-size: 12px; border: 1px solid var(--panel-border); border-radius: 4px; resize: vertical; background: var(--input-bg); color: var(--text-color); font-family: inherit; outline: none; }
+    .matrix-cell-textarea:focus { border-color: #3182ce; }
+    .control-bar { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: var(--toolbar-bg); padding: 10px; border-radius: 6px; border: 1px solid var(--panel-border); }
 
-    .matrix-table-container {
-      width: 100%;
-      overflow-x: auto;
-      border: 1px solid #cbd5e0;
-      border-radius: 6px;
-      margin-top: 15px;
-    }
+    /* 付箋カード */
+    .note-card { position: absolute; min-width: 260px; width: 320px; height: 230px; background: #fffdf0; border: 1px solid #e0d080; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; resize: both; overflow: hidden; z-index: 20; }
+    .note-card.selected-for-connect { outline: 3px solid #3182ce; }
+    .note-header { background: #fff3a8; padding: 6px 10px; display: flex; align-items: center; justify-content: space-between; cursor: grab; font-size: 12px; font-weight: 600; color: #5d5218; border-bottom: 1px solid #e0d080; }
+    .note-body { flex: 1; padding: 10px; outline: none; font-size: 13px; line-height: 1.6; overflow-y: auto; background: #fffdf0; color: #2d3748; }
 
-    .matrix-table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-      font-size: 13px;
-      background: #fff;
-    }
+    /* 画像カード */
+    .image-card { position: absolute; min-width: 200px; width: 360px; height: 280px; background: #fff; border: 1.5px solid #d6bcfa; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,0.1); display: flex; flex-direction: column; resize: both; overflow: hidden; z-index: 22; }
+    .image-card.selected-for-connect { outline: 3px solid #3182ce; }
+    .image-header { background: #faf5ff; color: #553c9a; padding: 6px 10px; display: flex; align-items: center; justify-content: space-between; cursor: grab; font-size: 12px; font-weight: 600; border-bottom: 1px solid #e9d8fd; }
+    .image-body { flex: 1; padding: 10px; overflow: auto; background: #fff; }
+    .image-container img { max-width: 100%; height: auto; display: block; }
+    .wrap-inline img { float: left; margin: 0 10px 6px 0; max-width: 45%; }
+    .wrap-square img { float: right; margin: 0 0 6px 10px; max-width: 45%; }
+    .wrap-topbottom img { display: block; margin: 0 auto 6px auto; max-width: 100%; }
+    .image-text-content { outline: none; font-size: 13px; line-height: 1.6; min-height: 80px; color: #2d3748; }
 
-    .matrix-table th, .matrix-table td {
-      border: 1px solid #e2e8f0;
-      padding: 6px;
-      vertical-align: middle;
-    }
+    /* マスク機能 */
+    .test-mask { display: inline-block; padding: 1px 5px; margin: 0 2px; border-radius: 4px; cursor: pointer; user-select: none; font-weight: bold; }
+    .test-mask.masked { background-color: #2d3748 !important; color: transparent !important; box-shadow: inset 0 0 4px rgba(0,0,0,0.4); }
+    .test-mask.revealed { background-color: #e6fffa !important; color: #234e52 !important; border: 1px dashed #319795; }
 
-    .matrix-table th {
-      background: #edf2f7;
-      text-align: center;
-      font-weight: bold;
-    }
+    /* 関連付けアンカー */
+    .text-anchor { border-bottom: 2px dashed #3182ce; background-color: rgba(49, 130, 206, 0.1); padding: 1px 3px; border-radius: 2px; cursor: pointer; color: #2b6cb0; }
+    .text-anchor.selected-for-connect { background-color: #bee3f8; outline: 1px solid #3182ce; }
 
-    .col-header-date {
-      font-size: 13px;
-      color: var(--primary);
-      background: #ebf8ff !important;
-    }
-
-    .col-header-day {
-      font-size: 12px;
-      font-weight: bold;
-    }
-    .col-header-day.sun { color: var(--accent-red); background: #fff5f5 !important; }
-    .col-header-day.sat { color: var(--accent-blue); background: #ebf8ff !important; }
-    .col-header-day.hol { color: var(--accent-orange); background: #fffaf0 !important; }
-
-    .matrix-row-label {
-      width: 140px;
-      font-weight: bold;
-      background: #f7fafc;
-      text-align: center;
-      font-size: 12px;
-    }
-    .matrix-row-label.work { color: #2b6cb0; background: #ebf8ff; }
-    .matrix-row-label.home { color: #2f855a; background: #f0fff4; }
-
-    .matrix-cell-textarea {
-      width: 100%;
-      height: 60px;
-      padding: 6px;
-      font-size: 12px;
-      border: 1px solid #e2e8f0;
-      border-radius: 4px;
-      resize: vertical;
-      font-family: inherit;
-      outline: none;
-    }
-    .matrix-cell-textarea:focus { border-color: var(--primary); }
+    select, input[type="date"], input[type="text"] { background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); padding: 4px 8px; border-radius: 4px; }
   </style>
 </head>
 <body>
@@ -543,76 +105,104 @@
 
     <div class="divider"></div>
 
-    <!-- 穴埋めマスク -->
     <button class="btn btn-success" id="add-mask-btn" title="選択テキストを穴埋めマスクにする">🙈 穴埋めマスク</button>
     <button class="btn" id="toggle-all-masks-btn" title="全マスクの表示/非表示切替">👀 全マスク表示/隠す</button>
 
     <div class="divider"></div>
 
-    <!-- 保存 -->
-    <button class="btn btn-primary" id="save-btn" title="ブラウザに保存 (Ctrl+S)">💾 保存</button>
-    <button class="btn" id="export-btn" title="データ書出">📤 出力</button>
-    <button class="btn" id="import-btn" title="データ読込">📥 読込</button>
+    <button class="btn btn-primary" id="save-btn" title="クラウドに保存 (Ctrl+S)">💾 クラウドに保存</button>
+    <button class="btn" id="export-btn" title="JSON出力">📤 出力</button>
+    <button class="btn" id="import-btn" title="JSON読込">📥 読込</button>
     <input type="file" id="import-file-input" accept=".json" style="display:none;">
 
     <div class="divider"></div>
 
-    <!-- 太字カラー -->
-    <div class="color-group">
-      <span class="color-group-label">太字:</span>
-      <button class="color-dot-btn" data-type="bold" data-color="#2d3748" style="background:#2d3748; color:#fff;" title="黒">B</button>
-      <button class="color-dot-btn" data-type="bold" data-color="#e53e3e" style="background:#fff5f5; color:#e53e3e;" title="赤">B</button>
-      <button class="color-dot-btn" data-type="bold" data-color="#3182ce" style="background:#ebf8ff; color:#3182ce;" title="青">B</button>
-    </div>
-
-    <!-- マーカー -->
-    <div class="color-group">
-      <span class="color-group-label">マーカー:</span>
-      <button class="color-dot-btn" data-type="marker" data-color="#fed7d7" style="background:#fed7d7;" title="赤"> </button>
-      <button class="color-dot-btn" data-type="marker" data-color="#fefcbf" style="background:#fefcbf;" title="黄"> </button>
-      <button class="color-dot-btn" data-type="marker" data-color="#bee3f8" style="background:#bee3f8;" title="青"> </button>
-      <button class="color-dot-btn" data-type="clear-marker" style="background:#fff; color:#e53e3e;" title="解除">✕</button>
-    </div>
-
-    <button class="btn" id="correct-btn" title="二重線と訂正">✂ 二重線で訂正</button>
-    <button class="btn" id="undo-correct-btn" title="訂正・マスク解除">↩ 訂正/マスク解除</button>
-
-    <div class="divider"></div>
-
-    <button class="btn" id="connect-toggle-btn" title="言葉や付箋の関連付け">🔗 関連付け</button>
-    <button class="btn btn-danger" id="cancel-connect-btn" style="display:none;" title="中止">✕ 中止</button>
+    <button class="btn" id="connect-toggle-btn" title="関連付け">🔗 関連付け</button>
+    <button class="btn btn-danger" id="cancel-connect-btn" style="display:none;">✕ 中止</button>
     <button class="btn" id="clear-lines-btn">接続全解除</button>
 
-    <span class="status-text" id="status-message">自動保存有効</span>
+    <div class="divider"></div>
+    <button class="btn" onclick="toggleTheme()" id="theme-toggle-btn">🌙</button>
+
+    <span class="status-text" id="status-message">☁️ クラウド接続中...</span>
   </header>
 
   <div id="page-bar">
     <div id="tabs-container" style="display: flex; gap: 6px;"></div>
-    <button class="add-page-btn" id="add-page-btn">＋ ページ追加</button>
+    <button class="add-page-btn" id="add-page-btn">＋ ノート追加</button>
   </div>
 
   <div id="workspace">
     <svg id="svg-layer"></svg>
-    <div id="base-canvas" contenteditable="true" spellcheck="false"></div>
+    <div id="base-canvas"></div>
   </div>
 
-  <script>
-    const STORAGE_KEY = 'CARD_NOTE_SCHEDULE_APP_V1';
+  <!-- Firebase クラウド同期スクリプト -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
-    const DEFAULT_PAGES = [
+    // ★★★ ご自身のFirebase設定に書き換えてください ★★★
+    const firebaseConfig = {
+        apiKey: "AIzaSyCdaWFXOfeCJwr2u-MGNyja3yUuoVoLplA",
+        authDomain: "note-app-fa29b.firebaseapp.com",
+        projectId: "note-app-fa29b",
+        storageBucket: "note-app-fa29b.firebasestorage.app",
+        messagingSenderId: "247676836666",
+        appId: "1:247676836666:web:c478efbd48ee3bc5de8e03",
+        measurementId: "G-GJWJPJST95"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.cloudSave = async function(data) {
+        try {
+            await setDoc(doc(db, "appData", "mainDoc"), data);
+            document.getElementById('status-message').textContent = "☁️ 同期完了";
+            setTimeout(() => { document.getElementById('status-message').textContent = "☁️ クラウド接続中"; }, 2000);
+        } catch (e) {
+            console.error("保存エラー: ", e);
+            alert("クラウド保存に失敗しました（データ容量が大きすぎないか確認してください）");
+        }
+    };
+
+    window.cloudLoad = async function() {
+        try {
+            const docSnap = await getDoc(doc(db, "appData", "mainDoc"));
+            return docSnap.exists() ? docSnap.data() : null;
+        } catch (e) {
+            console.error("読み込みエラー: ", e);
+            return null;
+        }
+    };
+
+    if (window.initAppAfterCloud) window.initAppAfterCloud();
+  </script>
+
+  <script>
+    const STORAGE_KEY = 'STUDY_NOTE_SCHEDULE_APP_V3';
+
+    let scheduleData = {
+      goal: '応用情報技術者試験 絶対合格！！',
+      startDate: '2026-08-20',
+      endDate: '2026-09-02',
+      cells: {}
+    };
+
+    let pages = [
       {
         id: 'page-1',
-        title: 'ノート 1',
-        content: '<h1>学習ノートスペース</h1><p>背景や付箋に自由に書き込んでください。</p>',
+        title: '自由ノート 1',
+        content: '<h1>自由ノートエリア</h1><p>背景をクリックしてテキストを入力できます。</p>',
         notes: [
-          { id: 'note-1', title: '付箋 #1', text: 'ここに重要なポイントを記載', x: 850, y: 80, w: 280, h: 200 }
+          { id: 'note-1', title: '付箋 #1', text: 'タスク 1: 仕様の確認', x: 800, y: 80, w: 280, h: 200 }
         ],
         images: [],
         connections: []
       }
     ];
 
-    let pages = [];
     let currentPageId = 'schedule-page';
     let noteIdCounter = 100;
     let imageIdCounter = 100;
@@ -621,13 +211,6 @@
     let isConnectMode = false;
     let connectSourceId = null;
     let areAllMasksRevealed = false;
-
-    // スケジュールデータ
-    let scheduleData = {
-      startDate: '2026-08-20',
-      endDate: '2026-08-27',
-      cells: {}
-    };
 
     const workspace = document.getElementById('workspace');
     const baseCanvas = document.getElementById('base-canvas');
@@ -643,14 +226,22 @@
     const exportBtn = document.getElementById('export-btn');
     const importBtn = document.getElementById('import-btn');
     const importFileInput = document.getElementById('import-file-input');
-    const correctBtn = document.getElementById('correct-btn');
-    const undoCorrectBtn = document.getElementById('undo-correct-btn');
     const connectToggleBtn = document.getElementById('connect-toggle-btn');
     const cancelConnectBtn = document.getElementById('cancel-connect-btn');
     const clearLinesBtn = document.getElementById('clear-lines-btn');
-    const statusMsg = document.getElementById('status-message');
 
-    // 祝日判定（簡易版）
+    function toggleTheme() {
+      const html = document.documentElement;
+      const btn = document.getElementById('theme-toggle-btn');
+      if (html.getAttribute('data-theme') === 'dark') {
+        html.setAttribute('data-theme', 'light');
+        btn.textContent = "☀️";
+      } else {
+        html.setAttribute('data-theme', 'dark');
+        btn.textContent = "🌙";
+      }
+    }
+
     function getJapaneseHoliday(date) {
       const m = date.getMonth() + 1;
       const d = date.getDate();
@@ -666,41 +257,49 @@
       return null;
     }
 
-    // --- スケジュールページのHTML生成 ---
+    // --- スケジュールページの生成 ---
     function renderSchedulePageContent() {
       return `
         <div class="matrix-app-wrapper">
-          <div style="display:flex; gap:10px; align-items:center; margin-bottom:15px; background:#f7fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
-            <label style="font-weight:bold; font-size:13px;">期間表示設定：</label>
-            <input type="date" id="sched-start" value="${scheduleData.startDate}" style="padding:4px; border:1px solid #cbd5e0; border-radius:4px;">
-            <span>〜</span>
-            <input type="date" id="sched-end" value="${scheduleData.endDate}" style="padding:4px; border:1px solid #cbd5e0; border-radius:4px;">
-            <button class="btn btn-primary" id="sched-update-btn">表示更新</button>
+          <div class="goal-bar" style="margin-bottom: 12px;">
+            <label style="font-weight:bold;">目標：</label>
+            <input type="text" id="goal-input" value="${scheduleData.goal || ''}" style="width: 85%; padding: 6px;">
           </div>
-
+          <div class="control-bar">
+            <label>期間：</label>
+            <input type="date" id="start-date" value="${scheduleData.startDate}"> 〜 <input type="date" id="end-date" value="${scheduleData.endDate}">
+            <button class="btn btn-primary" id="update-btn">表示更新</button>
+          </div>
           <div class="matrix-table-container">
-            <table class="matrix-table" id="matrix-table-el"></table>
+            <table class="matrix-table" id="matrix-table"></table>
           </div>
         </div>
       `;
     }
 
     function initScheduleDOM() {
-      const updateBtn = document.getElementById('sched-update-btn');
+      const updateBtn = document.getElementById('update-btn');
       if (updateBtn) {
         updateBtn.addEventListener('click', () => {
-          scheduleData.startDate = document.getElementById('sched-start').value;
-          scheduleData.endDate = document.getElementById('sched-end').value;
-          renderPage('schedule-page');
-          saveToStorage();
+          scheduleData.startDate = document.getElementById('start-date').value;
+          scheduleData.endDate = document.getElementById('end-date').value;
+          scheduleData.goal = document.getElementById('goal-input').value;
+          buildMatrixTable();
+          saveAllData();
+        });
+      }
+      const goalInput = document.getElementById('goal-input');
+      if (goalInput) {
+        goalInput.addEventListener('input', (e) => {
+          scheduleData.goal = e.target.value;
         });
       }
       buildMatrixTable();
     }
 
     function buildMatrixTable() {
-      const tableEl = document.getElementById('matrix-table-el');
-      if (!tableEl) return;
+      const table = document.getElementById('matrix-table');
+      if (!table) return;
 
       const start = new Date(scheduleData.startDate);
       const end = new Date(scheduleData.endDate);
@@ -715,13 +314,14 @@
 
       const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
 
-      // 1行1列：日付・曜日・祝日
+      // 日付ヘッダー
       let html = `<thead><tr><th class="matrix-row-label">日付</th>`;
       dateList.forEach(d => {
         html += `<th class="col-header-date">${d.getMonth()+1}/${d.getDate()}</th>`;
       });
       html += `</tr><tr><th class="matrix-row-label">曜日・祝日</th>`;
-      
+
+      // 曜日・祝日ヘッダー
       dateList.forEach(d => {
         const wIdx = d.getDay();
         const holiday = getJapaneseHoliday(d);
@@ -739,7 +339,7 @@
       });
       html += `</tr></thead><tbody>`;
 
-      // 予定欄（会社・家）
+      // 会社予定・家予定
       ['会社 予定', '家 予定'].forEach((label, idx) => {
         const fieldKey = idx === 0 ? 'company' : 'home';
         html += `<tr><td class="matrix-row-label ${idx === 0 ? 'work' : 'home'}">${label}</td>`;
@@ -752,7 +352,7 @@
         html += `</tr>`;
       });
 
-      // 1行2列：タスク（予定と実績）
+      // タスク予定・実績
       ['タスク1 予定', 'タスク1 実績', 'タスク2 予定', 'タスク2 実績'].forEach((label, idx) => {
         const fieldKey = `task_${idx}`;
         html += `<tr><td class="matrix-row-label">${label}</td>`;
@@ -766,56 +366,19 @@
       });
 
       html += `</tbody>`;
-      tableEl.innerHTML = html;
+      table.innerHTML = html;
 
-      tableEl.querySelectorAll('.matrix-cell-textarea').forEach(ta => {
+      table.querySelectorAll('.matrix-cell-textarea').forEach(ta => {
         ta.addEventListener('input', (e) => {
           const dt = e.target.dataset.date;
           const fd = e.target.dataset.field;
           if (!scheduleData.cells[dt]) scheduleData.cells[dt] = {};
           scheduleData.cells[dt][fd] = e.target.value;
-          saveToStorage();
         });
       });
     }
 
-    // --- データ保存 ---
-    function saveToStorage() {
-      saveCurrentPageState();
-      const data = {
-        pages,
-        currentPageId,
-        noteIdCounter,
-        imageIdCounter,
-        pageIdCounter,
-        anchorIdCounter,
-        scheduleData
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    }
-
-    function loadFromStorage() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          const data = JSON.parse(saved);
-          if (data && data.pages) {
-            pages = data.pages;
-            currentPageId = data.currentPageId || 'schedule-page';
-            noteIdCounter = data.noteIdCounter || 100;
-            imageIdCounter = data.imageIdCounter || 100;
-            pageIdCounter = data.pageIdCounter || 10;
-            anchorIdCounter = data.anchorIdCounter || 100;
-            if (data.scheduleData) scheduleData = data.scheduleData;
-            return;
-          }
-        } catch(e) {}
-      }
-      pages = JSON.parse(JSON.stringify(DEFAULT_PAGES));
-      currentPageId = 'schedule-page';
-    }
-
-    // --- ページ切り替え管理 ---
+    // --- ページ管理 ---
     function getCurrentPage() {
       if (currentPageId === 'schedule-page') return { id: 'schedule-page', title: 'スケジュール' };
       return pages.find(p => p.id === currentPageId) || pages[0];
@@ -862,12 +425,10 @@
 
       if (pageId === 'schedule-page') {
         baseCanvas.innerHTML = renderSchedulePageContent();
-        baseCanvas.contentEditable = 'false';
         initScheduleDOM();
       } else {
         const page = getCurrentPage();
         baseCanvas.innerHTML = page.content;
-        baseCanvas.contentEditable = 'true';
         if (page.notes) page.notes.forEach(n => createNoteElement(n));
         if (page.images) page.images.forEach(img => createImageElement(img));
       }
@@ -885,7 +446,6 @@
         if (currentPageId !== 'schedule-page') {
           saveCurrentPageState();
           renderPage('schedule-page');
-          saveToStorage();
         }
       });
       tabsContainer.appendChild(sTab);
@@ -902,7 +462,6 @@
           if (p.id !== currentPageId) {
             saveCurrentPageState();
             renderPage(p.id);
-            saveToStorage();
           }
         });
         if (pages.length > 1) {
@@ -911,7 +470,6 @@
             if (confirm(`「${p.title}」を削除しますか？`)) {
               pages = pages.filter(x => x.id !== p.id);
               renderPage(pages[0].id);
-              saveToStorage();
             }
           });
         }
@@ -922,18 +480,16 @@
     addPageBtn.addEventListener('click', () => {
       saveCurrentPageState();
       const newId = `page-${pageIdCounter++}`;
-      const newPage = {
+      pages.push({
         id: newId,
         title: `ノート ${pages.length + 1}`,
         content: `<p>新しいページです。</p>`,
         notes: [], images: [], connections: []
-      };
-      pages.push(newPage);
+      });
       renderPage(newId);
-      saveToStorage();
     });
 
-    // --- 付箋カード追加 ---
+    // --- 付箋・画像追加 ---
     function createNoteElement(data) {
       const el = document.createElement('div');
       el.className = 'note-card';
@@ -946,21 +502,15 @@
       el.innerHTML = `
         <div class="note-header">
           <span>${data.title}</span>
-          <button class="btn" style="padding:1px 5px; font-size:11px;" onclick="document.getElementById('${data.id}').remove(); renderLines(); saveToStorage();">✕</button>
+          <button class="btn" style="padding:1px 5px; font-size:10px;" onclick="document.getElementById('${data.id}').remove(); renderLines();">✕</button>
         </div>
         <div class="note-body" contenteditable="true" spellcheck="false">${data.text}</div>
       `;
-      workspace.appendChild(el);
+      baseCanvas.appendChild(el);
       initDraggable(el, el.querySelector('.note-header'));
 
-      el.addEventListener('click', () => {
-        if (isConnectMode) processConnection(data.id);
-      });
-      el.querySelector('.note-body').addEventListener('input', () => {
-        renderLines();
-        saveToStorage();
-      });
-      return el;
+      el.addEventListener('click', () => { if (isConnectMode) processConnection(data.id); });
+      el.querySelector('.note-body').addEventListener('input', renderLines);
     }
 
     addNoteBtn.addEventListener('click', () => {
@@ -968,9 +518,8 @@
         alert('スケジュール内には付箋を追加できません。ノートページを選択してください。');
         return;
       }
-      const newId = `note-${noteIdCounter++}`;
       createNoteElement({
-        id: newId,
+        id: `note-${noteIdCounter++}`,
         title: `付箋 #${noteIdCounter-1}`,
         text: '新しいメモ',
         x: workspace.scrollLeft + 100,
@@ -978,12 +527,9 @@
         w: 280, h: 200
       });
       renderLines();
-      saveToStorage();
     });
 
-    // --- 画像追加（ワードの折り返し機能付き） ---
     addImageBtn.addEventListener('click', () => imageFileInput.click());
-
     imageFileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -993,21 +539,16 @@
           alert('スケジュール内には画像を配置できません。');
           return;
         }
-        const imgData = {
+        createImageElement({
           id: `img-${imageIdCounter++}`,
           title: file.name.slice(0, 15),
           src: event.target.result,
           wrapMode: 'inline',
-          text: 'ここに画像の周りに回り込むテキストを入力できます。ワードの文字列の折り返しのように、画像とテキストが連動します。',
+          text: '画像の周りに回り込むテキスト',
           x: workspace.scrollLeft + 150,
           y: workspace.scrollTop + 150,
-          w: 380, h: 300
-        };
-        const page = getCurrentPage();
-        if (!page.images) page.images = [];
-        page.images.push(imgData);
-        createImageElement(imgData);
-        saveToStorage();
+          w: 360, h: 280
+        });
         imageFileInput.value = '';
       };
       reader.readAsDataURL(file);
@@ -1032,7 +573,7 @@
               <option value="square" ${data.wrapMode==='square'?'selected':''}>四角形(右)</option>
               <option value="topbottom" ${data.wrapMode==='topbottom'?'selected':''}>上下</option>
             </select>
-            <button class="btn" style="padding:1px 5px; font-size:11px;" onclick="document.getElementById('${data.id}').remove(); renderLines(); saveToStorage();">✕</button>
+            <button class="btn" style="padding:1px 5px; font-size:10px;" onclick="document.getElementById('${data.id}').remove(); renderLines();">✕</button>
           </div>
         </div>
         <div class="image-body">
@@ -1042,21 +583,15 @@
           </div>
         </div>
       `;
-      workspace.appendChild(el);
+      baseCanvas.appendChild(el);
       initDraggable(el, el.querySelector('.image-header'));
 
       el.querySelector('.wrap-selector').addEventListener('change', (e) => {
-        const mode = e.target.value;
-        el.dataset.wrapMode = mode;
-        el.querySelector('.image-container').className = `image-container wrap-${mode}`;
-        saveToStorage();
+        el.dataset.wrapMode = e.target.value;
+        el.querySelector('.image-container').className = `image-container wrap-${e.target.value}`;
       });
-
-      el.querySelector('.image-text-content').addEventListener('input', () => saveToStorage());
-      return el;
     }
 
-    // --- ドラッグ移動共通 ---
     function initDraggable(element, handle) {
       let isDragging = false;
       let startX, startY, initialLeft, initialTop;
@@ -1064,10 +599,8 @@
       handle.addEventListener('mousedown', (e) => {
         if (isConnectMode || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT') return;
         isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        initialLeft = element.offsetLeft;
-        initialTop = element.offsetTop;
+        startX = e.clientX; startY = e.clientY;
+        initialLeft = element.offsetLeft; initialTop = element.offsetTop;
         element.style.zIndex = 30;
 
         document.addEventListener('mousemove', onMouseMove);
@@ -1080,140 +613,42 @@
         element.style.top = `${Math.max(0, initialTop + (e.clientY - startY))}px`;
         renderLines();
       }
-
       function onMouseUp() {
         isDragging = false;
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
-        saveToStorage();
       }
     }
 
-    // --- 穴埋めマスク機能 ---
+    // --- 穴埋めマスク・関連付け ---
     addMaskBtn.addEventListener('click', () => {
       const sel = window.getSelection();
-      if (!sel.rangeCount || sel.isCollapsed) {
-        alert('穴埋めにするテキストを選択してください。');
-        return;
-      }
+      if (!sel.rangeCount || sel.isCollapsed) return alert('穴埋めにするテキストを選択してください。');
       const range = sel.getRangeAt(0);
       const span = document.createElement('span');
       span.className = 'test-mask masked';
       span.contentEditable = 'false';
       span.textContent = range.toString();
-
       range.deleteContents();
       range.insertNode(span);
-      saveToStorage();
     });
 
     toggleAllMasksBtn.addEventListener('click', () => {
-      const masks = document.querySelectorAll('.test-mask');
-      if (masks.length === 0) return;
       areAllMasksRevealed = !areAllMasksRevealed;
-      masks.forEach(m => {
-        if (areAllMasksRevealed) {
-          m.classList.remove('masked');
-          m.classList.add('revealed');
-        } else {
-          m.classList.remove('revealed');
-          m.classList.add('masked');
-        }
+      document.querySelectorAll('.test-mask').forEach(m => {
+        m.classList.toggle('masked', !areAllMasksRevealed);
+        m.classList.toggle('revealed', areAllMasksRevealed);
       });
     });
 
     workspace.addEventListener('click', (e) => {
       const mask = e.target.closest('.test-mask');
       if (mask && !isConnectMode) {
-        if (mask.classList.contains('masked')) {
-          mask.classList.remove('masked');
-          mask.classList.add('revealed');
-        } else {
-          mask.classList.remove('revealed');
-          mask.classList.add('masked');
-        }
+        mask.classList.toggle('masked');
+        mask.classList.toggle('revealed');
       }
     });
 
-    // --- 文字装飾 (太字・マーカー・訂正) ---
-    document.querySelectorAll('.color-dot-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const type = btn.dataset.type;
-        const color = btn.dataset.color;
-        const sel = window.getSelection();
-
-        if (type === 'clear-marker') {
-          if (!sel.rangeCount) return;
-          let node = sel.anchorNode;
-          while (node && node !== workspace) {
-            if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('highlight-marker')) {
-              const parent = node.parentNode;
-              while (node.firstChild) parent.insertBefore(node.firstChild, node);
-              parent.removeChild(node);
-              break;
-            }
-            node = node.parentNode;
-          }
-          saveToStorage();
-          return;
-        }
-
-        if (!sel.rangeCount || sel.isCollapsed) return;
-        const range = sel.getRangeAt(0);
-        const content = range.extractContents();
-        const span = document.createElement('span');
-
-        if (type === 'bold') {
-          span.className = 'custom-bold';
-          span.style.color = color;
-        } else if (type === 'marker') {
-          span.className = 'highlight-marker';
-          span.style.backgroundColor = color;
-        }
-        span.appendChild(content);
-        range.insertNode(span);
-        saveToStorage();
-      });
-    });
-
-    correctBtn.addEventListener('click', () => {
-      const sel = window.getSelection();
-      if (!sel.rangeCount || sel.isCollapsed) {
-        alert('訂正したい文字を選択してください。');
-        return;
-      }
-      const text = sel.toString();
-      const correction = prompt(`「${text}」に対する訂正を入力:`);
-      if (correction === null) return;
-
-      const range = sel.getRangeAt(0);
-      const wrapper = document.createElement('span');
-      wrapper.className = 'correction-wrapper';
-      wrapper.contentEditable = 'false';
-
-      wrapper.innerHTML = `<del class="correction-del">${text}</del><ins class="correction-ins">${correction}</ins>`;
-      range.deleteContents();
-      range.insertNode(wrapper);
-      saveToStorage();
-    });
-
-    undoCorrectBtn.addEventListener('click', () => {
-      const sel = window.getSelection();
-      if (!sel.rangeCount) return;
-      let node = sel.anchorNode;
-      while (node && node !== workspace) {
-        if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('correction-wrapper')) {
-          const del = node.querySelector('.correction-del');
-          const txt = document.createTextNode(del ? del.textContent : '');
-          node.parentNode.replaceChild(txt, node);
-          saveToStorage();
-          break;
-        }
-        node = node.parentNode;
-      }
-    });
-
-    // --- 言語・付箋の関連付け機能 ---
     connectToggleBtn.addEventListener('click', () => {
       isConnectMode = !isConnectMode;
       connectToggleBtn.classList.toggle('active', isConnectMode);
@@ -1222,10 +657,8 @@
     });
 
     cancelConnectBtn.addEventListener('click', resetConnectMode);
-
     function resetConnectMode() {
-      isConnectMode = false;
-      connectSourceId = null;
+      isConnectMode = false; connectSourceId = null;
       connectToggleBtn.classList.remove('active');
       cancelConnectBtn.style.display = 'none';
       document.querySelectorAll('.selected-for-connect').forEach(el => el.classList.remove('selected-for-connect'));
@@ -1258,7 +691,6 @@
         if (!page.connections) page.connections = [];
         page.connections.push({ from: connectSourceId, to: id });
         renderLines();
-        saveToStorage();
         resetConnectMode();
       }
     }
@@ -1267,7 +699,6 @@
       const page = getCurrentPage();
       if (page.connections) page.connections = [];
       renderLines();
-      saveToStorage();
     });
 
     function renderLines() {
@@ -1290,10 +721,8 @@
         const y2 = r2.top - wsRect.top + workspace.scrollTop + r2.height / 2;
 
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', x1);
-        line.setAttribute('y1', y1);
-        line.setAttribute('x2', x2);
-        line.setAttribute('y2', y2);
+        line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2); line.setAttribute('y2', y2);
         line.setAttribute('class', 'connector-line');
         svgLayer.appendChild(line);
       });
@@ -1301,16 +730,36 @@
 
     workspace.addEventListener('scroll', renderLines);
 
-    // --- ファイル出入庫 ---
+    // --- クラウド・ファイル保存機能 ---
+    window.saveAllData = async function() {
+      saveCurrentPageState();
+      const exportData = {
+        pages,
+        currentPageId,
+        scheduleData,
+        savedAt: new Date().toISOString()
+      };
+      if (window.cloudSave) {
+        await window.cloudSave(exportData);
+      }
+    };
+
+    saveBtn.addEventListener('click', () => saveAllData());
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveAllData();
+      }
+    });
+
     exportBtn.addEventListener('click', () => {
       saveCurrentPageState();
-      const data = { pages, currentPageId, scheduleData };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const exportData = { pages, currentPageId, scheduleData };
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = 'notebook_data.json';
-      a.click();
+      a.href = url; a.download = `study_notes_${new Date().toISOString().slice(0,10)}.json`;
+      a.click(); URL.revokeObjectURL(url);
     });
 
     importBtn.addEventListener('click', () => importFileInput.click());
@@ -1320,28 +769,39 @@
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
-          const data = JSON.parse(event.target.result);
-          if (data && data.pages) {
-            pages = data.pages;
-            currentPageId = data.currentPageId || 'schedule-page';
-            if (data.scheduleData) scheduleData = data.scheduleData;
-            saveToStorage();
+          const imported = JSON.parse(event.target.result);
+          if (imported && imported.pages) {
+            pages = imported.pages;
+            currentPageId = imported.currentPageId || 'schedule-page';
+            if (imported.scheduleData) scheduleData = imported.scheduleData;
             renderPage(currentPageId);
             alert('データを読み込みました！');
           }
-        } catch(err) { alert('読込失敗'); }
+        } catch (err) { alert('読み込み失敗'); }
+        importFileInput.value = '';
       };
       reader.readAsText(file);
     });
 
-    saveBtn.addEventListener('click', () => {
-      saveToStorage();
-      alert('保存しました！');
-    });
+    // 初期化ハンドラ（Firebaseロード完了後に呼び出される）
+    window.initAppAfterCloud = async function() {
+      if (window.cloudLoad) {
+        const data = await window.cloudLoad();
+        if (data) {
+          if (data.pages) pages = data.pages;
+          if (data.currentPageId) currentPageId = data.currentPageId;
+          if (data.scheduleData) scheduleData = data.scheduleData;
+        }
+      }
+      renderPage(currentPageId);
+    };
 
-    // 初期化
-    loadFromStorage();
-    renderPage(currentPageId);
+    // フォールバック初期化（もしFirebase読み込みが遅延・失敗した場合）
+    setTimeout(() => {
+      if (!document.getElementById('matrix-table').innerHTML) {
+        renderPage(currentPageId);
+      }
+    }, 1000);
   </script>
 </body>
 </html>
