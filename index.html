@@ -166,7 +166,7 @@
       width: 100%;
       min-width: 1500px;
       min-height: 1500px;
-      padding: 40px;
+      padding: 20px 40px;
       font-size: 15px;
       line-height: 2.0;
       outline: none;
@@ -174,29 +174,29 @@
       position: relative;
     }
 
-    /* 【縦棒2本で3分割：3カラムレイアウト】 */
-    #base-canvas.note-mode-canvas {
-      display: grid;
-      grid-template-columns: 1fr 2px 1fr 2px 1fr; /* カラムと「縦棒2本」を配置するグリッド */
-      gap: 0 20px;
-      max-width: none;
+    /* 通常ノートページ用：縦棒2本で3分割するレイアウト設定 */
+    #base-canvas.note-mode-canvas h1 {
+      font-size: 24px;
+      margin-bottom: 15px;
+      color: #222;
     }
 
-    #base-canvas.note-mode-canvas h1 {
-      grid-column: 1 / -1;
-      font-size: 24px;
-      margin-bottom: 20px;
-      color: #222;
+    .notes-columns-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 2px 1fr 2px 1fr;
+      gap: 0 25px;
+      align-items: stretch;
+      min-height: 800px;
     }
 
     .note-column {
       background: transparent;
-      padding: 10px;
-      min-height: 600px;
+      padding: 10px 0;
       outline: none;
+      min-height: 100%;
     }
 
-    /* くっきりした縦線（縦棒）のスタイル */
+    /* 一番上から一番下までスーッと伸びる縦棒 */
     .vertical-divider {
       background-color: #b0bec5;
       width: 2px;
@@ -347,14 +347,14 @@
   </div>
 
   <script>
-    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V13';
+    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V14';
 
-    // 縦棒2本（.vertical-divider）をカラムの間に挟む構造に変更
+    // 縦棒2本で3分割する構造に調整
     const DEFAULT_PAGES = [
       {
         id: 'page-1',
         title: 'ページ 1',
-        content: `<h1 style="grid-column: 1 / -1;">自由ノートエリア</h1><div class="note-column" contenteditable="true">カラム 1</div><div class="vertical-divider"></div><div class="note-column" contenteditable="true">カラム 2</div><div class="vertical-divider"></div><div class="note-column" contenteditable="true">カラム 3</div>`,
+        content: `<h1>自由ノートエリア</h1><div class="notes-columns-wrapper"><div class="note-column" contenteditable="true">カラム 1</div><div class="vertical-divider"></div><div class="note-column" contenteditable="true">カラム 2</div><div class="vertical-divider"></div><div class="note-column" contenteditable="true">カラム 3</div></div>`,
         notes: [], images: [], connections: [], branches: []
       }
     ];
@@ -660,7 +660,7 @@
       pages.push({
         id: newId,
         title: name,
-        content: `<h1 style="grid-column: 1 / -1;">${name}</h1><div class="note-column" contenteditable="true">カラム 1</div><div class="vertical-divider"></div><div class="note-column" contenteditable="true">カラム 2</div><div class="vertical-divider"></div><div class="note-column" contenteditable="true">カラム 3</div>`,
+        content: `<h1>${name}</h1><div class="notes-columns-wrapper"><div class="note-column" contenteditable="true">カラム 1</div><div class="vertical-divider"></div><div class="note-column" contenteditable="true">カラム 2</div><div class="vertical-divider"></div><div class="note-column" contenteditable="true">カラム 3</div></div>`,
         notes: [], images: [], connections: [], branches: []
       });
       renderPage(newId);
