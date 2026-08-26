@@ -359,7 +359,7 @@
   </div>
 
   <script>
-    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V21';
+    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V22';
 
     const DEFAULT_PAGES = [
       {
@@ -475,6 +475,7 @@
       buildMatrixTable();
     }
 
+    // 予定テキスト一括取込のパース処理（完全復活版）
     function parseAndApplyScheduleText(rawText) {
       const lines = rawText.split(/\r?\n/);
       let currentSection = null;
