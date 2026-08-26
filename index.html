@@ -168,7 +168,7 @@
       position: relative;
     }
 
-    /* 【講義ノート用紙テンプレート（枠線・固定3分割レイアウト）】 */
+    /* 講義ノート用紙テンプレート（固定3分割レイアウト） */
     .note-sheet {
       width: 1100px;
       min-height: 950px;
@@ -182,7 +182,6 @@
       box-shadow: 0 4px 16px rgba(0,0,0,0.08);
     }
 
-    /* 上部ヘッダー（論点 ＆ ポイント） */
     .sheet-header {
       grid-column: 1 / 3;
       border-bottom: 2px solid #333;
@@ -226,7 +225,6 @@
       overflow-y: auto;
     }
 
-    /* 下部：【板書】【気づき】【要点】の3分割エリア */
     .sheet-body {
       grid-column: 1 / 3;
       display: grid;
@@ -243,7 +241,6 @@
       word-break: break-all;
     }
 
-    /* 綺麗に固定された縦棒2本（区切り線） */
     .sheet-column:not(:last-child) {
       border-right: 2px solid #333;
     }
@@ -355,6 +352,15 @@
       <button class="color-dot-btn" data-type="marker" data-color="#c8e6c9" style="background:#c8e6c9;"></button>
       <button class="color-dot-btn" data-type="clear-marker" style="background:#ffffff; color:#d32f2f;">✕</button>
     </div>
+    <div class="divider"></div>
+    <!-- 文字サイズ変更ボタン群 -->
+    <div class="color-group">
+      <span class="color-group-label">文字サイズ:</span>
+      <button class="btn" data-size="12px" style="padding:2px 6px; font-size:11px;">小</button>
+      <button class="btn" data-size="15px" style="padding:2px 6px; font-size:13px;">中</button>
+      <button class="btn" data-size="18px" style="padding:2px 6px; font-size:15px;">大</button>
+      <button class="btn" data-size="22px" style="padding:2px 6px; font-size:17px;">特大</button>
+    </div>
     <span class="status-text" id="status-message">編集内容は自動保存されます</span>
   </header>
 
@@ -393,13 +399,13 @@
         <button class="modal-close-btn" id="close-help-btn">✕</button>
       </div>
       <div class="modal-body">
-        <p>通常ページは【論点】【ポイント】および【板書】【気づき】【要点】の固定3分割レイアウトになっています。エンターで下に長く書き込めます。</p>
+        <p>文字サイズボタン（小・中・大・特大）を使って、選択したテキストの大きさを自由に変更できます。</p>
       </div>
     </div>
   </div>
 
   <script>
-    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V16';
+    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V17';
 
     const DEFAULT_PAGES = [
       {
@@ -407,9 +413,9 @@
         title: 'ページ 1',
         topic: '論点：',
         point: '1\n2\n3',
-        col1: '【板書】',
-        col2: '【気づき】',
-        col3: '【要点】',
+        col1: '<div class="column-title">【板書】</div>',
+        col2: '<div class="column-title">【気づき】</div>',
+        col3: '<div class="column-title">【要点】</div>',
         notes: [], images: [], connections: [], branches: []
       }
     ];
@@ -749,6 +755,24 @@
         notes: [], images: [], connections: [], branches: []
       });
       renderPage(newId);
+    });
+
+    // 文字サイズ変更ボタンの動作処理
+    document.querySelectorAll('[data-size]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const size = btn.dataset.size;
+        const selection = window.getSelection();
+        if (!selection.rangeCount || selection.isCollapsed) {
+          alert('サイズを変更したいテキストを選択してください。');
+          return;
+        }
+        const range = selection.getRangeAt(0);
+        const span = document.createElement('span');
+        span.style.fontSize = size;
+        span.appendChild(range.extractContents());
+        range.insertNode(span);
+        triggerAutoSave();
+      });
     });
 
     function createNoteElement(data) {
