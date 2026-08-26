@@ -166,7 +166,7 @@
       width: 100%;
       min-width: 1500px;
       min-height: 1500px;
-      padding: 20px 40px;
+      padding: 30px 40px;
       font-size: 15px;
       line-height: 2.0;
       outline: none;
@@ -174,35 +174,39 @@
       position: relative;
     }
 
-    /* 通常ノートページ用：縦棒2本で3分割するレイアウト設定 */
-    #base-canvas.note-mode-canvas h1 {
-      font-size: 24px;
-      margin-bottom: 15px;
-      color: #222;
-    }
-
-    .notes-columns-wrapper {
+    /* 【縦棒2本で3分割：上部から下まで通すレイアウト】 */
+    #base-canvas.note-mode-canvas {
       display: grid;
       grid-template-columns: 1fr 2px 1fr 2px 1fr;
-      gap: 0 25px;
-      align-items: stretch;
-      min-height: 800px;
+      grid-template-rows: auto 1fr;
+      gap: 15px 20px;
+      max-width: none;
+      min-height: 1200px;
+    }
+
+    #base-canvas.note-mode-canvas h1 {
+      grid-column: 1 / -1;
+      font-size: 24px;
+      margin-bottom: 5px;
+      color: #222;
     }
 
     .note-column {
       background: transparent;
       padding: 10px 0;
       outline: none;
-      min-height: 100%;
+      grid-row: 2;
+      min-height: 800px;
     }
 
-    /* 一番上から一番下までスーッと伸びる縦棒 */
+    /* 縦棒を一番上（見出しのすぐ下）から一番下まで伸ばす */
     .vertical-divider {
       background-color: #b0bec5;
       width: 2px;
+      grid-row: 2;
+      align-self: stretch;
       height: 100%;
       min-height: 800px;
-      align-self: stretch;
     }
 
     #svg-layer {
@@ -349,12 +353,11 @@
   <script>
     const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V14';
 
-    // 縦棒2本で3分割する構造に調整
     const DEFAULT_PAGES = [
       {
         id: 'page-1',
         title: 'ページ 1',
-        content: `<h1>自由ノートエリア</h1><div class="notes-columns-wrapper"><div class="note-column" contenteditable="true">カラム 1</div><div class="vertical-divider"></div><div class="note-column" contenteditable="true">カラム 2</div><div class="vertical-divider"></div><div class="note-column" contenteditable="true">カラム 3</div></div>`,
+        content: `<h1 style="grid-column: 1 / -1;">自由ノートエリア</h1><div class="note-column" contenteditable="true">カラム 1</div><div class="vertical-divider"></div><div class="note-column" contenteditable="true">カラム 2</div><div class="vertical-divider"></div><div class="note-column" contenteditable="true">カラム 3</div>`,
         notes: [], images: [], connections: [], branches: []
       }
     ];
@@ -489,7 +492,6 @@
       });
       html += `</tr></thead><tbody>`;
 
-      // 仕事
       html += `<tr><td class="matrix-row-label work">予定(仕事)</td>`;
       dateList.forEach(d => {
         const dateStr = d.toISOString().slice(0, 10);
@@ -499,7 +501,6 @@
       });
       html += `</tr>`;
 
-      // 家
       html += `<tr><td class="matrix-row-label home">予定(家)</td>`;
       dateList.forEach(d => {
         const dateStr = d.toISOString().slice(0, 10);
@@ -509,7 +510,6 @@
       });
       html += `</tr>`;
 
-      // 書籍
       for (let bIdx = 0; bIdx < scheduleData.books.length; bIdx++) {
         html += `<tr><td class="matrix-row-label book">書籍 ${bIdx + 1}</td>`;
         dateList.forEach(d => {
@@ -660,7 +660,7 @@
       pages.push({
         id: newId,
         title: name,
-        content: `<h1>${name}</h1><div class="notes-columns-wrapper"><div class="note-column" contenteditable="true">カラム 1</div><div class="vertical-divider"></div><div class="note-column" contenteditable="true">カラム 2</div><div class="vertical-divider"></div><div class="note-column" contenteditable="true">カラム 3</div></div>`,
+        content: `<h1 style="grid-column: 1 / -1;">${name}</h1><div class="note-column" contenteditable="true">カラム 1</div><div class="vertical-divider"></div><div class="note-column" contenteditable="true">カラム 2</div><div class="vertical-divider"></div><div class="note-column" contenteditable="true">カラム 3</div>`,
         notes: [], images: [], connections: [], branches: []
       });
       renderPage(newId);
