@@ -359,7 +359,7 @@
   </div>
 
   <script>
-    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V24';
+    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V25';
 
     const DEFAULT_PAGES = [
       {
@@ -475,7 +475,7 @@
       buildMatrixTable();
     }
 
-    // 予定テキスト一括取込のパース処理（各セクションの判定を厳密に分離）
+    // 予定テキスト一括取込のパース処理（セクション検出の完全修正版）
     function parseAndApplyScheduleText(rawText) {
       const lines = rawText.split(/\r?\n/);
       let currentSection = null; // 'work', 'home', または 'book_0' 〜 'book_3'
@@ -491,7 +491,7 @@
 
         const cleanLine = line.replace(/\s+/g, '');
 
-        // セクションの切り替え判定
+        // 1. セクションの切り替え判定（厳密にチェック）
         if (cleanLine.includes('予定(仕事)') || cleanLine.includes('予定（仕事）') || cleanLine === '仕事予定') {
           currentSection = 'work';
           activeDateStr = null;
@@ -503,12 +503,14 @@
           continue;
         } 
 
-        // 書籍セクションの判定 (「書籍 1」〜「書籍 4」またはそれに類するもの)
+        // 書籍セクションの判定
         let matchedBook = false;
         for (let i = 0; i < scheduleData.books.length; i++) {
           const num = i + 1;
-          const bookNameClean = scheduleData.books[i].replace(/\s+/g, '');
-          if (cleanLine.includes(`書籍${num}`) || cleanLine.includes(`書籍・サイト${num}`) || cleanLine === bookNameClean) {
+          const bookName = scheduleData.books[i];
+          const bookNameClean = bookName.replace(/\s+/g, '');
+          
+          if (cleanLine === `書籍${num}` || cleanLine === `書籍・サイト${num}` || cleanLine === bookNameClean || cleanLine.includes(`書籍${num}`)) {
             currentSection = `book_${i}`;
             activeDateStr = null;
             matchedBook = true;
@@ -517,7 +519,7 @@
         }
         if (matchedBook) continue;
 
-        // 日付のみの行 (例: "8/28")
+        // 2. 日付のみの行 (例: "8/28")
         const dateOnlyMatch = line.match(/^(\d{1,4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/) || line.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
         if (dateOnlyMatch) {
           if (dateOnlyMatch[3]) {
@@ -533,7 +535,7 @@
           continue;
         }
 
-        // 日付と内容が同じ行にある場合 (例: "8/26 感動大学")
+        // 3. 日付と内容が同じ行にある場合 (例: "8/26 感動大学")
         const dateContentMatch = line.match(/^(\d{1,4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+(.+)$/) || line.match(/^(\d{1,2})[\/\-](\d{1,2})\s+(.+)$/);
         if (dateContentMatch) {
           let y, m, d, textContent;
@@ -560,7 +562,7 @@
           continue;
         }
 
-        // 日付指定後の続きの行（学習内容の複数行など）
+        // 4. 日付指定後の続きの行（学習内容の複数行など）
         if (activeDateStr && currentSection) {
           if (!scheduleData.cells[activeDateStr]) scheduleData.cells[activeDateStr] = {};
           const existing = scheduleData.cells[activeDateStr][currentSection] || '';
