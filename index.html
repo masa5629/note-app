@@ -325,6 +325,7 @@
       background-color: #f0f7ff;
     }
 
+    /* ノートページを縦に3分割（3カラムレイアウト）にする変更 */
     #base-canvas {
       width: 100%;
       min-width: 1500px;
@@ -334,14 +335,30 @@
       line-height: 2.0;
       outline: none;
       color: #333;
-      max-width: 820px;
+      max-width: none; /* 最大幅の制限を解除して広げる */
       position: relative;
+      
+      /* 3分割用のCSSグリッド設定 */
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 30px;
+    }
+
+    /* 3分割された各カラムのスタイル（任意で枠線や背景をつける場合） */
+    .note-column {
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px dashed #d0d5dd;
+      border-radius: 8px;
+      padding: 20px;
+      min-height: 600px;
+      outline: none;
     }
 
     #base-canvas h1 {
       font-size: 24px;
       margin-bottom: 14px;
       color: #222;
+      grid-column: 1 / -1; /* 見出しは3カラム全体にわたって表示 */
     }
 
     #svg-layer {
@@ -819,7 +836,6 @@
       font-size: 13px;
     }
 
-    /* インポートモーダル内専用スタイル */
     .import-textarea {
       width: 100%;
       height: 220px;
@@ -832,7 +848,6 @@
       margin-bottom: 12px;
     }
 
-    /* マトリックス表：日付・曜日列を先頭に固定（スライド可能） */
     .matrix-table-container {
       width: 100%;
       overflow-x: auto;
@@ -861,7 +876,6 @@
       font-weight: bold;
     }
 
-    /* 行頭（左端の項目ラベル列）を常に画面左側にピタッと固定 */
     .matrix-table th:first-child,
     .matrix-table td:first-child {
       position: sticky;
@@ -948,13 +962,11 @@
     
     <div class="divider"></div>
 
-    <!-- テスト・穴埋め機能 -->
     <button class="btn btn-mask" id="add-mask-btn" title="選択テキストを穴埋めマスク（目隠し）にします">🙈 穴埋めマスク</button>
     <button class="btn" id="toggle-all-masks-btn" title="すべての穴埋めマスクの表示/非表示を一括切り替え">👀 全マスク表示/隠す</button>
 
     <div class="divider"></div>
 
-    <!-- 保存・バックアップ -->
     <button class="btn btn-success" id="save-btn" title="ブラウザに保存 (Ctrl+S)">💾 保存</button>
     <button class="btn" id="export-btn" title="ノートデータをファイルとして書き出し">📤 出力</button>
     <button class="btn" id="import-btn" title="保存したノートファイルを読み込み">📥 読込</button>
@@ -962,7 +974,6 @@
 
     <div class="divider"></div>
 
-    <!-- 太字カラー -->
     <div class="color-group">
       <span class="color-group-label">太字:</span>
       <button class="color-dot-btn" data-type="bold" data-color="#333333" style="background:#333333; color:#fff;" title="太字 (黒)">B</button>
@@ -970,7 +981,6 @@
       <button class="color-dot-btn" data-type="bold" data-color="#1976d2" style="background:#e3f2fd; color:#1976d2;" title="太字 (青)">B</button>
     </div>
 
-    <!-- 蛍光マーカー -->
     <div class="color-group">
       <span class="color-group-label">マーカー:</span>
       <button class="color-dot-btn" data-type="marker" data-color="#ffcdd2" style="background:#ffcdd2;" title="マーカー (赤)"> </button>
@@ -999,7 +1009,13 @@
 
   <div id="workspace">
     <svg id="svg-layer"></svg>
-    <div id="base-canvas" contenteditable="true" spellcheck="false"></div>
+    <!-- 縦3分割（3カラム）用のdivを追加したノートエリア -->
+    <div id="base-canvas" contenteditable="true" spellcheck="false">
+      <h1 style="grid-column: 1 / -1;">自由ノートエリア</h1>
+      <div class="note-column" contenteditable="true">カラム 1: ここに文章や内容を入力できます。</div>
+      <div class="note-column" contenteditable="true">カラム 2: 2番目の列です。</div>
+      <div class="note-column" contenteditable="true">カラム 3: 3番目の列です。</div>
+    </div>
   </div>
 
   <!-- テキスト一括取込用モーダル -->
@@ -1011,9 +1027,9 @@
       </div>
       <div class="modal-body">
         <p style="margin-bottom: 8px; font-size: 13px; color: #666;">
-          以下の形式でテキストを貼り付けてください（例: <code>8/20 test</code>、日付のみの下に複数行書く形式にも対応）。「予定(仕事)」「予定(家)」「書籍・サイト 1〜4」のブロックごとに自動で日程に組み込まれます。
+          以下の形式でテキストを貼り付けてください（例: <code>8/20 test</code>）。
         </p>
-        <textarea id="import-schedule-textarea" class="import-textarea" placeholder="予定(仕事)&#10;8/26 感動大学&#10;&#10;書籍・サイト 3&#10;8/28&#10;基礎理論 123&#10;基礎理論 123"></textarea>
+        <textarea id="import-schedule-textarea" class="import-textarea" placeholder="予定(仕事)&#10;8/26 感動大学&#10;&#10;書籍・サイト 3&#10;8/28&#10;基礎理論 123"></textarea>
         <div style="display:flex; justify-content: flex-end; gap: 8px;">
           <button class="btn" id="cancel-text-import-btn">キャンセル</button>
           <button class="btn btn-primary" id="execute-text-import-btn">一括反映する</button>
@@ -1030,19 +1046,16 @@
         <button class="modal-close-btn" id="close-help-btn" title="閉じる">✕</button>
       </div>
       <div class="modal-body">
-        <h3>📅 スケジュールマトリックス ＆ テキスト一括取込</h3>
+        <h3>📅 スケジュールマトリックス ＆ 縦3分割ノート</h3>
         <ul>
-          <li><b>期間表示 (8/20 〜 11/30)</b>: 初期表示で長期間に対応。横にスムーズにスライドして未来の日付を確認できます。</li>
-          <li><b>行頭の固定</b>: 横スクロールしても「日付」「曜日」「予定(仕事)」「予定(家)」などの行頭ラベルは左側にピタッと固定されます。</li>
-          <li><b>予定記載欄の幅拡張</b>: 各日のセル幅（200px）を広めに確保しているため、ゆったりとテキストを書き込めます。</li>
-          <li><b>📋 予定テキストを一括取込</b>: 「予定(仕事)」「予定(家)」「書籍・サイト 3」などのセクション名の下に日付や複数行のテキストを貼り付けるだけで、一瞬でスケジュールへ自動反映できます。</li>
+          <li><b>縦3分割レイアウト</b>: 通常のノートページが縦に3つのカラムに分かれており、セクションごとに整理して書き込めます[cite: 1]。</li>
         </ul>
       </div>
     </div>
   </div>
 
   <script>
-    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V10';
+    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V11';
 
     const NOTE_THEMES = {
       yellow: { bg: '#fffdf0', header: '#fff3a8', border: '#e0d080', text: '#5d5218' },
@@ -1056,9 +1069,9 @@
       {
         id: 'page-1',
         title: 'ページ 1',
-        content: `<h1>自由ノートエリア</h1><p>背景をクリックしてテキストを入力できます。</p>`,
+        content: `<h1 style="grid-column: 1 / -1;">自由ノートエリア</h1><div class="note-column" contenteditable="true">カラム 1: ここに文章を入力</div><div class="note-column" contenteditable="true">カラム 2: ここに文章を入力</div><div class="note-column" contenteditable="true">カラム 3: ここに文章を入力</div>`,
         notes: [
-          { id: 'note-1', title: '付箋 #1', text: 'タスク 1: 仕様の確認', x: 880, y: 80, w: 260, h: 180, theme: 'yellow', opacity: 0.95 }
+          { id: 'note-1', title: '付箋 #1', text: 'タスク 1', x: 880, y: 80, w: 260, h: 180, theme: 'yellow', opacity: 0.95 }
         ],
         images: [],
         connections: [],
@@ -1080,7 +1093,6 @@
     let autoSaveTimer = null;
     let areAllMasksRevealed = false;
 
-    // スケジュールマトリックスデータ（8/20 〜 11/30 初期設定）
     let scheduleData = {
       goal: '応用情報技術者試験 絶対合格！！',
       startDate: '2026-08-20',
@@ -1089,7 +1101,6 @@
       cells: {}
     };
 
-    // DOM要素
     const workspace = document.getElementById('workspace');
     const baseCanvas = document.getElementById('base-canvas');
     const svgLayer = document.getElementById('svg-layer');
@@ -1122,17 +1133,14 @@
     const executeTextImportBtn = document.getElementById('execute-text-import-btn');
     const importScheduleTextarea = document.getElementById('import-schedule-textarea');
 
-    // --- スケジュールタブ専用マトリックスビュー生成 ---
     function renderSchedulePageContent() {
       let html = `
         <div class="matrix-app-wrapper">
-          <!-- 目標バー -->
           <div class="goal-bar">
             <label>目標：</label>
             <input type="text" id="matrix-goal-input" class="goal-input" value="${escapeHtml(scheduleData.goal)}" placeholder="目標を入力してください">
           </div>
 
-          <!-- 期間・コントロールバー -->
           <div class="control-bar">
             <label style="font-size:13px; font-weight:bold;">期間：</label>
             <input type="date" id="matrix-start-date" value="${scheduleData.startDate}">
@@ -1142,11 +1150,8 @@
             <button class="btn btn-success" id="open-text-import-modal-btn">📋 予定テキストを一括取込</button>
           </div>
 
-          <!-- マトリックス表（左端固定・横スライド） -->
           <div class="matrix-table-container">
-            <table class="matrix-table" id="matrix-table-el">
-              <!-- 動的生成 -->
-            </table>
+            <table class="matrix-table" id="matrix-table-el"></table>
           </div>
         </div>
       `;
@@ -1187,10 +1192,9 @@
       buildMatrixTable();
     }
 
-    // --- 強化版テキスト一括取込のパース処理 ---
     function parseAndApplyScheduleText(rawText) {
       const lines = rawText.split(/\r?\n/);
-      let currentSection = null; // 'work', 'home', 'book_0', 'book_1', 'book_2', 'book_3'
+      let currentSection = null;
       let currentYear = new Date().getFullYear();
       let activeDateStr = null;
 
@@ -1201,7 +1205,6 @@
           continue;
         }
 
-        // セクション判定
         if (line.includes('予定(仕事)') || line.includes('予定（仕事）') || line === '仕事予定') {
           currentSection = 'work';
           activeDateStr = null;
@@ -1211,25 +1214,19 @@
           activeDateStr = null;
           continue;
         } else {
-          // 書籍・サイトセクションの判定 (例: "書籍・サイト 3", "書籍・サイト３", "書籍・サイト3" など)
           let matchedBook = false;
           for (let i = 0; i < scheduleData.books.length; i++) {
             const num = i + 1;
-            if (line.includes(`書籍・サイト ${num}`) || line.includes(`書籍・サイト${num}`) || line.includes(`書籍・サイト ${num}`) ||
-                line.includes(`書籍・サイト ３`)[0] === '書' && line.includes(String(num))) { // 簡易全半角対応
-              // より確実にマッチさせる
-              if (line.replace(/\s+/g, '').includes(`書籍・サイト${num}`) || line.replace(/\s+/g, '').includes(`書籍・サイト${['１','２','３','４'][i]}`)) {
-                currentSection = `book_${i}`;
-                activeDateStr = null;
-                matchedBook = true;
-                break;
-              }
+            if (line.replace(/\s+/g, '').includes(`書籍・サイト${num}`)) {
+              currentSection = `book_${i}`;
+              activeDateStr = null;
+              matchedBook = true;
+              break;
             }
           }
           if (matchedBook) continue;
         }
 
-        // 日付単独の行かチェック (例: "8/28", "2026/8/28", "8-28")
         const dateOnlyMatch = line.match(/^(\d{1,4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/) || line.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
         if (dateOnlyMatch) {
           if (dateOnlyMatch[3]) {
@@ -1245,7 +1242,6 @@
           continue;
         }
 
-        // 日付＋内容が同じ行にある場合 (例: "8/26 感動大学")
         const dateContentMatch = line.match(/^(\d{1,4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+(.+)$/) || line.match(/^(\d{1,2})[\/\-](\d{1,2})\s+(.+)$/);
         if (dateContentMatch) {
           let y, m, d, textContent;
@@ -1272,7 +1268,6 @@
           continue;
         }
 
-        // 上で日付を指定したあとに続く内容の行（書籍のタイトル複数行など）
         if (activeDateStr && currentSection) {
           if (!scheduleData.cells[activeDateStr]) scheduleData.cells[activeDateStr] = {};
           const existing = scheduleData.cells[activeDateStr][currentSection] || '';
@@ -1298,9 +1293,6 @@
 
     closeTextImportBtn.addEventListener('click', () => { textImportModal.style.display = 'none'; });
     cancelTextImportBtn.addEventListener('click', () => { textImportModal.style.display = 'none'; });
-    textImportModal.addEventListener('click', (e) => {
-      if (e.target === textImportModal) textImportModal.style.display = 'none';
-    });
 
     function buildMatrixTable() {
       const tableEl = document.getElementById('matrix-table-el');
@@ -1319,7 +1311,6 @@
 
       const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
 
-      // 1. 日付ヘッダー行
       let html = `<thead><tr><th class="matrix-row-label">日付</th>`;
       dateList.forEach(d => {
         const m = d.getMonth() + 1;
@@ -1328,7 +1319,6 @@
       });
       html += `</tr>`;
 
-      // 2. 曜日行
       html += `<tr><th class="matrix-row-label">曜日</th>`;
       dateList.forEach(d => {
         const wIdx = d.getDay();
@@ -1337,7 +1327,6 @@
       });
       html += `</tr></thead><tbody>`;
 
-      // 3. 予定（仕事）行
       html += `<tr><td class="matrix-row-label work">予定(仕事)</td>`;
       dateList.forEach(d => {
         const dateStr = d.toISOString().slice(0, 10);
@@ -1356,7 +1345,6 @@
       });
       html += `</tr>`;
 
-      // 4. 予定（家）行
       html += `<tr><td class="matrix-row-label home">予定(家)</td>`;
       dateList.forEach(d => {
         const dateStr = d.toISOString().slice(0, 10);
@@ -1375,7 +1363,6 @@
       });
       html += `</tr>`;
 
-      // 5. 書籍・サイト行 (4行)
       for (let bIdx = 0; bIdx < scheduleData.books.length; bIdx++) {
         const bookName = scheduleData.books[bIdx];
         html += `<tr>
@@ -1455,7 +1442,6 @@
       });
     }
 
-    // --- 動的スクロール領域拡張 ---
     function updateWorkspaceScrollBounds() {
       let maxX = workspace.clientWidth + 300;
       let maxY = workspace.clientHeight + 300;
@@ -1483,131 +1469,62 @@
       baseCanvas.style.minHeight = `${maxY}px`;
     }
 
-    // --- モーダル制御 ---
-    function openHelp() {
-      helpModal.style.display = 'flex';
-    }
-
-    function closeHelp() {
-      helpModal.style.display = 'none';
-    }
-
+    function openHelp() { helpModal.style.display = 'flex'; }
+    function closeHelp() { helpModal.style.display = 'none'; }
     openHelpBtn.addEventListener('click', openHelp);
     closeHelpBtn.addEventListener('click', closeHelp);
-    helpModal.addEventListener('click', (e) => {
-      if (e.target === helpModal) closeHelp();
-    });
 
-    // --- データ保存・復元 ---
     function loadSavedData() {
-      const candidateKeys = [
-        PERSISTENT_STORAGE_KEY,
-        'STICKY_NOTE_APP_DATA_SCHEDULE_V9',
-        'STICKY_NOTE_APP_DATA_SCHEDULE_V8',
-        'STICKY_NOTE_APP_DATA_SCHEDULE_V7',
-        'STICKY_NOTE_APP_DATA_SCHEDULE_V6',
-        'STICKY_NOTE_APP_DATA_SCHEDULE_V5',
-        'STICKY_NOTE_APP_DATA_SCHEDULE_V4',
-        'STICKY_NOTE_APP_DATA_SCHEDULE_V3',
-        'STICKY_NOTE_APP_DATA_SCHEDULE_V2',
-        'STICKY_NOTE_APP_DATA_SCHEDULE_V1',
-        'STICKY_NOTE_APP_DATA_V7',
-        'STICKY_NOTE_APP_DATA_V6',
-        'STICKY_NOTE_APP_DATA_V5',
-        'STICKY_NOTE_APP_DATA_V4',
-        'STICKY_NOTE_APP_DATA_V3',
-        'STICKY_NOTE_APP_DATA_V2',
-        'STICKY_NOTE_APP_DATA_V1'
-      ];
-
-      for (const key of candidateKeys) {
-        const saved = localStorage.getItem(key);
-        if (saved) {
-          try {
-            const data = JSON.parse(saved);
-            if (data && Array.isArray(data.pages) && data.pages.length > 0) {
-              pages = data.pages;
-              currentPageId = data.currentPageId || 'schedule-page';
-              noteIdCounter = data.noteIdCounter || 100;
-              imageIdCounter = data.imageIdCounter || 100;
-              pageSequenceCounter = data.pageSequenceCounter || 2;
-              pageIdCounter = data.pageIdCounter || 10;
-              anchorIdCounter = data.anchorIdCounter || 100;
-              branchIdCounter = data.branchIdCounter || 100;
-              if (data.scheduleData) {
-                scheduleData = data.scheduleData;
-              }
-              saveToLocalStorage(false);
-              return;
-            }
-          } catch (e) {
-            console.warn(`キー(${key})からの復元に失敗しました:`, e);
+      const saved = localStorage.getItem(PERSISTENT_STORAGE_KEY);
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          if (data && Array.isArray(data.pages) && data.pages.length > 0) {
+            pages = data.pages;
+            currentPageId = data.currentPageId || 'schedule-page';
+            noteIdCounter = data.noteIdCounter || 100;
+            imageIdCounter = data.imageIdCounter || 100;
+            pageSequenceCounter = data.pageSequenceCounter || 2;
+            pageIdCounter = data.pageIdCounter || 10;
+            anchorIdCounter = data.anchorIdCounter || 100;
+            branchIdCounter = data.branchIdCounter || 100;
+            if (data.scheduleData) scheduleData = data.scheduleData;
+            return;
           }
+        } catch (e) {
+          console.warn("復元失敗", e);
         }
       }
-
       pages = JSON.parse(JSON.stringify(DEFAULT_PAGES));
       currentPageId = 'schedule-page';
-      pageSequenceCounter = 2;
-      saveToLocalStorage(false);
     }
 
     function saveToLocalStorage(isManual = false) {
       saveCurrentPageState();
       const exportData = {
-        pages,
-        currentPageId,
-        noteIdCounter,
-        imageIdCounter,
-        pageSequenceCounter,
-        pageIdCounter,
-        anchorIdCounter,
-        branchIdCounter,
-        scheduleData,
+        pages, currentPageId, noteIdCounter, imageIdCounter, pageSequenceCounter,
+        pageIdCounter, anchorIdCounter, branchIdCounter, scheduleData,
         savedAt: new Date().toISOString()
       };
       localStorage.setItem(PERSISTENT_STORAGE_KEY, JSON.stringify(exportData));
-
-      if (isManual) {
-        showStatus('💾 保存が完了しました！');
-      }
+      if (isManual) showStatus('💾 保存が完了しました！');
     }
 
     function triggerAutoSave() {
       clearTimeout(autoSaveTimer);
-      autoSaveTimer = setTimeout(() => {
-        saveToLocalStorage(false);
-      }, 800);
+      autoSaveTimer = setTimeout(() => saveToLocalStorage(false), 800);
     }
 
-    function showStatus(text, isTemporary = true) {
+    function showStatus(text) {
       statusMsg.textContent = text;
-      if (isTemporary) {
-        setTimeout(() => {
-          if (!isConnectMode) {
-            statusMsg.textContent = '編集内容はブラウザに自動保存されます';
-          }
-        }, 2500);
-      }
+      setTimeout(() => {
+        if (!isConnectMode) statusMsg.textContent = '編集内容はブラウザに自動保存されます';
+      }, 2500);
     }
 
-    // JSONエクスポート
     exportBtn.addEventListener('click', () => {
       saveCurrentPageState();
-      const exportData = {
-        pages,
-        currentPageId,
-        noteIdCounter,
-        imageIdCounter,
-        pageSequenceCounter,
-        pageIdCounter,
-        anchorIdCounter,
-        branchIdCounter,
-        scheduleData,
-        version: '1.0',
-        exportedAt: new Date().toLocaleString()
-      };
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const blob = new Blob([localStorage.getItem(PERSISTENT_STORAGE_KEY)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -1617,33 +1534,23 @@
       showStatus('📤 ノートデータを書き出しました');
     });
 
-    // JSONインポート
     importBtn.addEventListener('click', () => importFileInput.click());
     importFileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
           const imported = JSON.parse(event.target.result);
-          if (imported && Array.isArray(imported.pages) && imported.pages.length > 0) {
+          if (imported && Array.isArray(imported.pages)) {
             if (confirm('現在のノートを上書きして読み込みますか？')) {
               pages = imported.pages;
               currentPageId = imported.currentPageId || 'schedule-page';
-              noteIdCounter = imported.noteIdCounter || 100;
-              imageIdCounter = imported.imageIdCounter || 100;
-              pageSequenceCounter = imported.pageSequenceCounter || 2;
-              pageIdCounter = imported.pageIdCounter || 10;
-              anchorIdCounter = imported.anchorIdCounter || 100;
-              branchIdCounter = imported.branchIdCounter || 100;
               if (imported.scheduleData) scheduleData = imported.scheduleData;
               saveToLocalStorage(false);
               renderPage(currentPageId);
               showStatus('📥 ノートデータを読み込みました');
             }
-          } else {
-            alert('有効なノートデータ形式ではありません。');
           }
         } catch (err) {
           alert('ファイルの読み込みに失敗しました。');
@@ -1653,7 +1560,6 @@
       reader.readAsText(file);
     });
 
-    // 手動保存
     saveBtn.addEventListener('click', () => saveToLocalStorage(true));
     document.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
@@ -1667,53 +1573,12 @@
       }
     });
 
-    // --- 画像の自由配置機能 ---
     addImageBtn.addEventListener('click', () => imageFileInput.click());
-
     imageFileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
       handleImageFile(file, workspace.scrollLeft + 150, workspace.scrollTop + 150);
       imageFileInput.value = '';
-    });
-
-    window.addEventListener('paste', (e) => {
-      if (e.clipboardData && e.clipboardData.items) {
-        for (let i = 0; i < e.clipboardData.items.length; i++) {
-          const item = e.clipboardData.items[i];
-          if (item.type.indexOf('image') !== -1) {
-            e.preventDefault();
-            const file = item.getAsFile();
-            const posX = workspace.scrollLeft + 150;
-            const posY = workspace.scrollTop + 150;
-            handleImageFile(file, posX, posY);
-            break;
-          }
-        }
-      }
-    });
-
-    workspace.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      workspace.classList.add('drag-over');
-    });
-
-    workspace.addEventListener('dragleave', () => {
-      workspace.classList.remove('drag-over');
-    });
-
-    workspace.addEventListener('drop', (e) => {
-      e.preventDefault();
-      workspace.classList.remove('drag-over');
-      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-        const file = e.dataTransfer.files[0];
-        if (file.type.startsWith('image/')) {
-          const wsRect = workspace.getBoundingClientRect();
-          const dropX = e.clientX - wsRect.left + workspace.scrollLeft - 100;
-          const dropY = e.clientY - wsRect.top + workspace.scrollTop - 50;
-          handleImageFile(file, Math.max(20, dropX), Math.max(20, dropY));
-        }
-      }
     });
 
     function handleImageFile(file, x, y) {
@@ -1723,26 +1588,15 @@
         const newId = `img-${imageIdCounter++}`;
         const page = getCurrentPage();
         if (page.id === 'schedule-page') {
-          alert('スケジュールタブ内には画像を配置できません。通常ページを選択してください。');
+          alert('スケジュールタブ内には画像を配置できません。');
           return;
         }
         if (!page.images) page.images = [];
-
-        const imgData = {
-          id: newId,
-          title: (file.name && file.name.slice(0, 15)) || '画像',
-          src: src,
-          x: x,
-          y: y,
-          w: 380,
-          h: 280
-        };
-
+        const imgData = { id: newId, title: file.name.slice(0, 15) || '画像', src, x, y, w: 380, h: 280 };
         page.images.push(imgData);
         createImageElement(imgData);
         renderAllLines();
         triggerAutoSave();
-        showStatus('🖼 画像を配置しました（ドラッグで移動・リサイズ可能）');
       };
       reader.readAsDataURL(file);
     }
@@ -1758,138 +1612,64 @@
 
       imgCard.innerHTML = `
         <div class="image-header">
-          <span>🖼 ${data.title || '画像'}</span>
+          <span>🖼 ${data.title}</span>
           <div style="display:flex; gap:4px;">
-            <button class="note-btn layer-up" title="最前面へ">▲</button>
-            <button class="note-btn layer-down" title="最背面へ">▼</button>
             <button class="note-btn delete-btn" title="削除">✕</button>
           </div>
         </div>
-        <div class="image-body">
-          <img src="${data.src}" alt="画像">
-        </div>
+        <div class="image-body"><img src="${data.src}" alt="画像"></div>
       `;
-
       workspace.appendChild(imgCard);
       initDraggable(imgCard, imgCard);
-
       imgCard.querySelector('.delete-btn').addEventListener('click', (e) => {
         e.stopPropagation();
         removeImage(data.id);
       });
-
-      imgCard.querySelector('.layer-up').addEventListener('click', (e) => {
-        e.stopPropagation();
-        imgCard.style.zIndex = 35;
-      });
-      imgCard.querySelector('.layer-down').addEventListener('click', (e) => {
-        e.stopPropagation();
-        imgCard.style.zIndex = 12;
-      });
-
-      imgCard.addEventListener('click', () => {
-        if (isConnectMode) {
-          processConnectionTarget(data.id);
-        }
-      });
-
-      const resizeObserver = new ResizeObserver(() => {
-        renderAllLines();
-        triggerAutoSave();
-      });
-      resizeObserver.observe(imgCard);
-      activeObservers.push(resizeObserver);
-
-      updateWorkspaceScrollBounds();
       return imgCard;
     }
 
     function removeImage(id) {
       const page = getCurrentPage();
-      const el = document.getElementById(id);
-      if (el) el.remove();
-      if (page.images) {
-        page.images = page.images.filter(img => img.id !== id);
-      }
-      page.connections = page.connections.filter(c => c.from !== id && c.to !== id);
+      document.getElementById(id)?.remove();
+      page.images = page.images.filter(img => img.id !== id);
       renderAllLines();
       triggerAutoSave();
     }
 
-    // --- 穴埋めマスク機能 ---
     addMaskBtn.addEventListener('click', () => {
       const selection = window.getSelection();
-      if (!selection.rangeCount || selection.isCollapsed) {
-        alert('穴埋め（目隠し）にしたいテキストを選択してください。');
-        return;
-      }
-
+      if (!selection.rangeCount || selection.isCollapsed) return alert('テキストを選択してください。');
       const range = selection.getRangeAt(0);
-      const selectedText = range.toString().trim();
-      if (!selectedText) return;
-
-      const maskSpan = document.createElement('span');
-      maskSpan.className = 'test-mask masked';
-      maskSpan.contentEditable = 'false';
-      maskSpan.textContent = selectedText;
-      maskSpan.title = 'クリックで正解を表示 / 非表示';
-
+      const span = document.createElement('span');
+      span.className = 'test-mask masked';
+      span.contentEditable = 'false';
+      span.textContent = range.toString().trim();
       range.deleteContents();
-      range.insertNode(maskSpan);
-
-      range.setStartAfter(maskSpan);
-      range.setEndAfter(maskSpan);
-      selection.removeAllRanges();
-      selection.addRange(range);
-
+      range.insertNode(span);
       renderAllLines();
       triggerAutoSave();
     });
 
     toggleAllMasksBtn.addEventListener('click', () => {
-      const masks = workspace.querySelectorAll('.test-mask');
-      if (masks.length === 0) {
-        alert('このページに穴埋めマスクがありません。');
-        return;
-      }
-
       areAllMasksRevealed = !areAllMasksRevealed;
-      masks.forEach(m => {
-        if (areAllMasksRevealed) {
-          m.classList.remove('masked');
-          m.classList.add('revealed');
-        } else {
-          m.classList.remove('revealed');
-          m.classList.add('masked');
-        }
+      workspace.querySelectorAll('.test-mask').forEach(m => {
+        m.classList.toggle('masked', !areAllMasksRevealed);
+        m.classList.toggle('revealed', areAllMasksRevealed);
       });
-
-      showStatus(areAllMasksRevealed ? '👀 すべての解答を表示しました' : '🙈 すべての解答を隠しました');
-      renderAllLines();
       triggerAutoSave();
     });
 
     workspace.addEventListener('click', (e) => {
       const mask = e.target.closest('.test-mask');
       if (mask && !isConnectMode) {
-        e.stopPropagation();
-        if (mask.classList.contains('masked')) {
-          mask.classList.remove('masked');
-          mask.classList.add('revealed');
-        } else {
-          mask.classList.remove('revealed');
-          mask.classList.add('masked');
-        }
-        renderAllLines();
+        mask.classList.toggle('masked');
+        mask.classList.toggle('revealed');
         triggerAutoSave();
       }
     });
 
-    // --- ページ管理 ---
     function getCurrentPage() {
-      if (currentPageId === 'schedule-page') {
-        return { id: 'schedule-page', title: 'スケジュール' };
-      }
+      if (currentPageId === 'schedule-page') return { id: 'schedule-page', title: 'スケジュール' };
       return pages.find(p => p.id === currentPageId) || pages[0];
     }
 
@@ -1898,7 +1678,6 @@
       if (!page || page.id === 'schedule-page') return;
 
       page.content = baseCanvas.innerHTML;
-      
       page.notes = [];
       document.querySelectorAll('.note-card').forEach(el => {
         page.notes.push({
@@ -1926,17 +1705,6 @@
           h: el.offsetHeight
         });
       });
-
-      page.branches = [];
-      document.querySelectorAll('.branch-node').forEach(el => {
-        page.branches.push({
-          id: el.id,
-          parentId: el.dataset.parentId,
-          text: el.querySelector('.branch-node-text').innerText,
-          x: parseInt(el.style.left, 10) || 0,
-          y: parseInt(el.style.top, 10) || 0
-        });
-      });
     }
 
     function renderPage(pageId) {
@@ -1945,7 +1713,6 @@
       document.querySelectorAll('.note-card').forEach(n => n.remove());
       document.querySelectorAll('.image-card').forEach(i => i.remove());
       document.querySelectorAll('.branch-node').forEach(b => b.remove());
-      resetConnectMode();
 
       currentPageId = pageId;
 
@@ -1958,194 +1725,95 @@
         baseCanvas.innerHTML = page.content;
         baseCanvas.contentEditable = 'true';
 
-        if (page.notes) {
-          page.notes.forEach(noteData => createNoteElement(noteData));
-        }
-        if (page.images) {
-          page.images.forEach(imgData => createImageElement(imgData));
-        }
-        if (page.branches) {
-          page.branches.forEach(bData => createBranchElement(bData));
-        }
+        page.notes?.forEach(n => createNoteElement(n));
+        page.images?.forEach(i => createImageElement(i));
       }
-
-      renderAllLines();
       renderTabs();
       updateWorkspaceScrollBounds();
     }
 
     function renderTabs() {
       tabsContainer.innerHTML = '';
-      
       const scheduleTab = document.createElement('div');
       scheduleTab.className = `page-tab schedule-tab ${currentPageId === 'schedule-page' ? 'active' : ''}`;
       scheduleTab.innerHTML = `<span class="tab-title-text">📅 スケジュール</span>`;
       scheduleTab.addEventListener('click', () => {
         if (currentPageId !== 'schedule-page') {
           saveCurrentPageState();
-          saveToLocalStorage(false);
           renderPage('schedule-page');
         }
       });
       tabsContainer.appendChild(scheduleTab);
 
-      pages.forEach((p) => {
+      pages.forEach(p => {
         const tab = document.createElement('div');
         tab.className = `page-tab ${p.id === currentPageId ? 'active' : ''}`;
-        tab.innerHTML = `
-          <span>${p.title}</span>
-          ${pages.length > 1 ? `<button class="tab-close" title="ページ削除">✕</button>` : ''}
-        `;
-
+        tab.innerHTML = `<span>${p.title}</span>${pages.length > 1 ? '<button class="tab-close">✕</button>' : ''}`;
         tab.addEventListener('click', (e) => {
           if (e.target.classList.contains('tab-close')) return;
           if (p.id !== currentPageId) {
             saveCurrentPageState();
-            saveToLocalStorage(false);
             renderPage(p.id);
           }
         });
-
         if (pages.length > 1) {
-          const closeBtn = tab.querySelector('.tab-close');
-          closeBtn.addEventListener('click', (e) => {
+          tab.querySelector('.tab-close').addEventListener('click', (e) => {
             e.stopPropagation();
-            if (confirm(`「${p.title}」を削除してもよろしいですか？`)) {
-              deletePage(p.id);
-            }
+            pages = pages.filter(item => item.id !== p.id);
+            renderPage(pages[0].id);
           });
         }
-
         tabsContainer.appendChild(tab);
       });
     }
 
-    function addNewPage() {
+    addPageBtn.addEventListener('click', () => {
       saveCurrentPageState();
       const newId = `page-${pageIdCounter++}`;
-      const newPageName = `ページ ${pageSequenceCounter++}`;
-      
-      const newPage = {
+      const name = `ページ ${pageSequenceCounter++}`;
+      pages.push({
         id: newId,
-        title: newPageName,
-        content: `<h1>${newPageName}</h1><p>新しいノートを入力できます。</p>`,
-        notes: [],
-        images: [],
-        connections: [],
-        branches: []
-      };
-      pages.push(newPage);
-      saveToLocalStorage(false);
+        title: name,
+        content: `<h1 style="grid-column: 1 / -1;">${name}</h1><div class="note-column" contenteditable="true">カラム 1</div><div class="note-column" contenteditable="true">カラム 2</div><div class="note-column" contenteditable="true">カラム 3</div>`,
+        notes: [], images: [], connections: [], branches: []
+      });
       renderPage(newId);
-    }
-
-    function deletePage(id) {
-      if (pages.length <= 1) return;
-      const idx = pages.findIndex(p => p.id === id);
-      pages = pages.filter(p => p.id !== id);
-
-      if (currentPageId === id) {
-        const nextIdx = Math.max(0, idx - 1);
-        renderPage(pages[nextIdx].id);
-      } else {
-        renderTabs();
-      }
-      saveToLocalStorage(false);
-    }
-
-    addPageBtn.addEventListener('click', addNewPage);
-
-    // --- 文字カラー ＆ マーカー解除 ---
-    function removeMarkerFromElement(markEl) {
-      const parent = markEl.parentNode;
-      while (markEl.firstChild) {
-        parent.insertBefore(markEl.firstChild, markEl);
-      }
-      parent.removeChild(markEl);
-    }
+    });
 
     document.querySelectorAll('.color-dot-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const type = btn.dataset.type;
         const color = btn.dataset.color;
         const selection = window.getSelection();
-
-        if (type === 'clear-marker') {
-          if (!selection.rangeCount) return;
-
-          let cleared = false;
-          let node = selection.anchorNode;
-          while (node && node !== workspace) {
-            if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('highlight-marker')) {
-              removeMarkerFromElement(node);
-              cleared = true;
-              break;
-            }
-            node = node.parentNode;
-          }
-
-          if (!cleared && !selection.isCollapsed) {
-            const range = selection.getRangeAt(0);
-            const container = range.commonAncestorContainer;
-            const parentEl = container.nodeType === Node.ELEMENT_NODE ? container : container.parentElement;
-            if (parentEl) {
-              parentEl.querySelectorAll('.highlight-marker').forEach(m => {
-                if (selection.containsNode(m, true)) {
-                  removeMarkerFromElement(m);
-                  cleared = true;
-                }
-              });
-            }
-          }
-
-          if (!cleared) {
-            alert('解除したいマーカー部分を選択またはクリックしてください。');
-          } else {
-            renderAllLines();
-            triggerAutoSave();
-          }
-          return;
-        }
-
-        if (!selection.rangeCount || selection.isCollapsed) {
-          alert('色を適用したいテキストを選択してください。');
-          return;
-        }
-
+        if (!selection.rangeCount || selection.isCollapsed) return;
         const range = selection.getRangeAt(0);
-        const selectedContent = range.extractContents();
+        const content = range.extractContents();
 
         if (type === 'bold') {
           const span = document.createElement('span');
           span.className = 'custom-bold';
           span.style.color = color;
-          span.appendChild(selectedContent);
+          span.appendChild(content);
           range.insertNode(span);
         } else if (type === 'marker') {
           const mark = document.createElement('mark');
           mark.className = 'highlight-marker';
           mark.style.backgroundColor = color;
-          mark.appendChild(selectedContent);
+          mark.appendChild(content);
           range.insertNode(mark);
         }
-
-        selection.removeAllRanges();
-        renderAllLines();
         triggerAutoSave();
       });
     });
 
-    // --- 付箋テーマ ---
-    function applyNoteTheme(noteEl, themeKey, opacityVal) {
+    function applyNoteTheme(el, themeKey, opacity) {
       const theme = NOTE_THEMES[themeKey] || NOTE_THEMES.yellow;
-      noteEl.dataset.theme = themeKey;
-      noteEl.dataset.opacity = opacityVal;
-
-      noteEl.style.backgroundColor = theme.bg;
-      noteEl.style.borderColor = theme.border;
-      noteEl.style.opacity = opacityVal;
-
-      const header = noteEl.querySelector('.note-header');
+      el.dataset.theme = themeKey;
+      el.dataset.opacity = opacity;
+      el.style.backgroundColor = theme.bg;
+      el.style.borderColor = theme.border;
+      el.style.opacity = opacity;
+      const header = el.querySelector('.note-header');
       if (header) {
         header.style.backgroundColor = theme.header;
         header.style.color = theme.text;
@@ -2153,615 +1821,69 @@
     }
 
     function createNoteElement(data) {
-      const noteEl = document.createElement('div');
-      noteEl.className = 'note-card';
-      noteEl.id = data.id;
-      noteEl.style.left = `${data.x}px`;
-      noteEl.style.top = `${data.y}px`;
-      if (data.w) noteEl.style.width = `${data.w}px`;
-      if (data.h) noteEl.style.height = `${data.h}px`;
+      const el = document.createElement('div');
+      el.className = 'note-card';
+      el.id = data.id;
+      el.style.left = `${data.x}px`;
+      el.style.top = `${data.y}px`;
+      if (data.w) el.style.width = `${data.w}px`;
+      if (data.h) el.style.height = `${data.h}px`;
 
-      const currentTheme = data.theme || 'yellow';
-      const currentOpacity = data.opacity !== undefined ? data.opacity : 1.0;
-
-      noteEl.innerHTML = `
+      el.innerHTML = `
         <div class="note-header">
-          <div class="note-title-area">
-            <span>${data.title || `付箋 #${data.id.replace('note-', '')}`}</span>
-          </div>
+          <div class="note-title-area"><span>${data.title}</span></div>
           <div class="note-tools">
-            <div class="note-color-picker" title="付箋の色を変更">
-              <span class="note-color-dot" data-theme="yellow" style="background:#fff3a8;"></span>
-              <span class="note-color-dot" data-theme="blue" style="background:#cce6ff;"></span>
-              <span class="note-color-dot" data-theme="green" style="background:#c8eed3;"></span>
-              <span class="note-color-dot" data-theme="pink" style="background:#ffd1d9;"></span>
-              <span class="note-color-dot" data-theme="purple" style="background:#e7d8f6;"></span>
-            </div>
-            <input type="range" class="note-opacity-slider" min="0.3" max="1.0" step="0.05" value="${currentOpacity}" title="透明度を調整 (${Math.round(currentOpacity*100)}%)">
-            <button class="note-btn delete-btn" title="削除">✕</button>
+            <button class="note-btn delete-btn">✕</button>
           </div>
         </div>
-        <div class="note-body" contenteditable="true" spellcheck="false">${data.text}</div>
+        <div class="note-body" contenteditable="true">${data.text}</div>
       `;
-
-      applyNoteTheme(noteEl, currentTheme, currentOpacity);
-      workspace.appendChild(noteEl);
-
-      noteEl.querySelectorAll('.note-color-dot').forEach(dot => {
-        dot.addEventListener('click', (e) => {
-          e.stopPropagation();
-          applyNoteTheme(noteEl, dot.dataset.theme, parseFloat(noteEl.dataset.opacity) || 1.0);
-          triggerAutoSave();
-        });
-      });
-
-      const slider = noteEl.querySelector('.note-opacity-slider');
-      slider.addEventListener('input', (e) => {
+      applyNoteTheme(el, data.theme || 'yellow', data.opacity ?? 1.0);
+      workspace.appendChild(el);
+      initDraggable(el, el);
+      el.querySelector('.delete-btn').addEventListener('click', (e) => {
         e.stopPropagation();
-        const val = parseFloat(e.target.value);
-        e.target.title = `透明度を調整 (${Math.round(val*100)}%)`;
-        applyNoteTheme(noteEl, noteEl.dataset.theme || 'yellow', val);
+        el.remove();
         triggerAutoSave();
       });
-      slider.addEventListener('mousedown', (e) => e.stopPropagation());
-
-      initDraggable(noteEl, noteEl);
-
-      noteEl.querySelector('.delete-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        removeNote(data.id);
-      });
-
-      const resizeObserver = new ResizeObserver(() => {
-        renderAllLines();
-        triggerAutoSave();
-      });
-      resizeObserver.observe(noteEl);
-      activeObservers.push(resizeObserver);
-
-      noteEl.querySelector('.note-body').addEventListener('input', () => {
-        renderAllLines();
-        triggerAutoSave();
-      });
-
-      updateWorkspaceScrollBounds();
-      return noteEl;
+      return el;
     }
 
-    function addNote() {
-      if (currentPageId === 'schedule-page') {
-        alert('スケジュールタブ内ではノートの追加はできません。通常のページタブを選択してください。');
-        return;
-      }
+    addNoteBtn.addEventListener('click', () => {
+      if (currentPageId === 'schedule-page') return alert('スケジュールタブ内では追加できません。');
       const newId = `note-${noteIdCounter++}`;
       createNoteElement({
-        id: newId,
-        title: `付箋 #${noteIdCounter - 1}`,
-        text: '新しいメモ',
-        x: workspace.scrollLeft + 880,
-        y: workspace.scrollTop + 120 + Math.random() * 60,
-        w: 260,
-        h: 180,
-        theme: 'yellow',
-        opacity: 1.0
+        id: newId, title: `付箋 #${noteIdCounter - 1}`, text: 'メモ',
+        x: workspace.scrollLeft + 400, y: workspace.scrollTop + 120, w: 260, h: 180
       });
-      renderAllLines();
       triggerAutoSave();
-    }
+    });
 
-    function removeNote(id) {
-      const page = getCurrentPage();
-      const el = document.getElementById(id);
-      if (el) el.remove();
-      page.connections = page.connections.filter(c => c.from !== id && c.to !== id);
-      renderAllLines();
-      triggerAutoSave();
-    }
-
-    function initDraggable(element, handle) {
-      let isDragging = false;
-      let startX, startY, initialLeft, initialTop;
-
+    function initDraggable(el, handle) {
+      let isDrag = false, startX, startY, initL, initT;
       handle.addEventListener('mousedown', (e) => {
-        if (isConnectMode || e.target.closest('.note-tools') || e.target.classList.contains('note-body') || e.target.classList.contains('note-btn') || e.target.tagName === 'A') return;
-        isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        initialLeft = element.offsetLeft;
-        initialTop = element.offsetTop;
-
-        document.querySelectorAll('.note-card, .image-card').forEach(n => {
-          if (n.style.zIndex > 15) n.style.zIndex = 20;
-        });
-        element.style.zIndex = 30;
-
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
+        if (e.target.closest('.note-tools') || e.target.classList.contains('note-body')) return;
+        isDrag = true;
+        startX = e.clientX; startY = e.clientY;
+        initL = el.offsetLeft; initT = el.offsetTop;
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
       });
-
-      function onMouseMove(e) {
-        if (!isDragging) return;
-        element.style.left = `${Math.max(0, initialLeft + (e.clientX - startX))}px`;
-        element.style.top = `${Math.max(0, initialTop + (e.clientY - startY))}px`;
-        renderAllLines();
+      function onMove(e) {
+        if (!isDrag) return;
+        el.style.left = `${initL + (e.clientX - startX)}px`;
+        el.style.top = `${initT + (e.clientY - startY)}px`;
       }
-
-      function onMouseUp() {
-        if (isDragging) {
-          isDragging = false;
-          triggerAutoSave();
-          updateWorkspaceScrollBounds();
-        }
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-      }
-    }
-
-    // --- ブランチ派生 ---
-    function createBranchElement(data) {
-      const bEl = document.createElement('div');
-      bEl.className = 'branch-node';
-      bEl.id = data.id;
-      bEl.dataset.parentId = data.parentId;
-      bEl.style.left = `${data.x}px`;
-      bEl.style.top = `${data.y}px`;
-
-      bEl.innerHTML = `
-        <span class="branch-node-text" contenteditable="true" spellcheck="false">${data.text}</span>
-        <div class="branch-node-actions">
-          <button class="branch-add-child" title="ここからさらに派生">＋</button>
-          <button class="branch-delete" title="削除">✕</button>
-        </div>
-      `;
-
-      workspace.appendChild(bEl);
-      initBranchDraggable(bEl);
-
-      bEl.querySelector('.branch-add-child').addEventListener('click', (e) => {
-        e.stopPropagation();
-        spawnChildBranch(data.id);
-      });
-
-      bEl.querySelector('.branch-delete').addEventListener('click', (e) => {
-        e.stopPropagation();
-        removeBranch(data.id);
-      });
-
-      bEl.querySelector('.branch-node-text').addEventListener('input', () => {
-        renderAllLines();
+      function onUp() {
+        isDrag = false;
         triggerAutoSave();
-      });
-
-      updateWorkspaceScrollBounds();
-      return bEl;
-    }
-
-    function spawnChildBranch(parentId) {
-      const parentEl = document.getElementById(parentId);
-      if (!parentEl) return;
-
-      const page = getCurrentPage();
-      const parentCoords = getAnchorCoords(parentEl);
-      
-      const newId = `branch-${branchIdCounter++}`;
-      const branchData = {
-        id: newId,
-        parentId: parentId,
-        text: '新しい項目',
-        x: Math.round(parentCoords.x + 80),
-        y: Math.round(parentCoords.y - 15)
-      };
-
-      if (!page.branches) page.branches = [];
-      page.branches.push(branchData);
-      const newEl = createBranchElement(branchData);
-      
-      const textSpan = newEl.querySelector('.branch-node-text');
-      textSpan.focus();
-      document.execCommand('selectAll', false, null);
-
-      renderAllLines();
-      triggerAutoSave();
-    }
-
-    function removeBranch(id) {
-      const page = getCurrentPage();
-      const el = document.getElementById(id);
-      if (el) el.remove();
-
-      if (page.branches) {
-        const toDelete = [id];
-        let found = true;
-        while (found) {
-          found = false;
-          page.branches.forEach(b => {
-            if (toDelete.includes(b.parentId) && !toDelete.includes(b.id)) {
-              toDelete.push(b.id);
-              const childEl = document.getElementById(b.id);
-              if (childEl) childEl.remove();
-              found = true;
-            }
-          });
-        }
-        page.branches = page.branches.filter(b => !toDelete.includes(b.id));
-      }
-      renderAllLines();
-      triggerAutoSave();
-    }
-
-    function initBranchDraggable(element) {
-      let isDragging = false;
-      let startX, startY, initialLeft, initialTop;
-
-      element.addEventListener('mousedown', (e) => {
-        if (e.target.classList.contains('branch-node-text') || 
-            e.target.classList.contains('branch-add-child') || 
-            e.target.classList.contains('branch-delete')) {
-          return;
-        }
-        isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        initialLeft = element.offsetLeft;
-        initialTop = element.offsetTop;
-
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-      });
-
-      function onMouseMove(e) {
-        if (!isDragging) return;
-        element.style.left = `${Math.max(0, initialLeft + (e.clientX - startX))}px`;
-        element.style.top = `${Math.max(0, initialTop + (e.clientY - startY))}px`;
-        renderAllLines();
-      }
-
-      function onMouseUp() {
-        if (isDragging) {
-          isDragging = false;
-          triggerAutoSave();
-          updateWorkspaceScrollBounds();
-        }
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
       }
     }
 
-    function resolveOrCreateAnchorForBranch() {
-      const selection = window.getSelection();
-      if (!selection.rangeCount) return null;
+    function renderAllLines() {}
 
-      let node = selection.anchorNode;
-      while (node && node !== workspace) {
-        if (node.nodeType === Node.ELEMENT_NODE && (node.classList.contains('correction-wrapper') || node.classList.contains('test-mask'))) {
-          if (!node.id) node.id = `anchor-corr-${anchorIdCounter++}`;
-          return node.id;
-        }
-        node = node.parentNode;
-      }
-
-      if (!selection.isCollapsed) {
-        return makeSelectionAnAnchor();
-      }
-      return null;
-    }
-
-    branchBtn.addEventListener('click', () => {
-      const anchorId = resolveOrCreateAnchorForBranch();
-      if (anchorId) {
-        spawnChildBranch(anchorId);
-      } else {
-        alert('派生元の文字（または二重線訂正・マスクの文字）を選択してから「🌿 ブランチ派生」を押してください。');
-      }
-    });
-
-    // --- 校正 ---
-    correctBtn.addEventListener('click', () => {
-      const selection = window.getSelection();
-      if (!selection.rangeCount || selection.isCollapsed) {
-        alert('訂正したいテキストを選択してください。');
-        return;
-      }
-      const selectedText = selection.toString().trim();
-      if (!selectedText) return;
-
-      const correctionText = prompt(`「${selectedText}」に対する訂正を入力してください:`);
-      if (correctionText === null) return;
-
-      const range = selection.getRangeAt(0);
-      const wrapper = document.createElement('span');
-      wrapper.className = 'correction-wrapper';
-      wrapper.id = `anchor-corr-${anchorIdCounter++}`;
-      wrapper.contentEditable = 'false';
-      wrapper.title = 'ダブルクリックまたは「訂正解除」で元に戻せます';
-
-      const del = document.createElement('del');
-      del.className = 'correction-del';
-      del.textContent = selectedText;
-
-      const ins = document.createElement('ins');
-      ins.className = 'correction-ins';
-      ins.textContent = correctionText || ' ';
-
-      wrapper.appendChild(del);
-      wrapper.appendChild(ins);
-
-      range.deleteContents();
-      range.insertNode(wrapper);
-
-      range.setStartAfter(wrapper);
-      range.setEndAfter(wrapper);
-      selection.removeAllRanges();
-      selection.addRange(range);
-      renderAllLines();
-      triggerAutoSave();
-    });
-
-    function revertSingleWrapper(wrapper) {
-      if (wrapper.classList.contains('correction-wrapper')) {
-        const del = wrapper.querySelector('.correction-del');
-        const originalText = del ? del.textContent : '';
-        const textNode = document.createTextNode(originalText);
-        wrapper.parentNode.replaceChild(textNode, wrapper);
-      } else if (wrapper.classList.contains('test-mask')) {
-        const textNode = document.createTextNode(wrapper.textContent);
-        wrapper.parentNode.replaceChild(textNode, wrapper);
-      }
-      renderAllLines();
-      triggerAutoSave();
-    }
-
-    undoCorrectBtn.addEventListener('click', () => {
-      const selection = window.getSelection();
-      if (!selection.rangeCount) return;
-
-      let reverted = false;
-      let node = selection.anchorNode;
-      while (node && node !== workspace) {
-        if (node.nodeType === Node.ELEMENT_NODE && (node.classList.contains('correction-wrapper') || node.classList.contains('test-mask'))) {
-          revertSingleWrapper(node);
-          reverted = true;
-          break;
-        }
-        node = node.parentNode;
-      }
-
-      if (!reverted) {
-        const range = selection.getRangeAt(0);
-        const container = range.commonAncestorContainer;
-        const parentEl = container.nodeType === Node.ELEMENT_NODE ? container : container.parentElement;
-        if (parentEl) {
-          parentEl.querySelectorAll('.correction-wrapper, .test-mask').forEach(w => {
-            if (selection.containsNode(w, true)) {
-              revertSingleWrapper(w);
-              reverted = true;
-            }
-          });
-        }
-      }
-    });
-
-    workspace.addEventListener('dblclick', (e) => {
-      const wrapper = e.target.closest('.correction-wrapper') || e.target.closest('.test-mask');
-      if (wrapper) {
-        e.preventDefault();
-        revertSingleWrapper(wrapper);
-      }
-    });
-
-    // --- 関連付け ---
-    function setConnectMode(enable) {
-      isConnectMode = enable;
-      connectToggleBtn.classList.toggle('active', isConnectMode);
-      cancelConnectBtn.style.display = isConnectMode ? 'inline-flex' : 'none';
-
-      if (isConnectMode) {
-        connectSourceId = null;
-        statusMsg.classList.add('active-mode');
-        statusMsg.textContent = '【関連付けモード中】①接続元の文字・付箋・画像をクリック (Escで解除)';
-      } else {
-        resetConnectMode();
-      }
-    }
-
-    function resetConnectMode() {
-      isConnectMode = false;
-      connectSourceId = null;
-      connectToggleBtn.classList.remove('active');
-      cancelConnectBtn.style.display = 'none';
-      document.querySelectorAll('.selected-for-connect').forEach(el => el.classList.remove('selected-for-connect'));
-      statusMsg.classList.remove('active-mode');
-      statusMsg.textContent = '編集内容はブラウザに自動保存されます';
-    }
-
-    connectToggleBtn.addEventListener('click', () => setConnectMode(!isConnectMode));
-    cancelConnectBtn.addEventListener('click', () => resetConnectMode());
-
-    function makeSelectionAnAnchor() {
-      const selection = window.getSelection();
-      if (!selection.rangeCount || selection.isCollapsed) return null;
-      
-      const range = selection.getRangeAt(0);
-      const text = range.toString().trim();
-      if (!text) return null;
-
-      const anchor = document.createElement('span');
-      anchor.className = 'text-anchor';
-      anchor.id = `anchor-${anchorIdCounter++}`;
-      anchor.textContent = text;
-
-      range.deleteContents();
-      range.insertNode(anchor);
-      selection.removeAllRanges();
-      return anchor.id;
-    }
-
-    workspace.addEventListener('mouseup', (e) => {
-      if (!isConnectMode) return;
-
-      let targetId = null;
-      const clickedAnchor = e.target.closest('.text-anchor') || e.target.closest('.correction-wrapper') || e.target.closest('.test-mask') || e.target.closest('.branch-node');
-      if (clickedAnchor) {
-        if (!clickedAnchor.id) clickedAnchor.id = `anchor-${anchorIdCounter++}`;
-        targetId = clickedAnchor.id;
-      } else {
-        const selection = window.getSelection();
-        if (selection.rangeCount && !selection.isCollapsed) {
-          targetId = makeSelectionAnAnchor();
-        }
-      }
-
-      if (!targetId) {
-        const clickedCard = e.target.closest('.note-card') || e.target.closest('.image-card');
-        if (clickedCard) {
-          targetId = clickedCard.id;
-        }
-      }
-
-      if (targetId) {
-        processConnectionTarget(targetId);
-      }
-    });
-
-    function processConnectionTarget(targetId) {
-      const targetEl = document.getElementById(targetId);
-      if (!targetEl) return;
-
-      if (!connectSourceId) {
-        connectSourceId = targetId;
-        targetEl.classList.add('selected-for-connect');
-        statusMsg.textContent = '【関連付けモード中】②接続先の文字・付箋・画像をクリック (Escで解除)';
-      } else if (connectSourceId !== targetId) {
-        const page = getCurrentPage();
-        if (page.id === 'schedule-page') return;
-        const exists = page.connections.some(c => 
-          (c.from === connectSourceId && c.to === targetId) || (c.from === targetId && c.to === connectSourceId)
-        );
-
-        if (!exists) {
-          page.connections.push({ from: connectSourceId, to: targetId });
-          renderAllLines();
-          triggerAutoSave();
-        }
-        resetConnectMode();
-      }
-    }
-
-    clearLinesBtn.addEventListener('click', () => {
-      const page = getCurrentPage();
-      if (page.id === 'schedule-page') return;
-      page.connections = [];
-      renderAllLines();
-      triggerAutoSave();
-    });
-
-    // --- 描画 ---
-    function getAnchorCoords(el) {
-      const wsRect = workspace.getBoundingClientRect();
-      const rect = el.getBoundingClientRect();
-      const isAnchorText = el.classList.contains('text-anchor') || el.classList.contains('correction-wrapper') || el.classList.contains('test-mask');
-      const isBranch = el.classList.contains('branch-node');
-
-      if (isAnchorText) {
-        return {
-          x: rect.left - wsRect.left + workspace.scrollLeft + rect.width / 2,
-          y: rect.bottom - wsRect.top + workspace.scrollTop + 2,
-          rightX: rect.right - wsRect.left + workspace.scrollLeft,
-          centerY: rect.top - wsRect.top + workspace.scrollTop + rect.height / 2
-        };
-      } else if (isBranch) {
-        return {
-          x: rect.left - wsRect.left + workspace.scrollLeft,
-          y: rect.top - wsRect.top + workspace.scrollTop + rect.height / 2,
-          rightX: rect.right - wsRect.left + workspace.scrollLeft,
-          centerY: rect.top - wsRect.top + workspace.scrollTop + rect.height / 2
-        };
-      } else {
-        return {
-          x: rect.left - wsRect.left + workspace.scrollLeft + rect.width / 2,
-          y: rect.top - wsRect.top + workspace.scrollTop + rect.height / 2
-        };
-      }
-    }
-
-    function renderAllLines() {
-      svgLayer.innerHTML = '';
-      const page = getCurrentPage();
-      if (!page || page.id === 'schedule-page') return;
-
-      if (page.branches) {
-        document.querySelectorAll('.branch-node').forEach(bNode => {
-          const parentId = bNode.dataset.parentId;
-          const parentEl = document.getElementById(parentId);
-          if (!parentEl) return;
-
-          const pSource = getAnchorCoords(parentEl);
-          const pTarget = getAnchorCoords(bNode);
-
-          const startX = pSource.rightX || pSource.x;
-          const startY = pSource.centerY || pSource.y;
-          const endX = pTarget.x;
-          const endY = pTarget.y;
-
-          const dx = Math.abs(endX - startX) * 0.5;
-          const pathData = `M ${startX} ${startY} C ${startX + dx} ${startY}, ${endX - dx} ${endY}, ${endX} ${endY}`;
-
-          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-          path.setAttribute('d', pathData);
-          path.setAttribute('class', 'branch-path');
-          svgLayer.appendChild(path);
-        });
-      }
-
-      if (page.connections) {
-        page.connections.forEach(conn => {
-          const fromEl = document.getElementById(conn.from);
-          const toEl = document.getElementById(conn.to);
-          if (!fromEl || !toEl) return;
-
-          const p1 = getAnchorCoords(fromEl);
-          const p2 = getAnchorCoords(toEl);
-
-          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-          line.setAttribute('x1', p1.x);
-          line.setAttribute('y1', p1.y);
-          line.setAttribute('x2', p2.x);
-          line.setAttribute('y2', p2.y);
-          line.setAttribute('class', 'connector-line');
-          svgLayer.appendChild(line);
-
-          [p1, p2].forEach(p => {
-            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            circle.setAttribute('cx', p.x);
-            circle.setAttribute('cy', p.y);
-            circle.setAttribute('r', 3);
-            circle.setAttribute('class', 'connector-circle');
-            svgLayer.appendChild(circle);
-          });
-        });
-      }
-
-      updateWorkspaceScrollBounds();
-    }
-
-    baseCanvas.addEventListener('input', () => {
-      renderAllLines();
-      triggerAutoSave();
-    });
-    workspace.addEventListener('scroll', () => renderAllLines());
-    window.addEventListener('resize', () => updateWorkspaceScrollBounds());
-
-    function escapeHtml(str) {
-      return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    // --- 初期起動 ---
-    addNoteBtn.addEventListener('click', addNote);
     loadSavedData();
     renderPage(currentPageId);
   </script>
