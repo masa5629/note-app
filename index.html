@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>タイル型付箋ノート・高機能スケジュールアプリ</title>
+  <title>講義ノート・スケジュールアプリ</title>
   <style>
     :root {
       --bg-color: #f4f6f8;
@@ -154,8 +154,6 @@
       flex: 1;
       overflow: auto;
       background: #ffffff;
-      background-image: radial-gradient(#d0d0d0 1.2px, transparent 1.2px);
-      background-size: 24px 24px;
     }
 
     #workspace::-webkit-scrollbar { width: 12px; height: 12px; }
@@ -164,51 +162,99 @@
 
     #base-canvas {
       width: 100%;
-      min-width: 1500px;
-      min-height: 1500px;
-      padding: 30px 40px;
-      font-size: 15px;
-      line-height: 2.0;
-      outline: none;
-      color: #333;
+      min-width: 1200px;
+      min-height: 1200px;
+      padding: 30px;
       position: relative;
     }
 
-    /* 【通常ノート用：固定3分割レイアウト】 */
-    #base-canvas.note-mode-canvas {
+    /* 【講義ノート用紙テンプレート（枠線・固定3分割レイアウト）】 */
+    .note-sheet {
+      width: 1100px;
+      min-height: 950px;
+      background: #ffffff;
+      border: 2px solid #333;
       display: grid;
-      grid-template-columns: 1fr 1px 1fr 1px 1fr;
-      grid-template-rows: auto 1fr;
-      gap: 15px 20px;
-      max-width: none;
-      min-height: 1400px;
+      grid-template-columns: 3fr 1fr;
+      grid-template-rows: 90px 1fr;
+      position: relative;
+      margin: 0 auto;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
     }
 
-    #base-canvas.note-mode-canvas h1 {
-      grid-column: 1 / -1;
-      font-size: 24px;
-      margin-bottom: 5px;
-      color: #222;
+    /* 上部ヘッダー（論点 ＆ ポイント） */
+    .sheet-header {
+      grid-column: 1 / 3;
+      border-bottom: 2px solid #333;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
     }
 
-    /* 各カラム：エンターで下に長く書いていける独立した編集エリア */
-    .note-column {
-      background: transparent;
-      padding: 10px 5px;
+    .sheet-header-left {
+      padding: 12px 20px;
+      font-weight: bold;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
       outline: none;
-      grid-row: 2;
-      min-height: 1000px;
+    }
+
+    .sheet-header-right {
+      border-left: 2px solid #333;
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      gap: 10px;
+      background: #fafafa;
+    }
+
+    .point-label {
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .point-box {
+      flex: 1;
+      height: 100%;
+      border: 1.5px solid #9fa8da;
+      border-radius: 4px;
+      background: #fff;
+      padding: 6px 10px;
+      outline: none;
+      font-size: 13px;
+      line-height: 1.5;
+      overflow-y: auto;
+    }
+
+    /* 下部：【板書】【気づき】【要点】の3分割エリア */
+    .sheet-body {
+      grid-column: 1 / 3;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      min-height: 800px;
+    }
+
+    .sheet-column {
+      padding: 20px;
+      outline: none;
+      position: relative;
+      font-size: 14px;
+      line-height: 1.8;
       word-break: break-all;
     }
 
-    /* 縦棒（区切り線） */
-    .vertical-divider {
-      background-color: #b0bec5;
-      width: 1px;
-      grid-row: 2;
-      align-self: stretch;
-      height: 100%;
-      min-height: 1200px;
+    /* 綺麗に固定された縦棒2本（区切り線） */
+    .sheet-column:not(:last-child) {
+      border-right: 2px solid #333;
+    }
+
+    .column-title {
+      text-align: center;
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 20px;
+      color: #222;
+      letter-spacing: 1px;
     }
 
     #svg-layer {
@@ -347,23 +393,23 @@
         <button class="modal-close-btn" id="close-help-btn">✕</button>
       </div>
       <div class="modal-body">
-        <p>通常ページは縦棒2本で固定された3カラムレイアウトになっており、各カラム内でエンター改行しながら下に書き進めることができます。</p>
+        <p>通常ページは【論点】【ポイント】および【板書】【気づき】【要点】の固定3分割レイアウトになっています。エンターで下に長く書き込めます。</p>
       </div>
     </div>
   </div>
 
   <script>
-    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V15';
+    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V16';
 
-    // 3つの独立したカラムと2本の縦棒をあらかじめ定義
     const DEFAULT_PAGES = [
       {
         id: 'page-1',
         title: 'ページ 1',
-        contentTitle: '自由ノートエリア',
-        column1: 'カラム 1：ここに文章を入力',
-        column2: 'カラム 2：ここに文章を入力',
-        column3: 'カラム 3：ここに文章を入力',
+        topic: '論点：',
+        point: '1\n2\n3',
+        col1: '【板書】',
+        col2: '【気づき】',
+        col3: '【要点】',
         notes: [], images: [], connections: [], branches: []
       }
     ];
@@ -596,19 +642,20 @@
       return pages.find(p => p.id === currentPageId) || pages[0];
     }
 
-    // 各カラムの内容を個別に保存する
     function saveCurrentPageState() {
       const page = getCurrentPage();
       if (!page || page.id === 'schedule-page') return;
       
-      const titleInput = baseCanvas.querySelector('.page-title-input');
-      if (titleInput) page.contentTitle = titleInput.innerText;
+      const topicEl = baseCanvas.querySelector('.sheet-header-left');
+      const pointEl = baseCanvas.querySelector('.point-box');
+      const cols = baseCanvas.querySelectorAll('.sheet-column');
 
-      const cols = baseCanvas.querySelectorAll('.note-column');
+      if (topicEl) page.topic = topicEl.innerHTML;
+      if (pointEl) page.point = pointEl.innerHTML;
       if (cols.length >= 3) {
-        page.column1 = cols[0].innerHTML;
-        page.column2 = cols[1].innerHTML;
-        page.column3 = cols[2].innerHTML;
+        page.col1 = cols[0].innerHTML;
+        page.col2 = cols[1].innerHTML;
+        page.col3 = cols[2].innerHTML;
       }
     }
 
@@ -619,26 +666,30 @@
       currentPageId = pageId;
 
       if (pageId === 'schedule-page') {
-        baseCanvas.className = ''; 
         baseCanvas.innerHTML = renderSchedulePageContent();
         baseCanvas.contentEditable = 'false';
         initScheduleMatrixDOM();
       } else {
-        baseCanvas.className = 'note-mode-canvas'; 
         const page = getCurrentPage();
         
-        // 3カラム構造を安全に組み立てる
         baseCanvas.innerHTML = `
-          <h1 class="page-title-input" contenteditable="true" spellcheck="false">${escapeHtml(page.contentTitle || '自由ノートエリア')}</h1>
-          <div class="note-column" contenteditable="true" spellcheck="false">${page.column1 || ''}</div>
-          <div class="vertical-divider"></div>
-          <div class="note-column" contenteditable="true" spellcheck="false">${page.column2 || ''}</div>
-          <div class="vertical-divider"></div>
-          <div class="note-column" contenteditable="true" spellcheck="false">${page.column3 || ''}</div>
+          <div class="note-sheet">
+            <div class="sheet-header">
+              <div class="sheet-header-left" contenteditable="true" spellcheck="false">${page.topic || '論点：'}</div>
+              <div class="sheet-header-right">
+                <span class="point-label">ポイント</span>
+                <div class="point-box" contenteditable="true" spellcheck="false">${page.point || '1<br>2<br>3'}</div>
+              </div>
+            </div>
+            <div class="sheet-body">
+              <div class="sheet-column" contenteditable="true" spellcheck="false">${page.col1 || '<div class="column-title">【板書】</div>'}</div>
+              <div class="sheet-column" contenteditable="true" spellcheck="false">${page.col2 || '<div class="column-title">【気づき】</div>'}</div>
+              <div class="sheet-column" contenteditable="true" spellcheck="false">${page.col3 || '<div class="column-title">【要点】</div>'}</div>
+            </div>
+          </div>
         `;
 
-        // 入力時に自動保存を走らせる
-        baseCanvas.querySelectorAll('.note-column, .page-title-input').forEach(el => {
+        baseCanvas.querySelectorAll('.sheet-header-left, .point-box, .sheet-column').forEach(el => {
           el.addEventListener('input', () => triggerAutoSave());
         });
 
@@ -690,10 +741,11 @@
       pages.push({
         id: newId,
         title: name,
-        contentTitle: name,
-        column1: 'カラム 1',
-        column2: 'カラム 2',
-        column3: 'カラム 3',
+        topic: '論点：',
+        point: '1\n2\n3',
+        col1: '<div class="column-title">【板書】</div>',
+        col2: '<div class="column-title">【気づき】</div>',
+        col3: '<div class="column-title">【要点】</div>',
         notes: [], images: [], connections: [], branches: []
       });
       renderPage(newId);
