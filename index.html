@@ -207,11 +207,11 @@
       position: relative;
     }
 
-    /* 通常ノートページ用：縦3分割（3カラム）レイアウト[cite: 1] */
+    /* 通常ノートページ用：縦棒二本で3分割（3カラム、間に縦線を入れる） */
     #base-canvas.note-mode-canvas {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 30px;
+      grid-template-columns: 1fr 1px 1fr 1px 1fr;
+      gap: 0 30px;
       max-width: none;
     }
 
@@ -223,12 +223,17 @@
     }
 
     .note-column {
-      background: rgba(255, 255, 255, 0.8);
-      border: 1px dashed #d0d5dd;
-      border-radius: 8px;
-      padding: 20px;
-      min-height: 600px;
       outline: none;
+      padding: 10px;
+      min-height: 600px;
+    }
+
+    /* カラムの間の縦線（縦棒二本） */
+    .note-divider {
+      background-color: #d0d5dd;
+      width: 1px;
+      height: 100%;
+      min-height: 600px;
     }
 
     #svg-layer {
@@ -367,19 +372,19 @@
         <button class="modal-close-btn" id="close-help-btn">✕</button>
       </div>
       <div class="modal-body">
-        <p>通常ページは縦3分割（3カラム）、スケジュール画面はカレンダー表として切り替えて表示されます。</p>
+        <p>通常ページは縦棒2本による3分割レイアウト、スケジュール画面はカレンダー表として切り替えて表示されます。</p>
       </div>
     </div>
   </div>
 
   <script>
-    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V12';
+    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V13';
 
     const DEFAULT_PAGES = [
       {
         id: 'page-1',
         title: 'ページ 1',
-        content: `<h1 style="grid-column: 1 / -1;">自由ノートエリア</h1><div class="note-column" contenteditable="true">カラム 1</div><div class="note-column" contenteditable="true">カラム 2</div><div class="note-column" contenteditable="true">カラム 3</div>`,
+        content: `<h1 style="grid-column: 1 / -1;">自由ノートエリア</h1><div class="note-column" contenteditable="true">カラム 1</div><div class="note-divider"></div><div class="note-column" contenteditable="true">カラム 2</div><div class="note-divider"></div><div class="note-column" contenteditable="true">カラム 3</div>`,
         notes: [], images: [], connections: [], branches: []
       }
     ];
@@ -628,12 +633,12 @@
       currentPageId = pageId;
 
       if (pageId === 'schedule-page') {
-        baseCanvas.className = ''; // 通常ノート用のクラスを外す
+        baseCanvas.className = '';
         baseCanvas.innerHTML = renderSchedulePageContent();
         baseCanvas.contentEditable = 'false';
         initScheduleMatrixDOM();
       } else {
-        baseCanvas.className = 'note-mode-canvas'; // 通常ノートのときだけ3分割レイアウトを適用
+        baseCanvas.className = 'note-mode-canvas';
         const page = getCurrentPage();
         baseCanvas.innerHTML = page.content;
         baseCanvas.contentEditable = 'true';
@@ -685,7 +690,7 @@
       pages.push({
         id: newId,
         title: name,
-        content: `<h1 style="grid-column: 1 / -1;">${name}</h1><div class="note-column" contenteditable="true">カラム 1</div><div class="note-column" contenteditable="true">カラム 2</div><div class="note-column" contenteditable="true">カラム 3</div>`,
+        content: `<h1 style="grid-column: 1 / -1;">${name}</h1><div class="note-column" contenteditable="true">カラム 1</div><div class="note-divider"></div><div class="note-column" contenteditable="true">カラム 2</div><div class="note-divider"></div><div class="note-column" contenteditable="true">カラム 3</div>`,
         notes: [], images: [], connections: [], branches: []
       });
       renderPage(newId);
