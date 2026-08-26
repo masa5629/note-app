@@ -336,7 +336,7 @@
         <button class="modal-close-btn" id="close-text-import-btn">✕</button>
       </div>
       <div class="modal-body">
-        <textarea id="import-schedule-textarea" class="import-textarea" placeholder="予定(仕事)&#10;8/26 感動大学&#10;&#10;書籍 1&#10;8/28&#10;サンプルテキスト"></textarea>
+        <textarea id="import-schedule-textarea" class="import-textarea" placeholder="予定(仕事)&#10;8/26 感動大学&#10;&#10;書籍 3&#10;8/28&#10;サンプルテキスト"></textarea>
         <div style="display:flex; justify-content: flex-end; gap: 8px;">
           <button class="btn" id="cancel-text-import-btn">キャンセル</button>
           <button class="btn btn-primary" id="execute-text-import-btn">一括反映する</button>
@@ -359,7 +359,7 @@
   </div>
 
   <script>
-    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V22';
+    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V23';
 
     const DEFAULT_PAGES = [
       {
@@ -475,7 +475,7 @@
       buildMatrixTable();
     }
 
-    // 予定テキスト一括取込のパース処理（完全復活版）
+    // 予定テキスト一括取込のパース処理（「書籍 3」などの指定に対応）
     function parseAndApplyScheduleText(rawText) {
       const lines = rawText.split(/\r?\n/);
       let currentSection = null;
@@ -489,11 +489,13 @@
           continue;
         }
 
-        if (line.includes('予定(仕事)') || line.includes('予定（仕事）') || line === '仕事予定') {
+        const cleanLine = line.replace(/\s+/g, '');
+
+        if (cleanLine.includes('予定(仕事)') || cleanLine.includes('予定（仕事）') || cleanLine === '仕事予定') {
           currentSection = 'work';
           activeDateStr = null;
           continue;
-        } else if (line.includes('予定(家)') || line.includes('予定（家）') || line === '家予定') {
+        } else if (cleanLine.includes('予定(家)') || cleanLine.includes('予定（家）') || cleanLine === '家予定') {
           currentSection = 'home';
           activeDateStr = null;
           continue;
@@ -501,7 +503,9 @@
           let matchedBook = false;
           for (let i = 0; i < scheduleData.books.length; i++) {
             const num = i + 1;
-            if (line.replace(/\s+/g, '').includes(`書籍${num}`) || line.replace(/\s+/g, '').includes(`書籍・サイト${num}`)) {
+            const bookNameClean = scheduleData.books[i].replace(/\s+/g, '');
+            // 「書籍3」や「書籍・サイト3」などの表記、または現在の表の書籍名に完全一致・部分一致するかチェック
+            if (cleanLine.includes(`書籍${num}`) || cleanLine.includes(`書籍・サイト${num}`) || cleanLine.includes(bookNameClean)) {
               currentSection = `book_${i}`;
               activeDateStr = null;
               matchedBook = true;
