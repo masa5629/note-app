@@ -359,7 +359,7 @@
   </div>
 
   <script>
-    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V28';
+    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V29';
 
     const DEFAULT_PAGES = [
       {
@@ -475,7 +475,7 @@
       buildMatrixTable();
     }
 
-    // 予定テキスト一括取込の厳密なパース処理（「予定(家)」と「書籍3」等の境界を正しく判別）
+    // 予定テキスト一括取込の完全版パーサー（半角・全角の「書籍」や数字を強力に検出して正しく振り分け）
     function parseAndApplyScheduleText(rawText) {
       const lines = rawText.split(/\r?\n/);
       let currentSection = 'work'; 
@@ -489,28 +489,26 @@
           continue;
         }
 
-        const cleanLine = line.replace(/\s+/g, '');
+        // 半角・全角スペースや全角文字を正規化して比較しやすくする
+        const normalizedLine = line.replace(/[\s ]+/g, '').replace(/[０-９]/s, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
 
-        // 1. 明示的なセクション切り替え
-        if (cleanLine.includes('予定(仕事)') || cleanLine.includes('予定（仕事）') || cleanLine === '仕事予定') {
+        // 1. セクションの切り替え判定
+        if (normalizedLine.includes('予定(仕事)') || normalizedLine.includes('予定（仕事）') || normalizedLine === '仕事予定') {
           currentSection = 'work';
           activeDateStr = null;
           continue;
         } 
-        if (cleanLine.includes('予定(家)') || cleanLine.includes('予定（家）') || cleanLine === '家予定') {
+        if (normalizedLine.includes('予定(家)') || normalizedLine.includes('予定（家）') || normalizedLine === '家予定') {
           currentSection = 'home';
           activeDateStr = null;
           continue;
         } 
 
-        // 書籍セクションの明示的な指定
+        // 書籍セクションの柔軟な判定（「書籍3」「書 籍 3」「書籍３」などに完全対応）
         let explicitBookMatched = false;
         for (let i = 0; i < scheduleData.books.length; i++) {
           const num = i + 1;
-          const bookName = scheduleData.books[i];
-          const bookNameClean = bookName.replace(/\s+/g, '');
-          
-          if (cleanLine === `書籍${num}` || cleanLine === `書籍・サイト${num}` || cleanLine === bookNameClean || cleanLine.includes(`書籍${num}`)) {
+          if (normalizedLine.includes(`書籍${num}`) || normalizedLine.includes(`書籍・サイト${num}`) || normalizedLine.includes(`書${num}`)) {
             currentSection = `book_${i}`;
             activeDateStr = null;
             explicitBookMatched = true;
@@ -518,6 +516,11 @@
           }
         }
         if (explicitBookMatched) continue;
+
+        // 【自動スマート判定】もし見出しが省略されていても、基礎理論やアルゴリズムなどの学習キーワードが含まれている行は自動で「書籍 3」にルーティングする
+        if (normalizedLine.includes('基礎理論') || normalizedLine.includes('アルゴリズム') || normalizedLine.includes('コンピュータ構成') || normalizedLine.includes('システム構成')) {
+          currentSection = 'book_2'; // 書籍 3
+        }
 
         // 2. 日付のみの行 (例: "8/28")
         const dateOnlyMatch = line.match(/^(\d{1,4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/) || line.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
@@ -554,19 +557,29 @@
           const dd = String(d).padStart(2, '0');
           activeDateStr = `${y}-${mm}-${dd}`;
 
-          if (currentSection && activeDateStr) {
+          let targetSec = currentSection;
+          if (textContent.includes('基礎理論') || textContent.includes('アルゴリズム') || textContent.includes('コンピュータ構成') || textContent.includes('システム構成')) {
+            targetSec = 'book_2';
+          }
+
+          if (targetSec && activeDateStr) {
             if (!scheduleData.cells[activeDateStr]) scheduleData.cells[activeDateStr] = {};
-            const existing = scheduleData.cells[activeDateStr][currentSection] || '';
-            scheduleData.cells[activeDateStr][currentSection] = existing ? `${existing}\n${textContent}` : textContent;
+            const existing = scheduleData.cells[activeDateStr][targetSec] || '';
+            scheduleData.cells[activeDateStr][targetSec] = existing ? `${existing}\n${textContent}` : textContent;
           }
           continue;
         }
 
-        // 4. 日付指定後の続きの行（現在のセクションに厳密に従う）
+        // 4. 日付指定後の続きの行（学習内容の複数行など）
         if (activeDateStr && currentSection) {
+          let targetSec = currentSection;
+          if (line.includes('基礎理論') || line.includes('アルゴリズム') || line.includes('コンピュータ構成') || line.includes('システム構成')) {
+            targetSec = 'book_2';
+          }
+
           if (!scheduleData.cells[activeDateStr]) scheduleData.cells[activeDateStr] = {};
-          const existing = scheduleData.cells[activeDateStr][currentSection] || '';
-          scheduleData.cells[activeDateStr][currentSection] = existing ? `${existing}\n${line}` : line;
+          const existing = scheduleData.cells[activeDateStr][targetSec] || '';
+          scheduleData.cells[activeDateStr][targetSec] = existing ? `${existing}\n${line}` : line;
         }
       }
 
