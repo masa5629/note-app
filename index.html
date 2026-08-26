@@ -336,7 +336,7 @@
         <button class="modal-close-btn" id="close-text-import-btn">✕</button>
       </div>
       <div class="modal-body">
-        <textarea id="import-schedule-textarea" class="import-textarea" placeholder="予定(仕事)&#10;8/26 感動大学&#10;&#10;書籍 3&#10;8/28&#10;サンプルテキスト"></textarea>
+        <textarea id="import-schedule-textarea" class="import-textarea" placeholder="予定(仕事)&#10;8/26 感動大学&#10;&#10;書籍 3&#10;8/28&#10;基礎理論 123"></textarea>
         <div style="display:flex; justify-content: flex-end; gap: 8px;">
           <button class="btn" id="cancel-text-import-btn">キャンセル</button>
           <button class="btn btn-primary" id="execute-text-import-btn">一括反映する</button>
@@ -359,7 +359,7 @@
   </div>
 
   <script>
-    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V25';
+    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V26';
 
     const DEFAULT_PAGES = [
       {
@@ -475,10 +475,10 @@
       buildMatrixTable();
     }
 
-    // 予定テキスト一括取込のパース処理（セクション検出の完全修正版）
+    // 予定テキスト一括取込のパース処理（デフォルトセクションを work にして誤混入を防ぐ）
     function parseAndApplyScheduleText(rawText) {
       const lines = rawText.split(/\r?\n/);
-      let currentSection = null; // 'work', 'home', または 'book_0' 〜 'book_3'
+      let currentSection = 'work'; // デフォルトを 'work' にして、見出しなしの学習内容が勝手に 'home' に入るのを防ぐ
       let currentYear = new Date().getFullYear();
       let activeDateStr = null;
 
@@ -491,7 +491,7 @@
 
         const cleanLine = line.replace(/\s+/g, '');
 
-        // 1. セクションの切り替え判定（厳密にチェック）
+        // 1. セクションの切り替え判定
         if (cleanLine.includes('予定(仕事)') || cleanLine.includes('予定（仕事）') || cleanLine === '仕事予定') {
           currentSection = 'work';
           activeDateStr = null;
