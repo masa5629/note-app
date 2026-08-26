@@ -62,6 +62,7 @@
     .btn-help { background: #fff8e1; border-color: #ffe082; color: #f57f17; font-weight: bold; }
     .btn-image { background: #f3e5f5; border-color: #ba68c8; color: #6a1b9a; font-weight: bold; }
     .btn-success { background: #2e7d32; color: #ffffff; border-color: #2e7d32; }
+    .btn-success:hover { background: #1b5e20; }
     .btn-mask { background: #263238; color: #ffffff; border-color: #263238; font-weight: bold; }
     .btn-branch { background: #e8eaf6; border-color: #7986cb; color: #283593; font-weight: 600; }
     
@@ -198,7 +199,6 @@
       line-height: 2.0;
     }
 
-    /* 縦棒（区切り線）を上から下までストレートに配置 */
     .vertical-divider {
       background-color: #b0bec5;
       width: 1px;
@@ -336,7 +336,7 @@
         <button class="modal-close-btn" id="close-text-import-btn">✕</button>
       </div>
       <div class="modal-body">
-        <textarea id="import-schedule-textarea" class="import-textarea" placeholder="予定(仕事)&#10;8/26 感動大学"></textarea>
+        <textarea id="import-schedule-textarea" class="import-textarea" placeholder="予定(仕事)&#10;8/26 感動大学&#10;&#10;書籍 1&#10;8/28&#10;サンプルテキスト"></textarea>
         <div style="display:flex; justify-content: flex-end; gap: 8px;">
           <button class="btn" id="cancel-text-import-btn">キャンセル</button>
           <button class="btn btn-primary" id="execute-text-import-btn">一括反映する</button>
@@ -359,7 +359,7 @@
   </div>
 
   <script>
-    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V20';
+    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V21';
 
     const DEFAULT_PAGES = [
       {
@@ -389,7 +389,7 @@
       goal: '応用情報技術者試験 絶対合格！！',
       startDate: '2026-08-20',
       endDate: '2026-11-30',
-      books: ['キタミ式イラストIT塾', '科目B 重点対策', '過去問道場', '参考書'],
+      books: ['書籍 1', '書籍 2', '書籍 3', '書籍 4'],
       cells: {}
     };
 
@@ -475,6 +475,108 @@
       buildMatrixTable();
     }
 
+    function parseAndApplyScheduleText(rawText) {
+      const lines = rawText.split(/\r?\n/);
+      let currentSection = null;
+      let currentYear = new Date().getFullYear();
+      let activeDateStr = null;
+
+      for (let rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line) {
+          activeDateStr = null;
+          continue;
+        }
+
+        if (line.includes('予定(仕事)') || line.includes('予定（仕事）') || line === '仕事予定') {
+          currentSection = 'work';
+          activeDateStr = null;
+          continue;
+        } else if (line.includes('予定(家)') || line.includes('予定（家）') || line === '家予定') {
+          currentSection = 'home';
+          activeDateStr = null;
+          continue;
+        } else {
+          let matchedBook = false;
+          for (let i = 0; i < scheduleData.books.length; i++) {
+            const num = i + 1;
+            if (line.replace(/\s+/g, '').includes(`書籍${num}`) || line.replace(/\s+/g, '').includes(`書籍・サイト${num}`)) {
+              currentSection = `book_${i}`;
+              activeDateStr = null;
+              matchedBook = true;
+              break;
+            }
+          }
+          if (matchedBook) continue;
+        }
+
+        const dateOnlyMatch = line.match(/^(\d{1,4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/) || line.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
+        if (dateOnlyMatch) {
+          if (dateOnlyMatch[3]) {
+            currentYear = dateOnlyMatch[1];
+            const m = String(dateOnlyMatch[2]).padStart(2, '0');
+            const d = String(dateOnlyMatch[3]).padStart(2, '0');
+            activeDateStr = `${currentYear}-${m}-${d}`;
+          } else {
+            const m = String(dateOnlyMatch[1]).padStart(2, '0');
+            const d = String(dateOnlyMatch[2]).padStart(2, '0');
+            activeDateStr = `${currentYear}-${m}-${d}`;
+          }
+          continue;
+        }
+
+        const dateContentMatch = line.match(/^(\d{1,4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+(.+)$/) || line.match(/^(\d{1,2})[\/\-](\d{1,2})\s+(.+)$/);
+        if (dateContentMatch) {
+          let y, m, d, textContent;
+          if (dateContentMatch[4]) {
+            y = dateOnlyMatch && dateOnlyMatch[3] ? dateContentMatch[1] : currentYear;
+            m = dateContentMatch[2];
+            d = dateContentMatch[3];
+            textContent = dateContentMatch[4];
+          } else {
+            y = currentYear;
+            m = dateContentMatch[1];
+            d = dateContentMatch[2];
+            textContent = dateContentMatch[3];
+          }
+          const mm = String(m).padStart(2, '0');
+          const dd = String(d).padStart(2, '0');
+          activeDateStr = `${y}-${mm}-${dd}`;
+
+          if (currentSection && activeDateStr) {
+            if (!scheduleData.cells[activeDateStr]) scheduleData.cells[activeDateStr] = {};
+            const existing = scheduleData.cells[activeDateStr][currentSection] || '';
+            scheduleData.cells[activeDateStr][currentSection] = existing ? `${existing}\n${textContent}` : textContent;
+          }
+          continue;
+        }
+
+        if (activeDateStr && currentSection) {
+          if (!scheduleData.cells[activeDateStr]) scheduleData.cells[activeDateStr] = {};
+          const existing = scheduleData.cells[activeDateStr][currentSection] || '';
+          scheduleData.cells[activeDateStr][currentSection] = existing ? `${existing}\n${line}` : line;
+        }
+      }
+
+      buildMatrixTable();
+      triggerAutoSave();
+      textImportModal.style.display = 'none';
+      importScheduleTextarea.value = '';
+      showStatus('✨ スケジュールテキストを一括反映しました！');
+    }
+
+    executeTextImportBtn.addEventListener('click', () => {
+      const text = importScheduleTextarea.value;
+      if (!text.trim()) {
+        alert('テキストを入力してください。');
+        return;
+      }
+      parseAndApplyScheduleText(text);
+    });
+
+    closeTextImportBtn.addEventListener('click', () => { textImportModal.style.display = 'none'; });
+    cancelTextImportBtn.addEventListener('click', () => { textImportModal.style.display = 'none'; });
+
     function buildMatrixTable() {
       const tableEl = document.getElementById('matrix-table-el');
       if (!tableEl) return;
@@ -522,7 +624,10 @@
       html += `</tr>`;
 
       for (let bIdx = 0; bIdx < scheduleData.books.length; bIdx++) {
-        html += `<tr><td class="matrix-row-label book">書籍 ${bIdx + 1}</td>`;
+        const bookName = scheduleData.books[bIdx];
+        html += `<tr><td class="matrix-row-label book">
+          <input type="text" class="matrix-select book-name-input" data-book-idx="${bIdx}" value="${escapeHtml(bookName)}">
+        </td>`;
         dateList.forEach(d => {
           const dateStr = d.toISOString().slice(0, 10);
           if (!scheduleData.cells[dateStr]) scheduleData.cells[dateStr] = {};
@@ -544,6 +649,14 @@
           triggerAutoSave();
         });
       });
+
+      tableEl.querySelectorAll('.book-name-input').forEach(inp => {
+        inp.addEventListener('input', (e) => {
+          const idx = parseInt(e.target.dataset.bookIdx, 10);
+          scheduleData.books[idx] = e.target.value;
+          triggerAutoSave();
+        });
+      });
     }
 
     function updateWorkspaceScrollBounds() {
@@ -559,8 +672,6 @@
 
     openHelpBtn.addEventListener('click', () => { helpModal.style.display = 'flex'; });
     closeHelpBtn.addEventListener('click', () => { helpModal.style.display = 'none'; });
-    closeTextImportBtn.addEventListener('click', () => { textImportModal.style.display = 'none'; });
-    cancelTextImportBtn.addEventListener('click', () => { textImportModal.style.display = 'none'; });
 
     function loadSavedData() {
       const saved = localStorage.getItem(PERSISTENT_STORAGE_KEY);
