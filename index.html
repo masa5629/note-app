@@ -174,14 +174,14 @@
       position: relative;
     }
 
-    /* 【縦棒2本で3分割：上部から下まで通すレイアウト】 */
+    /* 【通常ノート用：固定3分割レイアウト】 */
     #base-canvas.note-mode-canvas {
       display: grid;
-      grid-template-columns: 1fr 2px 1fr 2px 1fr;
+      grid-template-columns: 1fr 1px 1fr 1px 1fr;
       grid-template-rows: auto 1fr;
       gap: 15px 20px;
       max-width: none;
-      min-height: 1200px;
+      min-height: 1400px;
     }
 
     #base-canvas.note-mode-canvas h1 {
@@ -191,22 +191,24 @@
       color: #222;
     }
 
+    /* 各カラム：エンターで下に長く書いていける独立した編集エリア */
     .note-column {
       background: transparent;
-      padding: 10px 0;
+      padding: 10px 5px;
       outline: none;
       grid-row: 2;
-      min-height: 800px;
+      min-height: 1000px;
+      word-break: break-all;
     }
 
-    /* 縦棒を一番上（見出しのすぐ下）から一番下まで伸ばす */
+    /* 縦棒（区切り線） */
     .vertical-divider {
       background-color: #b0bec5;
-      width: 2px;
+      width: 1px;
       grid-row: 2;
       align-self: stretch;
       height: 100%;
-      min-height: 800px;
+      min-height: 1200px;
     }
 
     #svg-layer {
@@ -317,7 +319,7 @@
 
   <div id="workspace">
     <svg id="svg-layer"></svg>
-    <div id="base-canvas" contenteditable="true" spellcheck="false"></div>
+    <div id="base-canvas" spellcheck="false"></div>
   </div>
 
   <!-- テキスト一括取込モーダル -->
@@ -345,19 +347,23 @@
         <button class="modal-close-btn" id="close-help-btn">✕</button>
       </div>
       <div class="modal-body">
-        <p>通常ページは縦棒2本で3分割されたカラムレイアウト、スケジュール画面はカレンダー表として切り替えて表示されます。</p>
+        <p>通常ページは縦棒2本で固定された3カラムレイアウトになっており、各カラム内でエンター改行しながら下に書き進めることができます。</p>
       </div>
     </div>
   </div>
 
   <script>
-    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V14';
+    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V15';
 
+    // 3つの独立したカラムと2本の縦棒をあらかじめ定義
     const DEFAULT_PAGES = [
       {
         id: 'page-1',
         title: 'ページ 1',
-        content: `<h1 style="grid-column: 1 / -1;">自由ノートエリア</h1><div class="note-column" contenteditable="true">カラム 1</div><div class="vertical-divider"></div><div class="note-column" contenteditable="true">カラム 2</div><div class="vertical-divider"></div><div class="note-column" contenteditable="true">カラム 3</div>`,
+        contentTitle: '自由ノートエリア',
+        column1: 'カラム 1：ここに文章を入力',
+        column2: 'カラム 2：ここに文章を入力',
+        column3: 'カラム 3：ここに文章を入力',
         notes: [], images: [], connections: [], branches: []
       }
     ];
@@ -590,10 +596,20 @@
       return pages.find(p => p.id === currentPageId) || pages[0];
     }
 
+    // 各カラムの内容を個別に保存する
     function saveCurrentPageState() {
       const page = getCurrentPage();
       if (!page || page.id === 'schedule-page') return;
-      page.content = baseCanvas.innerHTML;
+      
+      const titleInput = baseCanvas.querySelector('.page-title-input');
+      if (titleInput) page.contentTitle = titleInput.innerText;
+
+      const cols = baseCanvas.querySelectorAll('.note-column');
+      if (cols.length >= 3) {
+        page.column1 = cols[0].innerHTML;
+        page.column2 = cols[1].innerHTML;
+        page.column3 = cols[2].innerHTML;
+      }
     }
 
     function renderPage(pageId) {
@@ -610,8 +626,22 @@
       } else {
         baseCanvas.className = 'note-mode-canvas'; 
         const page = getCurrentPage();
-        baseCanvas.innerHTML = page.content;
-        baseCanvas.contentEditable = 'true';
+        
+        // 3カラム構造を安全に組み立てる
+        baseCanvas.innerHTML = `
+          <h1 class="page-title-input" contenteditable="true" spellcheck="false">${escapeHtml(page.contentTitle || '自由ノートエリア')}</h1>
+          <div class="note-column" contenteditable="true" spellcheck="false">${page.column1 || ''}</div>
+          <div class="vertical-divider"></div>
+          <div class="note-column" contenteditable="true" spellcheck="false">${page.column2 || ''}</div>
+          <div class="vertical-divider"></div>
+          <div class="note-column" contenteditable="true" spellcheck="false">${page.column3 || ''}</div>
+        `;
+
+        // 入力時に自動保存を走らせる
+        baseCanvas.querySelectorAll('.note-column, .page-title-input').forEach(el => {
+          el.addEventListener('input', () => triggerAutoSave());
+        });
+
         page.notes?.forEach(n => createNoteElement(n));
       }
       renderTabs();
@@ -660,7 +690,10 @@
       pages.push({
         id: newId,
         title: name,
-        content: `<h1 style="grid-column: 1 / -1;">${name}</h1><div class="note-column" contenteditable="true">カラム 1</div><div class="vertical-divider"></div><div class="note-column" contenteditable="true">カラム 2</div><div class="vertical-divider"></div><div class="note-column" contenteditable="true">カラム 3</div>`,
+        contentTitle: name,
+        column1: 'カラム 1',
+        column2: 'カラム 2',
+        column3: 'カラム 3',
         notes: [], images: [], connections: [], branches: []
       });
       renderPage(newId);
