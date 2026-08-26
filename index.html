@@ -246,12 +246,15 @@
     }
 
     .column-title {
-      text-align: center;
       font-weight: bold;
-      font-size: 16px;
-      margin-bottom: 20px;
+      font-size: 15px;
+      margin-bottom: 15px;
       color: #222;
-      letter-spacing: 1px;
+      display: inline-block;
+      background: #e3f2fd;
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid #bbdefb;
     }
 
     #svg-layer {
@@ -353,13 +356,13 @@
       <button class="color-dot-btn" data-type="clear-marker" style="background:#ffffff; color:#d32f2f;">✕</button>
     </div>
     <div class="divider"></div>
-    <!-- 文字サイズ変更ボタン群 -->
+    <!-- 文字サイズ調整ボタン群 -->
     <div class="color-group">
       <span class="color-group-label">文字サイズ:</span>
-      <button class="btn" data-size="12px" style="padding:2px 6px; font-size:11px;">小</button>
-      <button class="btn" data-size="15px" style="padding:2px 6px; font-size:13px;">中</button>
-      <button class="btn" data-size="18px" style="padding:2px 6px; font-size:15px;">大</button>
-      <button class="btn" data-size="22px" style="padding:2px 6px; font-size:17px;">特大</button>
+      <button class="btn size-btn" data-size="12px" style="padding:2px 6px; font-size:11px;">小</button>
+      <button class="btn size-btn" data-size="15px" style="padding:2px 6px; font-size:13px;">中</button>
+      <button class="btn size-btn" data-size="18px" style="padding:2px 6px; font-size:15px;">大</button>
+      <button class="btn size-btn" data-size="22px" style="padding:2px 6px; font-size:17px;">特大</button>
     </div>
     <span class="status-text" id="status-message">編集内容は自動保存されます</span>
   </header>
@@ -399,13 +402,13 @@
         <button class="modal-close-btn" id="close-help-btn">✕</button>
       </div>
       <div class="modal-body">
-        <p>文字サイズボタン（小・中・大・特大）を使って、選択したテキストの大きさを自由に変更できます。</p>
+        <p>テキストを選択してツールバーの「小・中・大・特大」ボタンを押すと、文字の大きさを変更できます。</p>
       </div>
     </div>
   </div>
 
   <script>
-    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V17';
+    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V18';
 
     const DEFAULT_PAGES = [
       {
@@ -758,7 +761,7 @@
     });
 
     // 文字サイズ変更ボタンの動作処理
-    document.querySelectorAll('[data-size]').forEach(btn => {
+    document.querySelectorAll('.size-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const size = btn.dataset.size;
         const selection = window.getSelection();
