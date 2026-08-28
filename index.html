@@ -63,6 +63,8 @@
     .btn-image { background: #f3e5f5; border-color: #ba68c8; color: #6a1b9a; font-weight: bold; }
     .btn-success { background: #2e7d32; color: #ffffff; border-color: #2e7d32; }
     .btn-success:hover { background: #1b5e20; }
+    .btn-danger { background: #d32f2f; color: #ffffff; border-color: #d32f2f; }
+    .btn-danger:hover { background: #c62828; }
     .btn-mask { background: #263238; color: #ffffff; border-color: #263238; font-weight: bold; }
     .btn-branch { background: #e8eaf6; border-color: #7986cb; color: #283593; font-weight: 600; }
     
@@ -359,7 +361,7 @@
   </div>
 
   <script>
-    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V29';
+    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V30';
 
     const DEFAULT_PAGES = [
       {
@@ -434,7 +436,20 @@
             <input type="date" id="matrix-end-date" value="${scheduleData.endDate}">
             <button class="btn btn-primary" id="matrix-update-btn">表示更新</button>
             <button class="btn btn-success" id="open-text-import-modal-btn">📋 予定テキストを一括取込</button>
+            
+            <!-- 追加された削除ボタン群 -->
+            <div style="margin-left: auto; display: flex; gap: 8px;">
+              <button class="btn btn-danger" id="clear-day-btn">🗑 選択した日の予定を消去</button>
+              <button class="btn btn-danger" id="clear-all-schedule-btn" style="background:#b71c1c;">🗑 すべての予定を削除</button>
+            </div>
           </div>
+          
+          <!-- 日付選択用（1日ごと削除用） -->
+          <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 13px;">
+            <label for="target-date-picker">対象の日付:</label>
+            <input type="date" id="target-date-picker" value="${scheduleData.startDate}">
+          </div>
+
           <div class="matrix-table-container">
             <table class="matrix-table" id="matrix-table-el"></table>
           </div>
@@ -472,10 +487,40 @@
         openImportModalBtn.addEventListener('click', () => { textImportModal.style.display = 'flex'; });
       }
 
+      // 1日ごとに予定を削除するボタンのイベント
+      const clearDayBtn = document.getElementById('clear-day-btn');
+      if (clearDayBtn) {
+        clearDayBtn.addEventListener('click', () => {
+          const targetDate = document.getElementById('target-date-picker').value;
+          if (!targetDate) return alert('日付を選択してください。');
+          if (confirm(`${targetDate} のすべての予定を削除しますか？`)) {
+            if (scheduleData.cells[targetDate]) {
+              delete scheduleData.cells[targetDate];
+            }
+            buildMatrixTable();
+            triggerAutoSave();
+            showStatus(`🗑 ${targetDate} の予定を削除しました`);
+          }
+        });
+      }
+
+      // すべての予定を一括削除するボタンのイベント
+      const clearAllBtn = document.getElementById('clear-all-schedule-btn');
+      if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', () => {
+          if (confirm('【警告】すべてのスケジュール・予定データを完全に削除しますか？')) {
+            scheduleData.cells = {};
+            buildMatrixTable();
+            triggerAutoSave();
+            showStatus('🗑 すべての予定を削除しました');
+          }
+        });
+      }
+
       buildMatrixTable();
     }
 
-    // 予定テキスト一括取込の完全版パーサー（半角・全角の「書籍」や数字を強力に検出して正しく振り分け）
+    // 予定テキスト一括取込のパース処理
     function parseAndApplyScheduleText(rawText) {
       const lines = rawText.split(/\r?\n/);
       let currentSection = 'work'; 
@@ -489,10 +534,8 @@
           continue;
         }
 
-        // 半角・全角スペースや全角文字を正規化して比較しやすくする
-        const normalizedLine = line.replace(/[\s ]+/g, '').replace(/[０-９]/s, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+        const normalizedLine = line.replace(/[\s ]+/g, '').replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
 
-        // 1. セクションの切り替え判定
         if (normalizedLine.includes('予定(仕事)') || normalizedLine.includes('予定（仕事）') || normalizedLine === '仕事予定') {
           currentSection = 'work';
           activeDateStr = null;
@@ -504,11 +547,13 @@
           continue;
         } 
 
-        // 書籍セクションの柔軟な判定（「書籍3」「書 籍 3」「書籍３」などに完全対応）
         let explicitBookMatched = false;
         for (let i = 0; i < scheduleData.books.length; i++) {
           const num = i + 1;
-          if (normalizedLine.includes(`書籍${num}`) || normalizedLine.includes(`書籍・サイト${num}`) || normalizedLine.includes(`書${num}`)) {
+          const bookName = scheduleData.books[i];
+          const bookNameClean = bookName.replace(/\s+/g, '');
+          
+          if (normalizedLine === `書籍${num}` || normalizedLine === `書籍・サイト${num}` || normalizedLine === bookNameClean || normalizedLine.includes(`書籍${num}`)) {
             currentSection = `book_${i}`;
             activeDateStr = null;
             explicitBookMatched = true;
@@ -517,12 +562,10 @@
         }
         if (explicitBookMatched) continue;
 
-        // 【自動スマート判定】もし見出しが省略されていても、基礎理論やアルゴリズムなどの学習キーワードが含まれている行は自動で「書籍 3」にルーティングする
         if (normalizedLine.includes('基礎理論') || normalizedLine.includes('アルゴリズム') || normalizedLine.includes('コンピュータ構成') || normalizedLine.includes('システム構成')) {
-          currentSection = 'book_2'; // 書籍 3
+          currentSection = 'book_2'; 
         }
 
-        // 2. 日付のみの行 (例: "8/28")
         const dateOnlyMatch = line.match(/^(\d{1,4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/) || line.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
         if (dateOnlyMatch) {
           if (dateOnlyMatch[3]) {
@@ -538,7 +581,6 @@
           continue;
         }
 
-        // 3. 日付と内容が同じ行にある場合 (例: "8/26 感動大学")
         const dateContentMatch = line.match(/^(\d{1,4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+(.+)$/) || line.match(/^(\d{1,2})[\/\-](\d{1,2})\s+(.+)$/);
         if (dateContentMatch) {
           let y, m, d, textContent;
@@ -570,7 +612,6 @@
           continue;
         }
 
-        // 4. 日付指定後の続きの行（学習内容の複数行など）
         if (activeDateStr && currentSection) {
           let targetSec = currentSection;
           if (line.includes('基礎理論') || line.includes('アルゴリズム') || line.includes('コンピュータ構成') || line.includes('システム構成')) {
