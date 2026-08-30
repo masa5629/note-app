@@ -219,21 +219,172 @@
       z-index: 10;
     }
 
+    /* 付箋（タイル）スタイル */
     .note-card {
       position: absolute;
-      min-width: 220px; min-height: 140px;
-      width: 260px; height: 180px;
+      min-width: 220px;
+      min-height: 140px;
+      width: 260px;
+      height: 180px;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      display: flex; flex-direction: column;
-      resize: both; overflow: hidden; z-index: 20;
+      display: flex;
+      flex-direction: column;
+      resize: both;
+      overflow: hidden;
+      z-index: 20;
     }
+
     .note-header {
-      padding: 5px 8px; display: flex; align-items: center; justify-content: space-between;
-      cursor: grab; font-size: 11px; font-weight: 600; border-bottom: 1px solid rgba(0,0,0,0.08);
+      padding: 5px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: grab;
+      user-select: none;
+      font-size: 11px;
+      font-weight: 600;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      gap: 4px;
     }
-    .note-tools { display: flex; align-items: center; gap: 4px; }
-    .note-body { flex: 1; padding: 10px; outline: none; font-size: 14px; line-height: 1.8; overflow-y: auto; }
+
+    .note-header:active { cursor: grabbing; }
+
+    .note-title-area {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .note-tools {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: auto;
+    }
+
+    .note-color-picker {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .note-color-dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.25);
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .note-color-dot:hover { transform: scale(1.3); }
+
+    .note-opacity-slider {
+      width: 44px;
+      height: 4px;
+      cursor: pointer;
+      accent-color: #555;
+    }
+
+    .note-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 3px;
+      color: #666;
+    }
+
+    .note-btn:hover {
+      background: rgba(0,0,0,0.12);
+      color: #000;
+    }
+
+    .note-body {
+      flex: 1;
+      padding: 10px;
+      outline: none;
+      font-size: 14px;
+      line-height: 1.8;
+      overflow-y: auto;
+    }
+
+    /* 派生ノード（ブランチ） */
+    .branch-path {
+      stroke: var(--branch-color);
+      stroke-width: 2.5;
+      fill: none;
+      stroke-linecap: round;
+    }
+
+    .branch-node {
+      position: absolute;
+      z-index: 25;
+      background: #ffffff;
+      border: 1.5px solid var(--branch-color);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #283593;
+      box-shadow: 0 3px 8px rgba(92, 107, 192, 0.15);
+      cursor: grab;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+      min-width: 60px;
+    }
+
+    .branch-node:active { cursor: grabbing; }
+
+    .branch-node-text {
+      outline: none;
+      cursor: text;
+      min-width: 30px;
+    }
+
+    .branch-node-actions {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .branch-add-child, .branch-delete {
+      background: none;
+      border: none;
+      font-size: 11px;
+      cursor: pointer;
+      color: #7986cb;
+      padding: 1px 3px;
+      border-radius: 3px;
+    }
+
+    .branch-add-child:hover {
+      background: #e8eaf6;
+      color: #1a237e;
+      font-weight: bold;
+    }
+
+    .branch-delete:hover {
+      background: #ffebee;
+      color: #d32f2f;
+    }
+
+    .text-anchor {
+      position: relative;
+      border-bottom: 2px dashed #1976d2;
+      background-color: rgba(25, 118, 210, 0.08);
+      border-radius: 2px;
+      padding: 1px 3px 2px 3px;
+      cursor: pointer;
+      display: inline-block;
+      line-height: 1.3;
+    }
 
     .image-card {
       position: absolute; width: 380px; height: 280px;
@@ -290,7 +441,7 @@
     <button class="btn btn-primary" id="add-note-btn">＋ 付箋を追加</button>
     <button class="btn btn-image" id="add-image-btn">🖼 画像を追加</button>
     <input type="file" id="image-file-input" accept="image/*" style="display:none;">
-    <button class="btn btn-branch" id="branch-btn">🌿 ブランチ派生</button>
+    <button class="btn btn-branch" id="branch-btn" title="選択テキストからブランチ派生">🌿 ブランチ派生</button>
     <div class="divider"></div>
     <button class="btn btn-mask" id="add-mask-btn">🙈 穴埋めマスク</button>
     <button class="btn" id="toggle-all-masks-btn">👀 全マスク表示/隠す</button>
@@ -366,13 +517,21 @@
         <button class="modal-close-btn" id="close-help-btn">✕</button>
       </div>
       <div class="modal-body">
-        <p>テキストを選択してツールバーのボタンや穴埋めマスク機能等をご利用いただけます。</p>
+        <p>テキストを選択してツールバーのボタンや「ブランチ派生」機能等をご利用いただけます。</p>
       </div>
     </div>
   </div>
 
   <script>
-    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V32';
+    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V33';
+
+    const NOTE_THEMES = {
+      yellow: { bg: '#fffdf0', header: '#fff3a8', border: '#e0d080', text: '#5d5218' },
+      blue:   { bg: '#f0f8ff', header: '#cce6ff', border: '#99ccff', text: '#154360' },
+      green:  { bg: '#f2faf4', header: '#c8eed3', border: '#97dcb0', text: '#195b2c' },
+      pink:   { bg: '#fff2f4', header: '#ffd1d9', border: '#fbaab9', text: '#681d2c' },
+      purple: { bg: '#f8f4fc', header: '#e7d8f6', border: '#cbb3e8', text: '#432368' }
+    };
 
     const DEFAULT_PAGES = [
       {
@@ -382,7 +541,10 @@
         column1: 'カラム 1：ここに文章を入力',
         column2: 'カラム 2：ここに文章を入力',
         column3: 'カラム 3：ここに文章を入力',
-        notes: [], images: [], connections: [], branches: []
+        notes: [
+          { id: 'note-1', title: '付箋 #1', text: 'ここにメモを入力', x: 400, y: 120, w: 260, h: 180, theme: 'yellow', opacity: 1.0 }
+        ],
+        images: [], connections: [], branches: []
       }
     ];
 
@@ -805,6 +967,7 @@
     function renderPage(pageId) {
       document.querySelectorAll('.note-card').forEach(n => n.remove());
       document.querySelectorAll('.image-card').forEach(i => i.remove());
+      document.querySelectorAll('.branch-node').forEach(b => b.remove());
 
       currentPageId = pageId;
 
@@ -831,8 +994,10 @@
         });
 
         page.notes?.forEach(n => createNoteElement(n));
+        page.branches?.forEach(b => createBranchElement(b));
       }
       renderTabs();
+      renderAllLines();
       updateWorkspaceScrollBounds();
     }
 
@@ -887,13 +1052,328 @@
       renderPage(newId);
     });
 
-    // --- 各種上部ボタンのイベント配線（完全復活） ---
+    // --- 付箋テーマ適用と作成機能 ---
+    function applyNoteTheme(noteEl, themeKey, opacityVal) {
+      const theme = NOTE_THEMES[themeKey] || NOTE_THEMES.yellow;
+      noteEl.dataset.theme = themeKey;
+      noteEl.dataset.opacity = opacityVal;
+
+      noteEl.style.backgroundColor = theme.bg;
+      noteEl.style.borderColor = theme.border;
+      noteEl.style.opacity = opacityVal;
+
+      const header = noteEl.querySelector('.note-header');
+      if (header) {
+        header.style.backgroundColor = theme.header;
+        header.style.color = theme.text;
+      }
+    }
+
+    function createNoteElement(data) {
+      const noteEl = document.createElement('div');
+      noteEl.className = 'note-card';
+      noteEl.id = data.id;
+      noteEl.style.left = `${data.x}px`;
+      noteEl.style.top = `${data.y}px`;
+      if (data.w) noteEl.style.width = `${data.w}px`;
+      if (data.h) noteEl.style.height = `${data.h}px`;
+
+      const currentTheme = data.theme || 'yellow';
+      const currentOpacity = data.opacity !== undefined ? data.opacity : 1.0;
+
+      noteEl.innerHTML = `
+        <div class="note-header">
+          <div class="note-title-area">
+            <span>${data.title || `付箋 #${data.id.replace('note-', '')}`}</span>
+          </div>
+          <div class="note-tools">
+            <div class="note-color-picker" title="付箋の色を変更">
+              <span class="note-color-dot" data-theme="yellow" style="background:#fff3a8;"></span>
+              <span class="note-color-dot" data-theme="blue" style="background:#cce6ff;"></span>
+              <span class="note-color-dot" data-theme="green" style="background:#c8eed3;"></span>
+              <span class="note-color-dot" data-theme="pink" style="background:#ffd1d9;"></span>
+              <span class="note-color-dot" data-theme="purple" style="background:#e7d8f6;"></span>
+            </div>
+            <input type="range" class="note-opacity-slider" min="0.3" max="1.0" step="0.05" value="${currentOpacity}" title="透明度を調整">
+            <button class="note-btn delete-btn" title="削除">✕</button>
+          </div>
+        </div>
+        <div class="note-body" contenteditable="true" spellcheck="false">${data.text}</div>
+      `;
+
+      applyNoteTheme(noteEl, currentTheme, currentOpacity);
+      workspace.appendChild(noteEl);
+
+      noteEl.querySelectorAll('.note-color-dot').forEach(dot => {
+        dot.addEventListener('click', (e) => {
+          e.stopPropagation();
+          applyNoteTheme(noteEl, dot.dataset.theme, parseFloat(noteEl.dataset.opacity) || 1.0);
+          triggerAutoSave();
+        });
+      });
+
+      const slider = noteEl.querySelector('.note-opacity-slider');
+      slider.addEventListener('input', (e) => {
+        e.stopPropagation();
+        const val = parseFloat(e.target.value);
+        applyNoteTheme(noteEl, noteEl.dataset.theme || 'yellow', val);
+        triggerAutoSave();
+      });
+      slider.addEventListener('mousedown', (e) => e.stopPropagation());
+
+      initDraggable(noteEl, noteEl);
+
+      noteEl.querySelector('.delete-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        noteEl.remove();
+        triggerAutoSave();
+      });
+
+      noteEl.querySelector('.note-body').addEventListener('input', () => {
+        triggerAutoSave();
+      });
+
+      return noteEl;
+    }
+
+    function initDraggable(element, handle) {
+      let isDragging = false;
+      let startX, startY, initialLeft, initialTop;
+
+      handle.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.note-tools') || e.target.classList.contains('note-body') || e.target.classList.contains('note-btn') || e.target.tagName === 'A') return;
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        initialLeft = element.offsetLeft;
+        initialTop = element.offsetTop;
+
+        document.querySelectorAll('.note-card, .image-card').forEach(n => {
+          if (n.style.zIndex > 15) n.style.zIndex = 20;
+        });
+        element.style.zIndex = 30;
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      });
+
+      function onMouseMove(e) {
+        if (!isDragging) return;
+        element.style.left = `${Math.max(0, initialLeft + (e.clientX - startX))}px`;
+        element.style.top = `${Math.max(0, initialTop + (e.clientY - startY))}px`;
+      }
+
+      function onMouseUp() {
+        if (isDragging) {
+          isDragging = false;
+          triggerAutoSave();
+        }
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      }
+    }
+
+    // --- ブランチ派生機能 ---
+    function makeSelectionAnAnchor() {
+      const selection = window.getSelection();
+      if (!selection.rangeCount || selection.isCollapsed) return null;
+      const range = selection.getRangeAt(0);
+      const text = range.toString().trim();
+      if (!text) return null;
+
+      const anchor = document.createElement('span');
+      anchor.className = 'text-anchor';
+      anchor.id = `anchor-${anchorIdCounter++}`;
+      anchor.textContent = text;
+
+      range.deleteContents();
+      range.insertNode(anchor);
+      selection.removeAllRanges();
+      return anchor.id;
+    }
+
+    function createBranchElement(data) {
+      const bEl = document.createElement('div');
+      bEl.className = 'branch-node';
+      bEl.id = data.id;
+      bEl.dataset.parentId = data.parentId;
+      bEl.style.left = `${data.x}px`;
+      bEl.style.top = `${data.y}px`;
+
+      bEl.innerHTML = `
+        <span class="branch-node-text" contenteditable="true" spellcheck="false">${data.text}</span>
+        <div class="branch-node-actions">
+          <button class="branch-add-child" title="さらに派生">＋</button>
+          <button class="branch-delete" title="削除">✕</button>
+        </div>
+      `;
+
+      workspace.appendChild(bEl);
+      initBranchDraggable(bEl);
+
+      bEl.querySelector('.branch-add-child').addEventListener('click', (e) => {
+        e.stopPropagation();
+        spawnChildBranch(data.id);
+      });
+
+      bEl.querySelector('.branch-delete').addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeBranch(data.id);
+      });
+
+      bEl.querySelector('.branch-node-text').addEventListener('input', () => {
+        renderAllLines();
+        triggerAutoSave();
+      });
+
+      return bEl;
+    }
+
+    function spawnChildBranch(parentId) {
+      const parentEl = document.getElementById(parentId);
+      if (!parentEl) return;
+
+      const page = getCurrentPage();
+      const pCoords = getAnchorCoords(parentEl);
+      const newId = `branch-${branchIdCounter++}`;
+      const branchData = {
+        id: newId,
+        parentId: parentId,
+        text: '新しい項目',
+        x: Math.round(pCoords.rightX + 60),
+        y: Math.round(pCoords.centerY - 15)
+      };
+
+      if (!page.branches) page.branches = [];
+      page.branches.push(branchData);
+      const newEl = createBranchElement(branchData);
+      
+      newEl.querySelector('.branch-node-text').focus();
+      renderAllLines();
+      triggerAutoSave();
+    }
+
+    function removeBranch(id) {
+      const page = getCurrentPage();
+      document.getElementById(id)?.remove();
+      if (page.branches) {
+        const toDelete = [id];
+        let found = true;
+        while (found) {
+          found = false;
+          page.branches.forEach(b => {
+            if (toDelete.includes(b.parentId) && !toDelete.includes(b.id)) {
+              toDelete.push(b.id);
+              document.getElementById(b.id)?.remove();
+              found = true;
+            }
+          });
+        }
+        page.branches = page.branches.filter(b => !toDelete.includes(b.id));
+      }
+      renderAllLines();
+      triggerAutoSave();
+    }
+
+    function initBranchDraggable(element) {
+      let isDragging = false;
+      let startX, startY, initialLeft, initialTop;
+
+      element.addEventListener('mousedown', (e) => {
+        if (e.target.classList.contains('branch-node-text') || e.target.tagName === 'BUTTON') return;
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        initialLeft = element.offsetLeft;
+        initialTop = element.offsetTop;
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      });
+
+      function onMouseMove(e) {
+        if (!isDragging) return;
+        element.style.left = `${Math.max(0, initialLeft + (e.clientX - startX))}px`;
+        element.style.top = `${Math.max(0, initialTop + (e.clientY - startY))}px`;
+        renderAllLines();
+      }
+
+      function onMouseUp() {
+        if (isDragging) {
+          isDragging = false;
+          triggerAutoSave();
+        }
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      }
+    }
+
+    function getAnchorCoords(el) {
+      const wsRect = workspace.getBoundingClientRect();
+      const rect = el.getBoundingClientRect();
+      return {
+        rightX: rect.right - wsRect.left + workspace.scrollLeft,
+        centerY: rect.top - wsRect.top + workspace.scrollTop + rect.height / 2
+      };
+    }
+
+    function renderAllLines() {
+      svgLayer.innerHTML = '';
+      const page = getCurrentPage();
+      if (!page || page.id === 'schedule-page' || !page.branches) return;
+
+      page.branches.forEach(bNode => {
+        const parentEl = document.getElementById(bNode.parentId);
+        const childEl = document.getElementById(bNode.id);
+        if (!parentEl || !childEl) return;
+
+        const p1 = getAnchorCoords(parentEl);
+        const wsRect = workspace.getBoundingClientRect();
+        const cRect = childEl.getBoundingClientRect();
+        const p2X = cRect.left - wsRect.left + workspace.scrollLeft;
+        const p2Y = cRect.top - wsRect.top + workspace.scrollTop + cRect.height / 2;
+
+        const dx = Math.abs(p2X - p1.rightX) * 0.5;
+        const pathData = `M ${p1.rightX} ${p1.centerY} C ${p1.rightX + dx} ${p1.centerY}, ${p2X - dx} ${p2Y}, ${p2X} ${p2Y}`;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', pathData);
+        path.setAttribute('class', 'branch-path');
+        svgLayer.appendChild(path);
+      });
+    }
+
+    branchBtn.addEventListener('click', () => {
+      if (currentPageId === 'schedule-page') return alert('スケジュール画面では使用できません。');
+      let anchorId = null;
+      const selection = window.getSelection();
+      if (selection.rangeCount && !selection.isCollapsed) {
+        anchorId = makeSelectionAnAnchor();
+      } else {
+        let node = selection.anchorNode;
+        while (node && node !== workspace) {
+          if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('text-anchor')) {
+            anchorId = node.id;
+            break;
+          }
+          node = node.parentNode;
+        }
+      }
+
+      if (anchorId) {
+        spawnChildBranch(anchorId);
+      } else {
+        alert('派生させたいテキストを選択してから「🌿 ブランチ派生」ボタンを押してください。');
+      }
+    });
+
+    // --- 各種上部ボタンのイベント配線 ---
 
     // 1. 付箋追加ボタン
     addNoteBtn.addEventListener('click', () => {
       if (currentPageId === 'schedule-page') return alert('スケジュールタブ内では付箋を追加できません。');
       const newId = `note-${noteIdCounter++}`;
-      createNoteElement({ id: newId, title: `付箋 #${noteIdCounter - 1}`, text: 'メモ', x: 400, y: 120 });
+      createNoteElement({ id: newId, title: `付箋 #${noteIdCounter - 1}`, text: '新しいメモ', x: workspace.scrollLeft + 400, y: workspace.scrollTop + 120, w: 260, h: 180, theme: 'yellow', opacity: 1.0 });
       triggerAutoSave();
     });
 
@@ -1015,7 +1495,6 @@
       });
     });
 
-    // マスクのクリック切替
     workspace.addEventListener('click', (e) => {
       const mask = e.target.closest('.test-mask');
       if (mask) {
@@ -1041,21 +1520,6 @@
         triggerAutoSave();
       });
     });
-
-    function createNoteElement(data) {
-      const el = document.createElement('div');
-      el.className = 'note-card';
-      el.id = data.id;
-      el.style.left = `${data.x}px`;
-      el.style.top = `${data.y}px`;
-      el.innerHTML = `
-        <div class="note-header"><span>${data.title}</span><button class="note-btn delete-btn">✕</button></div>
-        <div class="note-body" contenteditable="true">${data.text}</div>
-      `;
-      workspace.appendChild(el);
-      el.querySelector('.delete-btn').addEventListener('click', () => { el.remove(); triggerAutoSave(); });
-      return el;
-    }
 
     function escapeHtml(str) {
       return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
