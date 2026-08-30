@@ -188,6 +188,7 @@
       font-size: 24px;
       margin-bottom: 15px;
       color: #222;
+      outline: none;
     }
 
     .note-column {
@@ -244,11 +245,12 @@
     .image-body { flex: 1; display: flex; align-items: center; justify-content: center; background: #fafafa; }
     .image-body img { width: 100%; height: 100%; object-fit: contain; }
 
+    /* 穴埋めマスク */
     .test-mask { display: inline-block; padding: 1px 6px; margin: 0 2px; border-radius: 4px; cursor: pointer; user-select: none; font-weight: bold; }
     .test-mask.masked { background-color: #37474f !important; color: transparent !important; border: 1px solid #263238; }
     .test-mask.revealed { background-color: #e8f5e9 !important; color: #2e7d32 !important; border: 1px dashed #4caf50; }
 
-    /* マーカー用スタイル */
+    /* マーカー・太字用スタイル */
     .highlight-marker { padding: 2px 4px; border-radius: 3px; }
     .custom-bold { font-weight: bold; }
 
@@ -364,13 +366,13 @@
         <button class="modal-close-btn" id="close-help-btn">✕</button>
       </div>
       <div class="modal-body">
-        <p>テキストを選択してツールバーの「小・中・大・特大」ボタンや太字・マーカー、穴埋めマスク機能等をご利用いただけます。</p>
+        <p>テキストを選択してツールバーのボタンや穴埋めマスク機能等をご利用いただけます。</p>
       </div>
     </div>
   </div>
 
   <script>
-    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V31';
+    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V32';
 
     const DEFAULT_PAGES = [
       {
@@ -885,7 +887,7 @@
       renderPage(newId);
     });
 
-    // --- 各種上部ボタンのイベント配線（復活処理） ---
+    // --- 各種上部ボタンのイベント配線（完全復活） ---
 
     // 1. 付箋追加ボタン
     addNoteBtn.addEventListener('click', () => {
@@ -895,7 +897,52 @@
       triggerAutoSave();
     });
 
-    // 2. 太字・マーカーボタン
+    // 2. 画像追加ボタン
+    addImageBtn.addEventListener('click', () => imageFileInput.click());
+    imageFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const src = event.target.result;
+        const newId = `img-${imageIdCounter++}`;
+        const page = getCurrentPage();
+        if (page.id === 'schedule-page') return;
+        if (!page.images) page.images = [];
+        const imgData = { id: newId, title: file.name.slice(0, 15) || '画像', src, x: 150, y: 150, w: 380, h: 280 };
+        page.images.push(imgData);
+        createImageElement(imgData);
+        triggerAutoSave();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function createImageElement(data) {
+      const imgCard = document.createElement('div');
+      imgCard.className = 'image-card';
+      imgCard.id = data.id;
+      imgCard.style.left = `${data.x}px`;
+      imgCard.style.top = `${data.y}px`;
+      if (data.w) imgCard.style.width = `${data.w}px`;
+      if (data.h) imgCard.style.height = `${data.h}px`;
+
+      imgCard.innerHTML = `
+        <div class="image-header">
+          <span>🖼 ${data.title}</span>
+          <button class="note-btn delete-btn" style="background:none;border:none;cursor:pointer;color:#6a1b9a;">✕</button>
+        </div>
+        <div class="image-body"><img src="${data.src}" alt="画像"></div>
+      `;
+      workspace.appendChild(imgCard);
+      imgCard.querySelector('.delete-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        imgCard.remove();
+        triggerAutoSave();
+      });
+      return imgCard;
+    }
+
+    // 3. 太字・マーカーボタン
     document.querySelectorAll('.color-dot-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const type = btn.dataset.type;
@@ -942,7 +989,7 @@
       });
     });
 
-    // 3. 穴埋めマスクボタン
+    // 4. 穴埋めマスクボタン
     addMaskBtn.addEventListener('click', () => {
       const selection = window.getSelection();
       if (!selection.rangeCount || selection.isCollapsed) {
@@ -959,8 +1006,7 @@
       triggerAutoSave();
     });
 
-    // 4. 全マスク表示/隠すボタン
-    let areAllMasksRevealed = false;
+    // 5. 全マスク表示/隠すボタン
     toggleAllMasksBtn.addEventListener('click', () => {
       areAllMasksRevealed = !areAllMasksRevealed;
       document.querySelectorAll('.test-mask').forEach(m => {
@@ -978,7 +1024,7 @@
       }
     });
 
-    // 5. 文字サイズ変更ボタン
+    // 6. 文字サイズ変更ボタン
     document.querySelectorAll('.size-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const size = btn.dataset.size;
