@@ -245,7 +245,6 @@
       z-index: 20;
     }
 
-    /* ピン止め（固定配置）状態の付箋 */
     .note-card.pinned {
       resize: none !important;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
@@ -451,7 +450,6 @@
     .col-header-day.sun { color: #d32f2f; }
     .col-header-day.sat { color: #1976d2; }
 
-    /* 過去日付のグレーアウト & 本日日付の強調 */
     .date-past { background-color: #e9ecef !important; color: #6c757d !important; opacity: 0.75; }
     .date-today { background-color: #fffde7 !important; border: 2px solid #fbc02d !important; font-weight: bold; }
 
@@ -545,13 +543,16 @@
         <button class="modal-close-btn" id="close-help-btn">✕</button>
       </div>
       <div class="modal-body">
-        <p>付箋の「📌/🔒」ボタンでピン止め（固定配置）と自由配置を切り替えられます。</p>
+        <p><b>📅 スケジュール機能について</b></p>
+        <p>・「指定日から後ろへずらす(+1日)」ボタン：指定された日付以降のスケジュールをすべて1日後ろ（未来）へスライドさせます。</p>
+        <p>・「指定日から前へ前倒し(-1日)」ボタン：指定された日付以降のスケジュールをすべて1日前（過去）へスライドさせます。</p>
+        <p>・付箋の「📌/🔒」ボタンでピン止め（固定配置）と自由配置を切り替えられます。</p>
       </div>
     </div>
   </div>
 
   <script>
-    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V39';
+    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V40';
 
     const NOTE_THEMES = {
       yellow: { bg: '#fffdf0', header: '#fff3a8', border: '#e0d080', text: '#5d5218' },
@@ -640,9 +641,15 @@
             </div>
           </div>
           
-          <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 13px;">
-            <label for="target-date-picker">対象の日付:</label>
+          <!-- 対象日付とシフト（ずらす・前倒し）操作パネル -->
+          <div style="margin-bottom: 16px; display: flex; align-items: center; gap: 12px; font-size: 13px; background: #fff8e1; padding: 10px 14px; border-radius: 6px; border: 1px solid #ffe082; flex-wrap: wrap;">
+            <label for="target-date-picker" style="font-weight:bold;">対象の日付:</label>
             <input type="date" id="target-date-picker" value="${scheduleData.startDate}">
+            <span style="color:#666; font-size:12px;">(※選択日以降の予定をスライドします)</span>
+            <div style="margin-left: auto; display: flex; gap: 8px;">
+              <button class="btn" id="shift-forward-btn" style="background:#e3f2fd; color:#1565c0; border-color:#90caf9; font-weight:bold;">⏩ 指定日から後ろへずらす(+1日)</button>
+              <button class="btn" id="shift-backward-btn" style="background:#e8f5e9; color:#2e7d32; border-color:#a5d6a7; font-weight:bold;">⏪ 指定日から前へ前倒し(-1日)</button>
+            </div>
           </div>
 
           <div class="matrix-table-container">
@@ -651,6 +658,16 @@
         </div>
       `;
       return html;
+    }
+
+    // 日付文字列 (YYYY-MM-DD) に指定日数を加算・減算するヘルパー
+    function addDaysToDateStr(dateStr, days) {
+      const d = new Date(dateStr);
+      d.setDate(d.getDate() + days);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
     }
 
     function initScheduleMatrixDOM() {
@@ -707,6 +724,61 @@
             triggerAutoSave();
             showStatus('🗑 すべての予定を削除しました');
           }
+        });
+      }
+
+      // --- スケジュールを1日後ろへずらすボタン (+1日) ---
+      const shiftForwardBtn = document.getElementById('shift-forward-btn');
+      if (shiftForwardBtn) {
+        shiftForwardBtn.addEventListener('click', () => {
+          const targetDate = document.getElementById('target-date-picker').value;
+          if (!targetDate) return alert('基準となる対象の日付を選択してください。');
+          if (!confirm(`${targetDate} 以降のすべての予定を1日後ろ（未来側）にずらしますか？`)) return;
+
+          // 日付の降順/昇順どちらでも安全に処理できるようキーを抽出・ソート
+          const keys = Object.keys(scheduleData.cells).sort().reverse();
+          const newCells = {};
+
+          keys.forEach(dateStr => {
+            if (dateStr >= targetDate) {
+              const newDateStr = addDaysToDateStr(dateStr, 1);
+              newCells[newDateStr] = scheduleData.cells[dateStr];
+            } else {
+              newCells[dateStr] = scheduleData.cells[dateStr];
+            }
+          });
+
+          scheduleData.cells = newCells;
+          buildMatrixTable();
+          triggerAutoSave();
+          showStatus(`⏩ ${targetDate} 以降の予定を1日後ろへずらしました`);
+        });
+      }
+
+      // --- スケジュールを1日前へ前倒しするボタン (-1日) ---
+      const shiftBackwardBtn = document.getElementById('shift-backward-btn');
+      if (shiftBackwardBtn) {
+        shiftBackwardBtn.addEventListener('click', () => {
+          const targetDate = document.getElementById('target-date-picker').value;
+          if (!targetDate) return alert('基準となる対象の日付を選択してください。');
+          if (!confirm(`${targetDate} 以降のすべての予定を1日前（過去側）に前倒ししますか？`)) return;
+
+          const keys = Object.keys(scheduleData.cells).sort();
+          const newCells = {};
+
+          keys.forEach(dateStr => {
+            if (dateStr >= targetDate) {
+              const newDateStr = addDaysToDateStr(dateStr, -1);
+              newCells[newDateStr] = scheduleData.cells[dateStr];
+            } else {
+              newCells[dateStr] = scheduleData.cells[dateStr];
+            }
+          });
+
+          scheduleData.cells = newCells;
+          buildMatrixTable();
+          triggerAutoSave();
+          showStatus(`⏪ ${targetDate} 以降の予定を1日前へ前倒ししました`);
         });
       }
 
@@ -1060,7 +1132,6 @@
         const titleSpan = document.createElement('span');
         titleSpan.textContent = p.title;
         
-        // タブ名ダブルクリック編集
         tab.addEventListener('dblclick', (e) => {
           e.stopPropagation();
           const input = document.createElement('input');
@@ -1127,7 +1198,6 @@
       renderPage(newId);
     });
 
-    // --- 付箋テーマ適用と作成機能（ピン止め対応） ---
     function applyNoteTheme(noteEl, themeKey, opacityVal) {
       const theme = NOTE_THEMES[themeKey] || NOTE_THEMES.yellow;
       noteEl.dataset.theme = themeKey;
@@ -1182,7 +1252,6 @@
       applyNoteTheme(noteEl, currentTheme, currentOpacity);
       workspace.appendChild(noteEl);
 
-      // ピン止め切り替えボタン
       const pinBtn = noteEl.querySelector('.pin-btn');
       pinBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -1242,7 +1311,6 @@
       let startX, startY, initialLeft, initialTop;
 
       handle.addEventListener('mousedown', (e) => {
-        // ピン止めされている場合はドラッグ移動させない
         if (element.classList.contains('pinned')) return;
         if (e.target.closest('.note-tools') || e.target.classList.contains('note-body') || e.target.classList.contains('note-btn') || e.target.tagName === 'A' || e.target.tagName === 'INPUT') return;
         isDragging = true;
@@ -1269,7 +1337,6 @@
       function onMouseUp() {
         if (isDragging) {
           isDragging = false;
-          // 位置情報を保存データに反映
           const page = getCurrentPage();
           if (page && page.notes) {
             const found = page.notes.find(n => n.id === element.id);
@@ -1287,7 +1354,6 @@
       }
     }
 
-    // --- ブランチ派生機能（解除対応） ---
     function makeSelectionAnAnchor() {
       const selection = window.getSelection();
       if (!selection.rangeCount || selection.isCollapsed) return null;
@@ -1493,9 +1559,6 @@
       }
     });
 
-    // --- 各種上部ボタンのイベント配線 ---
-
-    // 1. 付箋追加ボタン
     addNoteBtn.addEventListener('click', () => {
       if (currentPageId === 'schedule-page') return alert('スケジュールタブ内では付箋を追加できません。');
       const newId = `note-${noteIdCounter++}`;
@@ -1507,7 +1570,6 @@
       triggerAutoSave();
     });
 
-    // 2. 画像追加ボタン
     addImageBtn.addEventListener('click', () => imageFileInput.click());
     imageFileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
@@ -1588,7 +1650,6 @@
       return imgCard;
     }
 
-    // 3. 太字・マーカーボタン
     document.querySelectorAll('.color-dot-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const type = btn.dataset.type;
@@ -1635,7 +1696,6 @@
       });
     });
 
-    // 4. 穴埋めマスクボタン（解除対応）
     addMaskBtn.addEventListener('click', () => {
       const selection = window.getSelection();
       if (!selection.rangeCount || selection.isCollapsed) {
@@ -1659,7 +1719,6 @@
       triggerAutoSave();
     });
 
-    // 5. 全マスク表示/隠すボタン
     toggleAllMasksBtn.addEventListener('click', () => {
       areAllMasksRevealed = !areAllMasksRevealed;
       document.querySelectorAll('.test-mask').forEach(m => {
@@ -1676,7 +1735,6 @@
       }
     });
 
-    // 6. 数値入力による文字サイズ変更ボタン
     document.getElementById('apply-font-size-btn').addEventListener('click', () => {
       const sizeVal = document.getElementById('font-size-num-input').value;
       if (!sizeVal || sizeVal < 5) {
