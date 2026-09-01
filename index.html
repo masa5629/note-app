@@ -140,6 +140,16 @@
       border-bottom: 1px solid #ffffff;
     }
 
+    .tab-name-input {
+      border: 1px solid #1976d2;
+      background: #fff;
+      font-size: 13px;
+      padding: 1px 4px;
+      border-radius: 3px;
+      outline: none;
+      width: 90px;
+    }
+
     .tab-close {
       border: none; background: none; font-size: 12px; cursor: pointer;
       color: #888; border-radius: 50%; width: 16px; height: 16px;
@@ -188,6 +198,7 @@
       font-size: 24px;
       margin-bottom: 15px;
       color: #222;
+      outline: none;
     }
 
     .note-column {
@@ -215,24 +226,185 @@
       top: 0; left: 0;
       width: 100%; height: 100%;
       pointer-events: none;
-      z-index: 10;
+      z-index: 50;
     }
 
+    /* 付箋（タイル）スタイル */
     .note-card {
       position: absolute;
-      min-width: 220px; min-height: 140px;
-      width: 260px; height: 180px;
+      min-width: 220px;
+      min-height: 140px;
+      width: 260px;
+      height: 180px;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      display: flex; flex-direction: column;
-      resize: both; overflow: hidden; z-index: 20;
+      display: flex;
+      flex-direction: column;
+      resize: both;
+      overflow: hidden;
+      z-index: 20;
     }
+
+    /* ピン止め（固定配置）状態の付箋 */
+    .note-card.pinned {
+      resize: none !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+    .note-card.pinned .note-header {
+      cursor: default !important;
+      background-color: #e0e0e0 !important;
+    }
+
     .note-header {
-      padding: 5px 8px; display: flex; align-items: center; justify-content: space-between;
-      cursor: grab; font-size: 11px; font-weight: 600; border-bottom: 1px solid rgba(0,0,0,0.08);
+      padding: 5px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: grab;
+      user-select: none;
+      font-size: 11px;
+      font-weight: 600;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      gap: 4px;
     }
-    .note-tools { display: flex; align-items: center; gap: 4px; }
-    .note-body { flex: 1; padding: 10px; outline: none; font-size: 14px; line-height: 1.8; overflow-y: auto; }
+
+    .note-header:active { cursor: grabbing; }
+
+    .note-title-area {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .note-tools {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: auto;
+    }
+
+    .note-color-picker {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .note-color-dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.25);
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .note-color-dot:hover { transform: scale(1.3); }
+
+    .note-opacity-slider {
+      width: 44px;
+      height: 4px;
+      cursor: pointer;
+      accent-color: #555;
+    }
+
+    .note-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 3px;
+      color: #666;
+    }
+
+    .note-btn:hover {
+      background: rgba(0,0,0,0.12);
+      color: #000;
+    }
+
+    .note-body {
+      flex: 1;
+      padding: 10px;
+      outline: none;
+      font-size: 14px;
+      line-height: 1.8;
+      overflow-y: auto;
+    }
+
+    /* 派生ノード（ブランチ） */
+    .branch-path {
+      stroke: var(--branch-color);
+      stroke-width: 2.5;
+      fill: none;
+      stroke-linecap: round;
+    }
+
+    .branch-node {
+      position: absolute;
+      z-index: 25;
+      background: #ffffff;
+      border: 1.5px solid var(--branch-color);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #283593;
+      box-shadow: 0 3px 8px rgba(92, 107, 192, 0.15);
+      cursor: grab;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+      min-width: 60px;
+    }
+
+    .branch-node:active { cursor: grabbing; }
+
+    .branch-node-text {
+      outline: none;
+      cursor: text;
+      min-width: 30px;
+    }
+
+    .branch-node-actions {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .branch-add-child, .branch-delete {
+      background: none;
+      border: none;
+      font-size: 11px;
+      cursor: pointer;
+      color: #7986cb;
+      padding: 1px 3px;
+      border-radius: 3px;
+    }
+
+    .branch-add-child:hover {
+      background: #e8eaf6;
+      color: #1a237e;
+      font-weight: bold;
+    }
+
+    .branch-delete:hover {
+      background: #ffebee;
+      color: #d32f2f;
+    }
+
+    .text-anchor {
+      position: relative;
+      border-bottom: 2px dashed #1976d2;
+      background-color: rgba(25, 118, 210, 0.08);
+      border-radius: 2px;
+      padding: 1px 3px 2px 3px;
+      cursor: pointer;
+      display: inline-block;
+      line-height: 1.3;
+    }
 
     .image-card {
       position: absolute; width: 380px; height: 280px;
@@ -240,14 +412,19 @@
       box-shadow: 0 6px 16px rgba(0,0,0,0.14); display: flex; flex-direction: column;
       resize: both; overflow: hidden; z-index: 22; cursor: grab;
     }
-    .image-header { background: #f3e5f5; color: #6a1b9a; padding: 4px 8px; display: flex; justify-content: space-between; font-size: 11px; }
-    .image-body { flex: 1; display: flex; align-items: center; justify-content: center; background: #fafafa; }
+    .image-header { background: #f3e5f5; color: #6a1b9a; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; cursor: grab; }
+    .image-header:active { cursor: grabbing; }
+    .image-size-controls { display: flex; align-items: center; gap: 4px; font-size: 11px; }
+    .image-size-input { width: 45px; padding: 1px 3px; font-size: 11px; border: 1px solid #ba68c8; border-radius: 3px; text-align: center; outline: none; }
+    .image-body { flex: 1; display: flex; align-items: center; justify-content: center; background: #fafafa; overflow: hidden; }
     .image-body img { width: 100%; height: 100%; object-fit: contain; }
 
+    /* 穴埋めマスク */
     .test-mask { display: inline-block; padding: 1px 6px; margin: 0 2px; border-radius: 4px; cursor: pointer; user-select: none; font-weight: bold; }
     .test-mask.masked { background-color: #37474f !important; color: transparent !important; border: 1px solid #263238; }
     .test-mask.revealed { background-color: #e8f5e9 !important; color: #2e7d32 !important; border: 1px dashed #4caf50; }
 
+    /* マーカー・太字用スタイル */
     .highlight-marker { padding: 2px 4px; border-radius: 3px; }
     .custom-bold { font-weight: bold; }
 
@@ -268,15 +445,22 @@
     .matrix-table th, .matrix-table td { border: 1px solid #cfd8dc; padding: 6px; vertical-align: top; width: 200px; min-width: 200px; }
     .matrix-table th { background: #eceff1; text-align: center; font-weight: bold; }
     .matrix-table th:first-child, .matrix-table td:first-child { position: sticky; left: 0; z-index: 12; background: #f8f9fa; width: 140px; min-width: 140px; }
+    
     .col-header-date { font-size: 14px; color: #1976d2; background: #e3f2fd !important; }
     .col-header-day { font-size: 12px; color: #555; }
     .col-header-day.sun { color: #d32f2f; }
     .col-header-day.sat { color: #1976d2; }
+
+    /* 過去日付のグレーアウト & 本日日付の強調 */
+    .date-past { background-color: #e9ecef !important; color: #6c757d !important; opacity: 0.75; }
+    .date-today { background-color: #fffde7 !important; border: 2px solid #fbc02d !important; font-weight: bold; }
+
     .matrix-row-label { font-weight: bold; text-align: center; vertical-align: middle; font-size: 12px; }
     .matrix-row-label.work { color: #1565c0; background: #e3f2fd; }
     .matrix-row-label.home { color: #2e7d32; background: #e8f5e9; }
     .matrix-row-label.book { color: #4527a0; background: #ede7f6; }
     .matrix-cell-textarea { width: 100%; height: 90px; padding: 6px; font-size: 12px; border: 1px solid #e0e0e0; border-radius: 4px; resize: vertical; outline: none; }
+    .matrix-cell-textarea.date-past { background-color: #f8f9fa !important; color: #888 !important; }
   </style>
 </head>
 <body>
@@ -287,7 +471,7 @@
     <button class="btn btn-primary" id="add-note-btn">＋ 付箋を追加</button>
     <button class="btn btn-image" id="add-image-btn">🖼 画像を追加</button>
     <input type="file" id="image-file-input" accept="image/*" style="display:none;">
-    <button class="btn btn-branch" id="branch-btn">🌿 ブランチ派生</button>
+    <button class="btn btn-branch" id="branch-btn" title="選択テキストからブランチ派生">🌿 ブランチ派生</button>
     <div class="divider"></div>
     <button class="btn btn-mask" id="add-mask-btn">🙈 穴埋めマスク</button>
     <button class="btn" id="toggle-all-masks-btn">👀 全マスク表示/隠す</button>
@@ -317,13 +501,11 @@
     </div>
     <div class="divider"></div>
 
-    <!-- 文字サイズ変更ボタン群 -->
+    <!-- 文字サイズ数値指定コントロール -->
     <div class="color-group">
-      <span class="color-group-label">文字サイズ:</span>
-      <button class="btn size-btn" data-size="12px" style="padding:2px 6px; font-size:11px;">小</button>
-      <button class="btn size-btn" data-size="15px" style="padding:2px 6px; font-size:13px;">中</button>
-      <button class="btn size-btn" data-size="18px" style="padding:2px 6px; font-size:15px;">大</button>
-      <button class="btn size-btn" data-size="22px" style="padding:2px 6px; font-size:17px;">特大</button>
+      <span class="color-group-label">文字サイズ(px):</span>
+      <input type="number" id="font-size-num-input" value="15" min="8" max="72" style="width: 48px; padding: 2px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; text-align: center;">
+      <button class="btn" id="apply-font-size-btn" style="padding: 2px 6px; font-size: 11px;">適用</button>
     </div>
     <span class="status-text" id="status-message">編集内容は自動保存されます</span>
   </header>
@@ -363,13 +545,21 @@
         <button class="modal-close-btn" id="close-help-btn">✕</button>
       </div>
       <div class="modal-body">
-        <p>テキストを選択してツールバーの「小・中・大・特大」ボタンや太字・マーカー、穴埋めマスク機能等をご利用いただけます。</p>
+        <p>付箋の「📌/🔒」ボタンでピン止め（固定配置）と自由配置を切り替えられます。</p>
       </div>
     </div>
   </div>
 
   <script>
-    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V32';
+    const PERSISTENT_STORAGE_KEY = 'STICKY_NOTE_APP_DATA_SCHEDULE_V39';
+
+    const NOTE_THEMES = {
+      yellow: { bg: '#fffdf0', header: '#fff3a8', border: '#e0d080', text: '#5d5218' },
+      blue:   { bg: '#f0f8ff', header: '#cce6ff', border: '#99ccff', text: '#154360' },
+      green:  { bg: '#f2faf4', header: '#c8eed3', border: '#97dcb0', text: '#195b2c' },
+      pink:   { bg: '#fff2f4', header: '#ffd1d9', border: '#fbaab9', text: '#681d2c' },
+      purple: { bg: '#f8f4fc', header: '#e7d8f6', border: '#cbb3e8', text: '#432368' }
+    };
 
     const DEFAULT_PAGES = [
       {
@@ -444,14 +634,12 @@
             <button class="btn btn-primary" id="matrix-update-btn">表示更新</button>
             <button class="btn btn-success" id="open-text-import-modal-btn">📋 予定テキストを一括取込</button>
             
-            <!-- 削除ボタン群 -->
             <div style="margin-left: auto; display: flex; gap: 8px;">
               <button class="btn btn-danger" id="clear-day-btn">🗑 選択した日の予定を消去</button>
               <button class="btn btn-danger" id="clear-all-schedule-btn" style="background:#b71c1c;">🗑 すべての予定を削除</button>
             </div>
           </div>
           
-          <!-- 日付選択用（1日ごと削除用） -->
           <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 13px;">
             <label for="target-date-picker">対象の日付:</label>
             <input type="date" id="target-date-picker" value="${scheduleData.startDate}">
@@ -525,7 +713,6 @@
       buildMatrixTable();
     }
 
-    // 予定テキスト一括取込のパース処理
     function parseAndApplyScheduleText(rawText) {
       const lines = rawText.split(/\r?\n/);
       let currentSection = 'work'; 
@@ -663,15 +850,26 @@
         curr.setDate(curr.getDate() + 1);
       }
 
+      const todayStr = new Date().toISOString().slice(0, 10);
       const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+
       let html = `<thead><tr><th class="matrix-row-label">日付</th>`;
       dateList.forEach(d => {
-        html += `<th class="col-header-date">${d.getMonth() + 1}/${d.getDate()}</th>`;
+        const dateStr = d.toISOString().slice(0, 10);
+        let dateClass = 'col-header-date';
+        if (dateStr === todayStr) dateClass += ' date-today';
+        else if (dateStr < todayStr) dateClass += ' date-past';
+
+        html += `<th class="${dateClass}">${d.getMonth() + 1}/${d.getDate()}</th>`;
       });
       html += `</tr><tr><th class="matrix-row-label">曜日</th>`;
       dateList.forEach(d => {
+        const dateStr = d.toISOString().slice(0, 10);
         const wIdx = d.getDay();
-        const wClass = wIdx === 0 ? 'sun' : (wIdx === 6 ? 'sat' : '');
+        let wClass = wIdx === 0 ? 'sun' : (wIdx === 6 ? 'sat' : '');
+        if (dateStr === todayStr) wClass += ' date-today';
+        else if (dateStr < todayStr) wClass += ' date-past';
+
         html += `<th class="col-header-day ${wClass}">${weekdays[wIdx]}</th>`;
       });
       html += `</tr></thead><tbody>`;
@@ -681,7 +879,9 @@
         const dateStr = d.toISOString().slice(0, 10);
         if (!scheduleData.cells[dateStr]) scheduleData.cells[dateStr] = {};
         const cellData = scheduleData.cells[dateStr];
-        html += `<td><textarea class="matrix-cell-textarea" data-date="${dateStr}" data-field="work">${escapeHtml(cellData.work || '')}</textarea></td>`;
+        let pastClass = (dateStr < todayStr) ? 'date-past' : '';
+        if (dateStr === todayStr) pastClass = 'date-today';
+        html += `<td><textarea class="matrix-cell-textarea ${pastClass}" data-date="${dateStr}" data-field="work">${escapeHtml(cellData.work || '')}</textarea></td>`;
       });
       html += `</tr>`;
 
@@ -690,7 +890,9 @@
         const dateStr = d.toISOString().slice(0, 10);
         if (!scheduleData.cells[dateStr]) scheduleData.cells[dateStr] = {};
         const cellData = scheduleData.cells[dateStr];
-        html += `<td><textarea class="matrix-cell-textarea" data-date="${dateStr}" data-field="home">${escapeHtml(cellData.home || '')}</textarea></td>`;
+        let pastClass = (dateStr < todayStr) ? 'date-past' : '';
+        if (dateStr === todayStr) pastClass = 'date-today';
+        html += `<td><textarea class="matrix-cell-textarea ${pastClass}" data-date="${dateStr}" data-field="home">${escapeHtml(cellData.home || '')}</textarea></td>`;
       });
       html += `</tr>`;
 
@@ -703,7 +905,9 @@
           const dateStr = d.toISOString().slice(0, 10);
           if (!scheduleData.cells[dateStr]) scheduleData.cells[dateStr] = {};
           const cellData = scheduleData.cells[dateStr];
-          html += `<td><textarea class="matrix-cell-textarea" data-date="${dateStr}" data-field="book_${bIdx}">${escapeHtml(cellData[`book_${bIdx}`] || '')}</textarea></td>`;
+          let pastClass = (dateStr < todayStr) ? 'date-past' : '';
+          if (dateStr === todayStr) pastClass = 'date-today';
+          html += `<td><textarea class="matrix-cell-textarea ${pastClass}" data-date="${dateStr}" data-field="book_${bIdx}">${escapeHtml(cellData[`book_${bIdx}`] || '')}</textarea></td>`;
         });
         html += `</tr>`;
       }
@@ -801,6 +1005,7 @@
     function renderPage(pageId) {
       document.querySelectorAll('.note-card').forEach(n => n.remove());
       document.querySelectorAll('.image-card').forEach(i => i.remove());
+      document.querySelectorAll('.branch-node').forEach(b => b.remove());
 
       currentPageId = pageId;
 
@@ -827,8 +1032,11 @@
         });
 
         page.notes?.forEach(n => createNoteElement(n));
+        page.images?.forEach(img => createImageElement(img));
+        page.branches?.forEach(b => createBranchElement(b));
       }
       renderTabs();
+      renderAllLines();
       updateWorkspaceScrollBounds();
     }
 
@@ -848,21 +1056,57 @@
       pages.forEach(p => {
         const tab = document.createElement('div');
         tab.className = `page-tab ${p.id === currentPageId ? 'active' : ''}`;
-        tab.innerHTML = `<span>${p.title}</span>${pages.length > 1 ? '<button class="tab-close">✕</button>' : ''}`;
+        
+        const titleSpan = document.createElement('span');
+        titleSpan.textContent = p.title;
+        
+        // タブ名ダブルクリック編集
+        tab.addEventListener('dblclick', (e) => {
+          e.stopPropagation();
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.className = 'tab-name-input';
+          input.value = p.title;
+          
+          input.addEventListener('blur', () => {
+            if (input.value.trim()) {
+              p.title = input.value.trim();
+            }
+            renderTabs();
+            triggerAutoSave();
+          });
+          
+          input.addEventListener('keydown', (ke) => {
+            if (ke.key === 'Enter') input.blur();
+          });
+          
+          titleSpan.replaceWith(input);
+          input.focus();
+          input.select();
+        });
+
+        tab.appendChild(titleSpan);
+
+        if (pages.length > 1) {
+          const closeBtn = document.createElement('button');
+          closeBtn.className = 'tab-close';
+          closeBtn.textContent = '✕';
+          closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            pages = pages.filter(item => item.id !== p.id);
+            renderPage(pages[0].id);
+          });
+          tab.appendChild(closeBtn);
+        }
+
         tab.addEventListener('click', (e) => {
-          if (e.target.classList.contains('tab-close')) return;
+          if (e.target.classList.contains('tab-close') || e.target.tagName === 'INPUT') return;
           if (p.id !== currentPageId) {
             saveCurrentPageState();
             renderPage(p.id);
           }
         });
-        if (pages.length > 1) {
-          tab.querySelector('.tab-close').addEventListener('click', (e) => {
-            e.stopPropagation();
-            pages = pages.filter(item => item.id !== p.id);
-            renderPage(pages[0].id);
-          });
-        }
+
         tabsContainer.appendChild(tab);
       });
     }
@@ -883,17 +1127,468 @@
       renderPage(newId);
     });
 
-    // --- 各種上部ボタンのイベント配線（完全復活） ---
+    // --- 付箋テーマ適用と作成機能（ピン止め対応） ---
+    function applyNoteTheme(noteEl, themeKey, opacityVal) {
+      const theme = NOTE_THEMES[themeKey] || NOTE_THEMES.yellow;
+      noteEl.dataset.theme = themeKey;
+      noteEl.dataset.opacity = opacityVal;
+
+      noteEl.style.backgroundColor = theme.bg;
+      noteEl.style.borderColor = theme.border;
+      noteEl.style.opacity = opacityVal;
+
+      const header = noteEl.querySelector('.note-header');
+      if (header && !noteEl.classList.contains('pinned')) {
+        header.style.backgroundColor = theme.header;
+        header.style.color = theme.text;
+      }
+    }
+
+    function createNoteElement(data) {
+      const noteEl = document.createElement('div');
+      noteEl.className = 'note-card';
+      if (data.pinned) noteEl.classList.add('pinned');
+      noteEl.id = data.id;
+      noteEl.style.left = `${data.x}px`;
+      noteEl.style.top = `${data.y}px`;
+      if (data.w) noteEl.style.width = `${data.w}px`;
+      if (data.h) noteEl.style.height = `${data.h}px`;
+
+      const currentTheme = data.theme || 'yellow';
+      const currentOpacity = data.opacity !== undefined ? data.opacity : 1.0;
+      const pinIcon = data.pinned ? '🔒' : '📌';
+
+      noteEl.innerHTML = `
+        <div class="note-header">
+          <div class="note-title-area">
+            <span>${data.title || `付箋 #${data.id.replace('note-', '')}`}</span>
+          </div>
+          <div class="note-tools">
+            <button class="note-btn pin-btn" title="自由配置/ピン止め切り替え">${pinIcon}</button>
+            <div class="note-color-picker" title="付箋の色を変更">
+              <span class="note-color-dot" data-theme="yellow" style="background:#fff3a8;"></span>
+              <span class="note-color-dot" data-theme="blue" style="background:#cce6ff;"></span>
+              <span class="note-color-dot" data-theme="green" style="background:#c8eed3;"></span>
+              <span class="note-color-dot" data-theme="pink" style="background:#ffd1d9;"></span>
+              <span class="note-color-dot" data-theme="purple" style="background:#e7d8f6;"></span>
+            </div>
+            <input type="range" class="note-opacity-slider" min="0.3" max="1.0" step="0.05" value="${currentOpacity}" title="透明度を調整">
+            <button class="note-btn delete-btn" title="削除">✕</button>
+          </div>
+        </div>
+        <div class="note-body" contenteditable="true" spellcheck="false">${data.text}</div>
+      `;
+
+      applyNoteTheme(noteEl, currentTheme, currentOpacity);
+      workspace.appendChild(noteEl);
+
+      // ピン止め切り替えボタン
+      const pinBtn = noteEl.querySelector('.pin-btn');
+      pinBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        noteEl.classList.toggle('pinned');
+        const isPinned = noteEl.classList.contains('pinned');
+        pinBtn.textContent = isPinned ? '🔒' : '📌';
+        data.pinned = isPinned;
+        if (isPinned) {
+          noteEl.querySelector('.note-header').style.backgroundColor = '#e0e0e0';
+        } else {
+          applyNoteTheme(noteEl, noteEl.dataset.theme || 'yellow', parseFloat(noteEl.dataset.opacity) || 1.0);
+        }
+        triggerAutoSave();
+      });
+
+      noteEl.querySelectorAll('.note-color-dot').forEach(dot => {
+        dot.addEventListener('click', (e) => {
+          e.stopPropagation();
+          applyNoteTheme(noteEl, dot.dataset.theme, parseFloat(noteEl.dataset.opacity) || 1.0);
+          data.theme = dot.dataset.theme;
+          triggerAutoSave();
+        });
+      });
+
+      const slider = noteEl.querySelector('.note-opacity-slider');
+      slider.addEventListener('input', (e) => {
+        e.stopPropagation();
+        const val = parseFloat(e.target.value);
+        applyNoteTheme(noteEl, noteEl.dataset.theme || 'yellow', val);
+        data.opacity = val;
+        triggerAutoSave();
+      });
+      slider.addEventListener('mousedown', (e) => e.stopPropagation());
+
+      initDraggable(noteEl, noteEl);
+
+      noteEl.querySelector('.delete-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        noteEl.remove();
+        const page = getCurrentPage();
+        if (page && page.notes) {
+          page.notes = page.notes.filter(n => n.id !== data.id);
+        }
+        triggerAutoSave();
+      });
+
+      noteEl.querySelector('.note-body').addEventListener('input', () => {
+        data.text = noteEl.querySelector('.note-body').innerHTML;
+        triggerAutoSave();
+      });
+
+      return noteEl;
+    }
+
+    function initDraggable(element, handle) {
+      let isDragging = false;
+      let startX, startY, initialLeft, initialTop;
+
+      handle.addEventListener('mousedown', (e) => {
+        // ピン止めされている場合はドラッグ移動させない
+        if (element.classList.contains('pinned')) return;
+        if (e.target.closest('.note-tools') || e.target.classList.contains('note-body') || e.target.classList.contains('note-btn') || e.target.tagName === 'A' || e.target.tagName === 'INPUT') return;
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        initialLeft = element.offsetLeft;
+        initialTop = element.offsetTop;
+
+        document.querySelectorAll('.note-card, .image-card').forEach(n => {
+          if (n.style.zIndex > 15) n.style.zIndex = 20;
+        });
+        element.style.zIndex = 30;
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      });
+
+      function onMouseMove(e) {
+        if (!isDragging) return;
+        element.style.left = `${Math.max(0, initialLeft + (e.clientX - startX))}px`;
+        element.style.top = `${Math.max(0, initialTop + (e.clientY - startY))}px`;
+      }
+
+      function onMouseUp() {
+        if (isDragging) {
+          isDragging = false;
+          // 位置情報を保存データに反映
+          const page = getCurrentPage();
+          if (page && page.notes) {
+            const found = page.notes.find(n => n.id === element.id);
+            if (found) {
+              found.x = element.offsetLeft;
+              found.y = element.offsetTop;
+              found.w = element.offsetWidth;
+              found.h = element.offsetHeight;
+            }
+          }
+          triggerAutoSave();
+        }
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      }
+    }
+
+    // --- ブランチ派生機能（解除対応） ---
+    function makeSelectionAnAnchor() {
+      const selection = window.getSelection();
+      if (!selection.rangeCount || selection.isCollapsed) return null;
+      const range = selection.getRangeAt(0);
+      const text = range.toString().trim();
+      if (!text) return null;
+
+      const anchor = document.createElement('span');
+      anchor.className = 'text-anchor';
+      anchor.id = `anchor-${anchorIdCounter++}`;
+      anchor.textContent = text;
+
+      anchor.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        const page = getCurrentPage();
+        if (page && page.branches) {
+          const childBranches = page.branches.filter(b => b.parentId === anchor.id);
+          childBranches.forEach(cb => removeBranch(cb.id));
+        }
+        anchor.replaceWith(document.createTextNode(anchor.textContent));
+        renderAllLines();
+        triggerAutoSave();
+      });
+
+      range.deleteContents();
+      range.insertNode(anchor);
+      selection.removeAllRanges();
+      return anchor.id;
+    }
+
+    function createBranchElement(data) {
+      const bEl = document.createElement('div');
+      bEl.className = 'branch-node';
+      bEl.id = data.id;
+      bEl.dataset.parentId = data.parentId;
+      bEl.style.left = `${data.x}px`;
+      bEl.style.top = `${data.y}px`;
+
+      bEl.innerHTML = `
+        <span class="branch-node-text" contenteditable="true" spellcheck="false">${data.text}</span>
+        <div class="branch-node-actions">
+          <button class="branch-add-child" title="さらに派生">＋</button>
+          <button class="branch-delete" title="削除">✕</button>
+        </div>
+      `;
+
+      workspace.appendChild(bEl);
+      initBranchDraggable(bEl);
+
+      bEl.querySelector('.branch-add-child').addEventListener('click', (e) => {
+        e.stopPropagation();
+        spawnChildBranch(data.id);
+      });
+
+      bEl.querySelector('.branch-delete').addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeBranch(data.id);
+      });
+
+      bEl.querySelector('.branch-node-text').addEventListener('input', () => {
+        renderAllLines();
+        triggerAutoSave();
+      });
+
+      return bEl;
+    }
+
+    function spawnChildBranch(parentId) {
+      const parentEl = document.getElementById(parentId);
+      if (!parentEl) return;
+
+      const page = getCurrentPage();
+      const pCoords = getAnchorCoords(parentEl);
+      const newId = `branch-${branchIdCounter++}`;
+      const branchData = {
+        id: newId,
+        parentId: parentId,
+        text: '新しい項目',
+        x: Math.round(pCoords.rightX + 60),
+        y: Math.round(pCoords.centerY - 15)
+      };
+
+      if (!page.branches) page.branches = [];
+      page.branches.push(branchData);
+      const newEl = createBranchElement(branchData);
+      
+      newEl.querySelector('.branch-node-text').focus();
+      renderAllLines();
+      triggerAutoSave();
+    }
+
+    function removeBranch(id) {
+      const page = getCurrentPage();
+      document.getElementById(id)?.remove();
+      if (page.branches) {
+        const toDelete = [id];
+        let found = true;
+        while (found) {
+          found = false;
+          page.branches.forEach(b => {
+            if (toDelete.includes(b.parentId) && !toDelete.includes(b.id)) {
+              toDelete.push(b.id);
+              document.getElementById(b.id)?.remove();
+              found = true;
+            }
+          });
+        }
+        page.branches = page.branches.filter(b => !toDelete.includes(b.id));
+      }
+      renderAllLines();
+      triggerAutoSave();
+    }
+
+    function initBranchDraggable(element) {
+      let isDragging = false;
+      let startX, startY, initialLeft, initialTop;
+
+      element.addEventListener('mousedown', (e) => {
+        if (e.target.classList.contains('branch-node-text') || e.target.tagName === 'BUTTON') return;
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        initialLeft = element.offsetLeft;
+        initialTop = element.offsetTop;
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      });
+
+      function onMouseMove(e) {
+        if (!isDragging) return;
+        element.style.left = `${Math.max(0, initialLeft + (e.clientX - startX))}px`;
+        element.style.top = `${Math.max(0, initialTop + (e.clientY - startY))}px`;
+        renderAllLines();
+      }
+
+      function onMouseUp() {
+        if (isDragging) {
+          isDragging = false;
+          triggerAutoSave();
+        }
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      }
+    }
+
+    function getAnchorCoords(el) {
+      const wsRect = workspace.getBoundingClientRect();
+      const rect = el.getBoundingClientRect();
+      return {
+        rightX: rect.right - wsRect.left + workspace.scrollLeft,
+        centerY: rect.top - wsRect.top + workspace.scrollTop + rect.height / 2
+      };
+    }
+
+    function renderAllLines() {
+      svgLayer.innerHTML = '';
+      const page = getCurrentPage();
+      if (!page || page.id === 'schedule-page' || !page.branches) return;
+
+      page.branches.forEach(bNode => {
+        const parentEl = document.getElementById(bNode.parentId);
+        const childEl = document.getElementById(bNode.id);
+        if (!parentEl || !childEl) return;
+
+        const p1 = getAnchorCoords(parentEl);
+        const wsRect = workspace.getBoundingClientRect();
+        const cRect = childEl.getBoundingClientRect();
+        const p2X = cRect.left - wsRect.left + workspace.scrollLeft;
+        const p2Y = cRect.top - wsRect.top + workspace.scrollTop + cRect.height / 2;
+
+        const dx = Math.abs(p2X - p1.rightX) * 0.5;
+        const pathData = `M ${p1.rightX} ${p1.centerY} C ${p1.rightX + dx} ${p1.centerY}, ${p2X - dx} ${p2Y}, ${p2X} ${p2Y}`;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', pathData);
+        path.setAttribute('class', 'branch-path');
+        svgLayer.appendChild(path);
+      });
+    }
+
+    branchBtn.addEventListener('click', () => {
+      if (currentPageId === 'schedule-page') return alert('スケジュール画面では使用できません。');
+      let anchorId = null;
+      const selection = window.getSelection();
+      if (selection.rangeCount && !selection.isCollapsed) {
+        anchorId = makeSelectionAnAnchor();
+      } else {
+        let node = selection.anchorNode;
+        while (node && node !== workspace) {
+          if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('text-anchor')) {
+            anchorId = node.id;
+            break;
+          }
+          node = node.parentNode;
+        }
+      }
+
+      if (anchorId) {
+        spawnChildBranch(anchorId);
+      } else {
+        alert('派生させたいテキストを選択してから「🌿 ブランチ派生」ボタンを押してください。');
+      }
+    });
+
+    // --- 各種上部ボタンのイベント配線 ---
 
     // 1. 付箋追加ボタン
     addNoteBtn.addEventListener('click', () => {
       if (currentPageId === 'schedule-page') return alert('スケジュールタブ内では付箋を追加できません。');
       const newId = `note-${noteIdCounter++}`;
-      createNoteElement({ id: newId, title: `付箋 #${noteIdCounter - 1}`, text: 'メモ', x: workspace.scrollLeft + 400, y: workspace.scrollTop + 120 });
+      const page = getCurrentPage();
+      const noteData = { id: newId, title: `付箋 #${noteIdCounter - 1}`, text: '新しいメモ', x: workspace.scrollLeft + 400, y: workspace.scrollTop + 120, w: 260, h: 180, theme: 'yellow', opacity: 1.0, pinned: false };
+      if (!page.notes) page.notes = [];
+      page.notes.push(noteData);
+      createNoteElement(noteData);
       triggerAutoSave();
     });
 
-    // 2. 太字・マーカーボタン
+    // 2. 画像追加ボタン
+    addImageBtn.addEventListener('click', () => imageFileInput.click());
+    imageFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const src = event.target.result;
+        const newId = `img-${imageIdCounter++}`;
+        const page = getCurrentPage();
+        if (page.id === 'schedule-page') return;
+        if (!page.images) page.images = [];
+        const imgData = { id: newId, title: file.name.slice(0, 12) || '画像', src, x: 150, y: 150, w: 380, h: 280 };
+        page.images.push(imgData);
+        createImageElement(imgData);
+        triggerAutoSave();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function createImageElement(data) {
+      const imgCard = document.createElement('div');
+      imgCard.className = 'image-card';
+      imgCard.id = data.id;
+      imgCard.style.left = `${data.x}px`;
+      imgCard.style.top = `${data.y}px`;
+      const currentW = data.w || 380;
+      const currentH = data.h || 280;
+      imgCard.style.width = `${currentW}px`;
+      imgCard.style.height = `${currentH}px`;
+
+      imgCard.innerHTML = `
+        <div class="image-header">
+          <span>🖼 ${data.title}</span>
+          <div class="image-size-controls" title="幅・高さを数値(px)で変更">
+            W:<input type="number" class="image-size-input img-w-input" value="${currentW}" min="50" max="3000">
+            H:<input type="number" class="image-size-input img-h-input" value="${currentH}" min="50" max="3000">
+            <button class="note-btn delete-btn" style="background:none;border:none;cursor:pointer;color:#6a1b9a;font-weight:bold;">✕</button>
+          </div>
+        </div>
+        <div class="image-body"><img src="${data.src}" alt="画像"></div>
+      `;
+      workspace.appendChild(imgCard);
+      initDraggable(imgCard, imgCard.querySelector('.image-header'));
+
+      const wInp = imgCard.querySelector('.img-w-input');
+      const hInp = imgCard.querySelector('.img-h-input');
+
+      wInp.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        if (val > 20) {
+          imgCard.style.width = `${val}px`;
+          data.w = val;
+          triggerAutoSave();
+        }
+      });
+      wInp.addEventListener('mousedown', (e) => e.stopPropagation());
+
+      hInp.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        if (val > 20) {
+          imgCard.style.height = `${val}px`;
+          data.h = val;
+          triggerAutoSave();
+        }
+      });
+      hInp.addEventListener('mousedown', (e) => e.stopPropagation());
+
+      imgCard.querySelector('.delete-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        imgCard.remove();
+        const page = getCurrentPage();
+        if (page && page.images) {
+          page.images = page.images.filter(i => i.id !== data.id);
+        }
+        triggerAutoSave();
+      });
+
+      return imgCard;
+    }
+
+    // 3. 太字・マーカーボタン
     document.querySelectorAll('.color-dot-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const type = btn.dataset.type;
@@ -940,7 +1635,7 @@
       });
     });
 
-    // 3. 穴埋めマスクボタン
+    // 4. 穴埋めマスクボタン（解除対応）
     addMaskBtn.addEventListener('click', () => {
       const selection = window.getSelection();
       if (!selection.rangeCount || selection.isCollapsed) {
@@ -952,12 +1647,19 @@
       span.className = 'test-mask masked';
       span.contentEditable = 'false';
       span.textContent = range.toString().trim();
+      
+      span.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        span.replaceWith(document.createTextNode(span.textContent));
+        triggerAutoSave();
+      });
+
       range.deleteContents();
       range.insertNode(span);
       triggerAutoSave();
     });
 
-    // 4. 全マスク表示/隠すボタン
+    // 5. 全マスク表示/隠すボタン
     toggleAllMasksBtn.addEventListener('click', () => {
       areAllMasksRevealed = !areAllMasksRevealed;
       document.querySelectorAll('.test-mask').forEach(m => {
@@ -966,7 +1668,6 @@
       });
     });
 
-    // マスクのクリック切替
     workspace.addEventListener('click', (e) => {
       const mask = e.target.closest('.test-mask');
       if (mask) {
@@ -975,41 +1676,28 @@
       }
     });
 
-    // 5. 文字サイズ変更ボタン
-    document.querySelectorAll('.size-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const size = btn.dataset.size;
-        const selection = window.getSelection();
-        if (!selection.rangeCount || selection.isCollapsed) {
-          alert('サイズを変更したいテキストを選択してください。');
-          return;
-        }
-        const range = selection.getRangeAt(0);
-        const span = document.createElement('span');
-        span.style.fontSize = size;
-        span.appendChild(range.extractContents());
-        range.insertNode(span);
-        triggerAutoSave();
-      });
+    // 6. 数値入力による文字サイズ変更ボタン
+    document.getElementById('apply-font-size-btn').addEventListener('click', () => {
+      const sizeVal = document.getElementById('font-size-num-input').value;
+      if (!sizeVal || sizeVal < 5) {
+        alert('有効なピクセル数値を入力してください。');
+        return;
+      }
+      const selection = window.getSelection();
+      if (!selection.rangeCount || selection.isCollapsed) {
+        alert('サイズを変更したいテキストを選択してください。');
+        return;
+      }
+      const range = selection.getRangeAt(0);
+      const span = document.createElement('span');
+      span.style.fontSize = `${sizeVal}px`;
+      span.appendChild(range.extractContents());
+      range.insertNode(span);
+      triggerAutoSave();
     });
 
-    function createNoteElement(data) {
-      const el = document.createElement('div');
-      el.className = 'note-card';
-      el.id = data.id;
-      el.style.left = `${data.x}px`;
-      el.style.top = `${data.y}px`;
-      el.innerHTML = `
-        <div class="note-header"><span>${data.title}</span><button class="note-btn delete-btn">✕</button></div>
-        <div class="note-body" contenteditable="true">${data.text}</div>
-      `;
-      workspace.appendChild(el);
-      el.querySelector('.delete-btn').addEventListener('click', () => { el.remove(); triggerAutoSave(); });
-      return el;
-    }
-
     function escapeHtml(str) {
-      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
     loadSavedData();
